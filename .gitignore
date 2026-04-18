@@ -1,0 +1,8 @@
+build/
+.vs/
+*.user
+*.suo
+*.aps
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake

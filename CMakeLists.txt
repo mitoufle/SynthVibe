@@ -1,0 +1,75 @@
+cmake_minimum_required(VERSION 3.22)
+project(AISynth VERSION 0.1.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ---------------------------------------------------------------------------
+# JUCE via FetchContent
+# ---------------------------------------------------------------------------
+include(FetchContent)
+FetchContent_Declare(
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        7.0.9
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(JUCE)
+
+# ---------------------------------------------------------------------------
+# Plugin target
+# ---------------------------------------------------------------------------
+juce_add_plugin(AISynth
+    VERSION                     0.1.0
+    COMPANY_NAME                "AISynth"
+    PLUGIN_MANUFACTURER_CODE    AiSy
+    PLUGIN_CODE                 Asn1
+    FORMATS                     VST3 Standalone
+    PRODUCT_NAME                "AI Synth"
+    IS_SYNTH                    TRUE
+    NEEDS_MIDI_INPUT            TRUE
+    NEEDS_MIDI_OUTPUT           FALSE
+    IS_MIDI_EFFECT              FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    COPY_PLUGIN_AFTER_BUILD     FALSE
+)
+
+# ---------------------------------------------------------------------------
+# Sources  — add new .cpp files here as features grow
+# ---------------------------------------------------------------------------
+target_sources(AISynth PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginEditor.cpp
+    Source/Parameters/ParameterLayout.cpp
+    Source/Engine/Oscillator.cpp
+    Source/Engine/Envelope.cpp
+    Source/Engine/Filter.cpp
+    Source/Engine/Voice.cpp
+    Source/Engine/SynthEngine.cpp
+    Source/Presets/PresetManager.cpp
+    Source/FX/Delay.cpp
+    # Source/FX/FXChain.cpp        <- uncomment when FX are implemented
+    # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
+)
+
+target_include_directories(AISynth PRIVATE Source)
+
+target_compile_definitions(AISynth PUBLIC
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    JUCE_DISPLAY_SPLASH_SCREEN=0
+)
+
+target_link_libraries(AISynth
+    PRIVATE
+        juce::juce_audio_utils
+        juce::juce_audio_processors
+        juce::juce_dsp
+        juce::juce_gui_basics
+        juce::juce_gui_extra
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+)
