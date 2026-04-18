@@ -25,7 +25,10 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
-    // Arpeggiator (rewrites midiMessages before the synth sees them)
+    // Snapshot APVTS une seule fois par bloc (évite 26 getRawParameterValue × N events)
+    const VoiceParams vp = buildVoiceParams();
+
+    // Arpeggiator
     double bpm = 120.0;
     if (auto* ph = getPlayHead())
         if (auto pos = ph->getPosition())
@@ -33,34 +36,32 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     arp.setParams(buildArpParams());
     arp.process(midiMessages, buffer.getNumSamples(), bpm, getSampleRate());
 
-    // Dispatch MIDI events at sample-accurate positions
+    // Dispatch MIDI events à positions sample-accurate
     int currentSample = 0;
     for (const auto meta : midiMessages)
     {
         const int eventPos = meta.samplePosition;
         if (eventPos > currentSample)
         {
-            synth.setParams(buildVoiceParams());
+            synth.setParams(vp);
             synth.processBlock(buffer, currentSample, eventPos - currentSample);
             currentSample = eventPos;
         }
         synth.handleMidiMessage(meta.getMessage());
     }
 
-    // Process remaining samples after last MIDI event
     const int remaining = buffer.getNumSamples() - currentSample;
     if (remaining > 0) {
-        synth.setParams(buildVoiceParams());
+        synth.setParams(vp);
         synth.processBlock(buffer, currentSample, remaining);
     }
 
-    // Apply master volume
-    const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
-    buffer.applyGain(masterVol);
-
-    // FX chain (post-gain)
+    // FX chain en premier, PUIS master volume (post-fader correct)
     fxChain.setParams(buildDelayParams(), buildChorusParams());
     fxChain.process(buffer);
+
+    const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
+    buffer.applyGain(masterVol);
 }
 
 VoiceParams AISynthProcessor::buildVoiceParams() const
