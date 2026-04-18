@@ -1,5 +1,7 @@
 build/
 .vs/
+.superpowers/
+.worktrees/
 *.user
 *.suo
 *.aps
