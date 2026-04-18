@@ -24,6 +24,14 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
+    // Arpeggiator (rewrites midiMessages before the synth sees them)
+    double bpm = 120.0;
+    if (auto* ph = getPlayHead())
+        if (auto pos = ph->getPosition())
+            if (auto b = pos->getBpm()) bpm = *b;
+    arp.setParams(buildArpParams());
+    arp.process(midiMessages, buffer.getNumSamples(), bpm, getSampleRate());
+
     // Dispatch MIDI events at sample-accurate positions
     int currentSample = 0;
     for (const auto meta : midiMessages)
@@ -95,6 +103,16 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.fltEnv.sustain = *apvts.getRawParameterValue(ParamIDs::fltSustain);
     p.fltEnv.release = *apvts.getRawParameterValue(ParamIDs::fltRelease);
 
+    return p;
+}
+
+ArpEngine::Params AISynthProcessor::buildArpParams() const
+{
+    ArpEngine::Params p;
+    p.enabled     = *apvts.getRawParameterValue(ParamIDs::arpEnabled) > 0.5f;
+    p.mode        = static_cast<ArpEngine::Mode>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpMode)));
+    p.rateIndex   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpRate));
+    p.octaveRange = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpOctaveRange));
     return p;
 }
 

@@ -46,6 +46,7 @@ target_sources(AISynth PRIVATE
     Source/Engine/Filter.cpp
     Source/Engine/Voice.cpp
     Source/Engine/SynthEngine.cpp
+    Source/Engine/ArpEngine.cpp
     Source/Presets/PresetManager.cpp
     Source/FX/Delay.cpp
     Source/FX/Chorus.cpp

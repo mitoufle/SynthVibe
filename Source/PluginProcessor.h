@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Engine/SynthEngine.h"
 #include "FX/FXChain.h"
+#include "Engine/ArpEngine.h"
 #include "Parameters/ParameterLayout.h"
 
 class AISynthProcessor : public juce::AudioProcessor
@@ -41,10 +42,12 @@ public:
 private:
     SynthEngine synth;
     FXChain     fxChain;
+    ArpEngine   arp;
 
-    VoiceParams    buildVoiceParams()  const;
-    Delay::Params  buildDelayParams()  const;
-    Chorus::Params buildChorusParams() const;
+    VoiceParams       buildVoiceParams()  const;
+    Delay::Params     buildDelayParams()  const;
+    Chorus::Params    buildChorusParams() const;
+    ArpEngine::Params buildArpParams()    const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AISynthProcessor)
 };
