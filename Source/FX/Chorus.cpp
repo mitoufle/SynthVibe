@@ -63,8 +63,7 @@ void Chorus::process(juce::AudioBuffer<float>& buffer)
 
 float Chorus::readInterpolated(const std::vector<float>& buf, float delSamples) const noexcept
 {
-    float readPosF = static_cast<float>(writePos) - delSamples;
-    while (readPosF < 0.f) readPosF += static_cast<float>(bufSize);
+    const float readPosF = std::fmod(static_cast<float>(writePos) - delSamples + static_cast<float>(bufSize), static_cast<float>(bufSize));
     const int   i0   = static_cast<int>(readPosF) % bufSize;
     const int   i1   = (i0 + 1) % bufSize;
     const float frac = readPosF - std::floor(readPosF);
