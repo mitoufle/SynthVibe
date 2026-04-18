@@ -58,13 +58,29 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
 {
     VoiceParams p;
 
-    p.waveform     = static_cast<Waveform>(
-                         static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Waveform)));
-    p.detuneCents  = *apvts.getRawParameterValue(ParamIDs::osc1Detune);
-    p.octave       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Octave));
+    p.osc1.waveform = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Waveform)));
+    p.osc1.octave   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Octave));
+    p.osc1.semitone = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Semitone));
+    p.osc1.detune   = *apvts.getRawParameterValue(ParamIDs::osc1Detune);
+    p.osc1.level    = *apvts.getRawParameterValue(ParamIDs::osc1Level);
 
-    p.filterType   = static_cast<FilterType>(
-                         static_cast<int>(*apvts.getRawParameterValue(ParamIDs::filterType)));
+    p.osc2.waveform = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Waveform)));
+    p.osc2.octave   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Octave));
+    p.osc2.semitone = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Semitone));
+    p.osc2.detune   = *apvts.getRawParameterValue(ParamIDs::osc2Detune);
+    p.osc2.level    = *apvts.getRawParameterValue(ParamIDs::osc2Level);
+
+    p.lfo1.shape = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo1Shape)));
+    p.lfo1.rate  = *apvts.getRawParameterValue(ParamIDs::lfo1Rate);
+    p.lfo1.depth = *apvts.getRawParameterValue(ParamIDs::lfo1Depth);
+    p.lfo1.dest  = static_cast<LfoDest>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo1Dest)));
+
+    p.lfo2.shape = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo2Shape)));
+    p.lfo2.rate  = *apvts.getRawParameterValue(ParamIDs::lfo2Rate);
+    p.lfo2.depth = *apvts.getRawParameterValue(ParamIDs::lfo2Depth);
+    p.lfo2.dest  = static_cast<LfoDest>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo2Dest)));
+
+    p.filterType      = static_cast<FilterType>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::filterType)));
     p.filterCutoff    = *apvts.getRawParameterValue(ParamIDs::filterCutoff);
     p.filterResonance = *apvts.getRawParameterValue(ParamIDs::filterResonance);
     p.filterEnvAmt    = *apvts.getRawParameterValue(ParamIDs::filterEnvAmt);
