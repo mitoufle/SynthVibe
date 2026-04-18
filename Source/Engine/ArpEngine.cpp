@@ -41,6 +41,7 @@ void ArpEngine::reset()
 {
     heldNotes.clear();
     sequence.clear();
+    sortedBuf.clear();
     stepIndex      = 0;
     sampleCounter  = 0;
     pingDir        = 1;
@@ -49,27 +50,31 @@ void ArpEngine::reset()
     pendingNoteOff = false;
 }
 
+void ArpEngine::prepare()
+{
+    heldNotes.reserve(32);
+    sequence.reserve(128);
+    sortedBuf.reserve(32);
+}
+
 void ArpEngine::buildSequence()
 {
     sequence.clear();
     if (heldNotes.empty()) return;
 
-    auto sorted = heldNotes;
-    std::sort(sorted.begin(), sorted.end(),
+    sortedBuf.assign(heldNotes.begin(), heldNotes.end());
+    std::sort(sortedBuf.begin(), sortedBuf.end(),
               [](const HeldNote& a, const HeldNote& b) { return a.note < b.note; });
 
     for (int oct = 0; oct < params.octaveRange; ++oct)
-        for (auto& h : sorted)
+        for (auto& h : sortedBuf)
             sequence.push_back({ h.note + oct * 12, h.velocity });
 
     if (params.mode == Mode::Down)
         std::reverse(sequence.begin(), sequence.end());
 
     if (params.mode == Mode::Random)
-    {
-        static std::mt19937 rng { std::random_device{}() };
         std::shuffle(sequence.begin(), sequence.end(), rng);
-    }
 
     if (stepIndex >= static_cast<int>(sequence.size()))
         stepIndex = 0;

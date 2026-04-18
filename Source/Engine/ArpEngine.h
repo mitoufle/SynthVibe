@@ -2,6 +2,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <vector>
 #include <utility>
+#include <random>
 
 class ArpEngine
 {
@@ -20,6 +21,7 @@ public:
     void noteOn (int midiNote, float velocity);
     void noteOff(int midiNote);
     void reset();
+    void prepare();
 
     // Rewrites midiBuffer in-place. Call before SynthEngine::handleMidiMessage.
     void process(juce::MidiBuffer& midi, int numSamples, double bpm, double sr);
@@ -30,6 +32,7 @@ private:
     struct HeldNote { int note; float velocity; };
     std::vector<HeldNote> heldNotes;
     std::vector<HeldNote> sequence;
+    std::vector<HeldNote> sortedBuf;  // buffer de travail pour buildSequence(), évite l'alloc per-call
 
     int   stepIndex      = 0;
     int   sampleCounter  = 0;
@@ -37,6 +40,8 @@ private:
     int   lastNote       = -1;
     bool  noteIsOn       = false;
     bool  pendingNoteOff = false;   // set when arp disabled mid-note
+
+    std::mt19937 rng { std::random_device{}() };
 
     void buildSequence();
     int  samplesPerStep(double bpm, double sr) const noexcept;

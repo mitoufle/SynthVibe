@@ -16,6 +16,7 @@ void AISynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
                                   2 };
     synth.prepare(spec);
     fxChain.prepare(sampleRate, samplesPerBlock);
+    arp.prepare();
 }
 
 void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
