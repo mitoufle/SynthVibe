@@ -4,23 +4,38 @@
 #include "Filter.h"
 #include <juce_dsp/juce_dsp.h>
 
-// All parameters needed to configure one voice.
-// This struct is the bridge between the APVTS and the audio engine —
-// the AI layer will also build VoiceParams from a prompt interpretation.
+enum class LfoDest { Pitch = 0, Filter, Amp, Detune };
+
+struct OscParams
+{
+    Waveform waveform = Waveform::Saw;
+    int      octave   = 0;
+    int      semitone = 0;
+    float    detune   = 0.f;
+    float    level    = 1.f;
+};
+
+struct LfoParams
+{
+    Waveform shape = Waveform::Sine;
+    float    rate  = 1.f;
+    float    depth = 0.f;
+    LfoDest  dest  = LfoDest::Pitch;
+};
+
 struct VoiceParams
 {
-    // Oscillator
-    Waveform waveform     = Waveform::Saw;
-    float    detuneCents  = 0.f;
-    int      octave       = 0;
+    OscParams osc1;
+    OscParams osc2;   // osc2.level read from APVTS default 0.f — silent until turned up
 
-    // Filter
+    LfoParams lfo1;
+    LfoParams lfo2;
+
     FilterType filterType      = FilterType::LowPass;
     float      filterCutoff    = 8000.f;
     float      filterResonance = 0.1f;
-    float      filterEnvAmt    = 0.f;   // -1..1, scales filter envelope depth
+    float      filterEnvAmt    = 0.f;
 
-    // Envelopes
     Envelope::Params ampEnv;
     Envelope::Params fltEnv;
 };
@@ -39,7 +54,10 @@ public:
     int   getMidiNote() const { return currentNote; }
 
 private:
-    Oscillator osc;
+    Oscillator osc1;
+    Oscillator osc2;
+    Oscillator lfo1Osc;
+    Oscillator lfo2Osc;
     Envelope   ampEnv;
     Envelope   fltEnv;
     Filter     filter;
@@ -49,5 +67,5 @@ private:
     float  velocity    = 1.f;
     double sampleRate  = 44100.0;
 
-    static double midiNoteToHz(int note, int octaveOffset) noexcept;
+    static double midiNoteToHz(int note, int octaveOffset, int semitoneOffset = 0) noexcept;
 };
