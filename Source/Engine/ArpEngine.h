@@ -31,11 +31,12 @@ private:
     std::vector<HeldNote> heldNotes;
     std::vector<HeldNote> sequence;
 
-    int   stepIndex     = 0;
-    int   sampleCounter = 0;
-    int   pingDir       = 1;
-    int   lastNote      = -1;
-    bool  noteIsOn      = false;
+    int   stepIndex      = 0;
+    int   sampleCounter  = 0;
+    int   pingDir        = 1;
+    int   lastNote       = -1;
+    bool  noteIsOn       = false;
+    bool  pendingNoteOff = false;   // set when arp disabled mid-note
 
     void buildSequence();
     int  samplesPerStep(double bpm, double sr) const noexcept;

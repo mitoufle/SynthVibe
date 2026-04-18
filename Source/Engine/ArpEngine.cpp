@@ -4,8 +4,20 @@
 
 void ArpEngine::setParams(const Params& p)
 {
+    if (!p.enabled && params.enabled && noteIsOn && lastNote >= 0)
+        pendingNoteOff = true;
+
     params = p;
-    if (!p.enabled) reset();
+
+    if (!p.enabled)
+    {
+        heldNotes.clear();
+        sequence.clear();
+        stepIndex     = 0;
+        sampleCounter = 0;
+        pingDir       = 1;
+        // Ne pas toucher noteIsOn/lastNote — process() les nettoie après le noteOff
+    }
 }
 
 void ArpEngine::noteOn(int midiNote, float velocity)
@@ -29,11 +41,12 @@ void ArpEngine::reset()
 {
     heldNotes.clear();
     sequence.clear();
-    stepIndex     = 0;
-    sampleCounter = 0;
-    pingDir       = 1;
-    lastNote      = -1;
-    noteIsOn      = false;
+    stepIndex      = 0;
+    sampleCounter  = 0;
+    pingDir        = 1;
+    lastNote       = -1;
+    noteIsOn       = false;
+    pendingNoteOff = false;
 }
 
 void ArpEngine::buildSequence()
@@ -65,13 +78,23 @@ void ArpEngine::buildSequence()
 int ArpEngine::samplesPerStep(double bpm, double sr) const noexcept
 {
     static constexpr double rateFractions[] = { 0.25, 0.5, 1.0, 2.0 };
-    const double beats = rateFractions[juce::jlimit(0, 3, params.rateIndex)];
-    return static_cast<int>((60.0 / bpm) * beats * sr);
+    const double safeBpm = std::max(bpm, 20.0);
+    const double beats   = rateFractions[juce::jlimit(0, 3, params.rateIndex)];
+    return std::max(static_cast<int>((60.0 / safeBpm) * beats * sr), 1);
 }
 
 void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, double sr)
 {
-    if (!params.enabled || sequence.empty())
+    if (pendingNoteOff && lastNote >= 0)
+    {
+        midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+        pendingNoteOff = false;
+        noteIsOn       = false;
+        lastNote       = -1;
+        return;
+    }
+
+    if (!params.enabled)
         return;
 
     juce::MidiBuffer output;
@@ -84,11 +107,25 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             noteOff(msg.getNoteNumber());
         else if (msg.isNoteOn())
             noteOn(msg.getNoteNumber(), msg.getFloatVelocity());
+        else
+            output.addEvent(msg, meta.samplePosition);
+    }
+
+    if (sequence.empty())
+    {
+        if (noteIsOn && lastNote >= 0)
+        {
+            output.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+            noteIsOn = false;
+            lastNote = -1;
+        }
+        midi.swapWith(output);
+        return;
     }
 
     for (int i = 0; i < numSamples; ++i)
     {
-        if (sampleCounter == 0 && !sequence.empty())
+        if (sampleCounter == 0)
         {
             if (noteIsOn && lastNote >= 0)
             {
@@ -117,5 +154,5 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         if (sampleCounter >= stepLen) sampleCounter = 0;
     }
 
-    midi = output;
+    midi.swapWith(output);
 }
