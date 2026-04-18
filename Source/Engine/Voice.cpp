@@ -72,8 +72,9 @@ float Voice::getNextSample()
     const float l2 = lfo2Osc.getNextSample() * params.lfo2.depth;
 
     // Pitch modulation: only compute std::pow when an LFO is actually targeting Pitch
-    const bool hasPitchLfo = (params.lfo1.dest == LfoDest::Pitch && params.lfo1.depth > 0.f)
-                           || (params.lfo2.dest == LfoDest::Pitch && params.lfo2.depth > 0.f);
+    const bool hasPitchLfo = (params.lfo1.dest == LfoDest::Pitch && params.lfo1.depth != 0.f)
+                           || (params.lfo2.dest == LfoDest::Pitch && params.lfo2.depth != 0.f);
+    // setParams() resets osc frequency each block; skipping per-sample is safe only while that invariant holds.
     if (hasPitchLfo && currentNote >= 0)
     {
         const float pitchCents = (params.lfo1.dest == LfoDest::Pitch ? l1 * 100.f : 0.f)
@@ -85,8 +86,8 @@ float Voice::getNextSample()
 
     // Detune modulation: only apply LFO mod when an LFO targets Detune
     // Static detune is already set by setParams() / noteOn()
-    const bool hasDetuneLfo = (params.lfo1.dest == LfoDest::Detune && params.lfo1.depth > 0.f)
-                            || (params.lfo2.dest == LfoDest::Detune && params.lfo2.depth > 0.f);
+    const bool hasDetuneLfo = (params.lfo1.dest == LfoDest::Detune && params.lfo1.depth != 0.f)
+                            || (params.lfo2.dest == LfoDest::Detune && params.lfo2.depth != 0.f);
     if (hasDetuneLfo)
     {
         const float detuneMod = (params.lfo1.dest == LfoDest::Detune ? l1 * 50.f : 0.f)
@@ -100,8 +101,8 @@ float Voice::getNextSample()
     // Filter modulation: only update cutoff when env or LFO is actually modulating it
     const float envMod = fltEnv.getNextSample();
     const bool hasFilterMod = (params.filterEnvAmt != 0.f)
-                            || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth > 0.f)
-                            || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth > 0.f);
+                            || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
+                            || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f);
     if (hasFilterMod)
     {
         float cutoff = params.filterCutoff * (1.f + params.filterEnvAmt * envMod);
@@ -114,8 +115,8 @@ float Voice::getNextSample()
     sample = filter.processSample(sample);
 
     float ampGain = ampEnv.getNextSample() * velocity;
-    const bool hasAmpLfo = (params.lfo1.dest == LfoDest::Amp && params.lfo1.depth > 0.f)
-                         || (params.lfo2.dest == LfoDest::Amp && params.lfo2.depth > 0.f);
+    const bool hasAmpLfo = (params.lfo1.dest == LfoDest::Amp && params.lfo1.depth != 0.f)
+                         || (params.lfo2.dest == LfoDest::Amp && params.lfo2.depth != 0.f);
     if (hasAmpLfo)
     {
         ampGain *= 1.f + (params.lfo1.dest == LfoDest::Amp ? l1 * 0.5f : 0.f);
