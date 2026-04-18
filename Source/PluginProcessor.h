@@ -1,7 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Engine/SynthEngine.h"
-#include "FX/Delay.h"
+#include "FX/FXChain.h"
 #include "Parameters/ParameterLayout.h"
 
 class AISynthProcessor : public juce::AudioProcessor
@@ -40,10 +40,11 @@ public:
 
 private:
     SynthEngine synth;
-    Delay       delay;
+    FXChain     fxChain;
 
-    VoiceParams  buildVoiceParams() const;
-    Delay::Params buildDelayParams() const;
+    VoiceParams    buildVoiceParams()  const;
+    Delay::Params  buildDelayParams()  const;
+    Chorus::Params buildChorusParams() const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AISynthProcessor)
 };

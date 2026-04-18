@@ -48,7 +48,8 @@ target_sources(AISynth PRIVATE
     Source/Engine/SynthEngine.cpp
     Source/Presets/PresetManager.cpp
     Source/FX/Delay.cpp
-    # Source/FX/FXChain.cpp        <- uncomment when FX are implemented
+    Source/FX/Chorus.cpp
+    Source/FX/FXChain.cpp
     # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
 )
 

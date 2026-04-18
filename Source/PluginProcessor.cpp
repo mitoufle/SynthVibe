@@ -15,7 +15,7 @@ void AISynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
                                   static_cast<juce::uint32>(samplesPerBlock),
                                   2 };
     synth.prepare(spec);
-    delay.prepare(sampleRate, samplesPerBlock);
+    fxChain.prepare(sampleRate, samplesPerBlock);
 }
 
 void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
@@ -49,9 +49,9 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
     buffer.applyGain(masterVol);
 
-    // Delay (post-gain)
-    delay.setParams(buildDelayParams());
-    delay.process(buffer);
+    // FX chain (post-gain)
+    fxChain.setParams(buildDelayParams(), buildChorusParams());
+    fxChain.process(buffer);
 }
 
 VoiceParams AISynthProcessor::buildVoiceParams() const
@@ -95,6 +95,15 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.fltEnv.sustain = *apvts.getRawParameterValue(ParamIDs::fltSustain);
     p.fltEnv.release = *apvts.getRawParameterValue(ParamIDs::fltRelease);
 
+    return p;
+}
+
+Chorus::Params AISynthProcessor::buildChorusParams() const
+{
+    Chorus::Params p;
+    p.rate  = *apvts.getRawParameterValue(ParamIDs::chorusRate);
+    p.depth = *apvts.getRawParameterValue(ParamIDs::chorusDepth);
+    p.mix   = *apvts.getRawParameterValue(ParamIDs::chorusMix);
     return p;
 }
 
