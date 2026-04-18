@@ -33,6 +33,7 @@ private:
     std::vector<HeldNote> heldNotes;
     std::vector<HeldNote> sequence;
     std::vector<HeldNote> sortedBuf;  // buffer de travail pour buildSequence(), évite l'alloc per-call
+    juce::MidiBuffer scratchMidi;  // pré-alloué pour éviter l'allocation dans process()
 
     int   stepIndex      = 0;
     int   sampleCounter  = 0;

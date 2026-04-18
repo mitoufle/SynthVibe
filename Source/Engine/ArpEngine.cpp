@@ -55,6 +55,7 @@ void ArpEngine::prepare()
     heldNotes.reserve(32);
     sequence.reserve(128);
     sortedBuf.reserve(32);
+    scratchMidi.ensureSize(512);
 }
 
 void ArpEngine::buildSequence()
@@ -102,7 +103,7 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
     if (!params.enabled)
         return;
 
-    juce::MidiBuffer output;
+    scratchMidi.clear();
     const int stepLen = samplesPerStep(bpm, sr);
 
     for (auto meta : midi)
@@ -113,18 +114,18 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         else if (msg.isNoteOn())
             noteOn(msg.getNoteNumber(), msg.getFloatVelocity());
         else
-            output.addEvent(msg, meta.samplePosition);
+            scratchMidi.addEvent(msg, meta.samplePosition);
     }
 
     if (sequence.empty())
     {
         if (noteIsOn && lastNote >= 0)
         {
-            output.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+            scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
             noteIsOn = false;
             lastNote = -1;
         }
-        midi.swapWith(output);
+        midi.swapWith(scratchMidi);
         return;
     }
 
@@ -134,12 +135,12 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         {
             if (noteIsOn && lastNote >= 0)
             {
-                output.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
                 noteIsOn = false;
             }
 
             const auto& step = sequence[stepIndex];
-            output.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
+            scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
             lastNote = step.note;
             noteIsOn = true;
 
@@ -159,5 +160,5 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         if (sampleCounter >= stepLen) sampleCounter = 0;
     }
 
-    midi.swapWith(output);
+    midi.swapWith(scratchMidi);
 }
