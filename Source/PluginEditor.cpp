@@ -1,47 +1,77 @@
 #include "PluginEditor.h"
 
-static constexpr int EditorW   = 660;
-static constexpr int EditorH   = 500;
-static constexpr int TopBar    = 32;
-static constexpr int Pad       = 8;
-static constexpr int KnobH     = 80;   // name label (14) + rotary + value box (16)
-static constexpr int SectionTitleH = 16;
-static constexpr int ComboH    = 24;
-
 AISynthEditor::AISynthEditor(AISynthProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
     setLookAndFeel(&laf);
-    setSize(EditorW, EditorH);
+    setSize(900, 560);
 
-    // Oscillator waveform combo
-    oscWaveformBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
-    oscWaveformAttach = std::make_unique<
-        juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            p.apvts, "osc_waveform", oscWaveformBox);
-    addAndMakeVisible(oscWaveformBox);
+    osc1WaveBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
+    osc1WaveAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "osc1_waveform", osc1WaveBox);
 
-    // Filter type combo
+    osc2WaveBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
+    osc2WaveAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "osc2_waveform", osc2WaveBox);
+
     filterTypeBox.addItemList({ "Low Pass", "High Pass", "Band Pass" }, 1);
-    filterTypeAttach = std::make_unique<
-        juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            p.apvts, "filter_type", filterTypeBox);
-    addAndMakeVisible(filterTypeBox);
+    filterTypeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "filter_type", filterTypeBox);
 
-    for (auto* c : { &knobDetune, &knobOctave,
+    lfo1ShapeBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
+    lfo1ShapeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "lfo1_shape", lfo1ShapeBox);
+    lfo1DestBox.addItemList({ "Pitch", "Filter", "Amp", "Detune" }, 1);
+    lfo1DestAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "lfo1_dest", lfo1DestBox);
+
+    lfo2ShapeBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
+    lfo2ShapeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "lfo2_shape", lfo2ShapeBox);
+    lfo2DestBox.addItemList({ "Pitch", "Filter", "Amp", "Detune" }, 1);
+    lfo2DestAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "lfo2_dest", lfo2DestBox);
+
+    arpOnAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        processor.apvts, "arp_enabled", arpOnButton);
+    arpModeBox.addItemList({ "Up", "Down", "UpDown", "Random" }, 1);
+    arpModeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "arp_mode", arpModeBox);
+    arpRateBox.addItemList({ "1/16", "1/8", "1/4", "1/2" }, 1);
+    arpRateAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.apvts, "arp_rate", arpRateBox);
+
+    styleLabel(lblOsc1,   "OSC 1",   SynthLookAndFeel::colOscAccent);
+    styleLabel(lblOsc2,   "OSC 2",   SynthLookAndFeel::colOscAccent);
+    styleLabel(lblFilter, "FILTER",  SynthLookAndFeel::colFilterAccent);
+    styleLabel(lblAmpEnv, "AMP ENV", SynthLookAndFeel::colEnvAccent);
+    styleLabel(lblFltEnv, "FLT ENV", SynthLookAndFeel::colEnvAccent);
+    styleLabel(lblLfo1,   "LFO 1",   SynthLookAndFeel::colLfoAccent);
+    styleLabel(lblLfo2,   "LFO 2",   SynthLookAndFeel::colLfoAccent);
+    styleLabel(lblDelay,  "DELAY",   SynthLookAndFeel::colFxAccent);
+    styleLabel(lblChorus, "CHORUS",  SynthLookAndFeel::colFxAccent);
+    styleLabel(lblArp,    "ARP",     SynthLookAndFeel::colArpAccent);
+    styleLabel(lblMaster, "MASTER",  SynthLookAndFeel::colAccent);
+
+    for (juce::ComboBox* c : std::initializer_list<juce::ComboBox*>{
+                     &osc1WaveBox, &osc2WaveBox, &filterTypeBox,
+                     &lfo1ShapeBox, &lfo1DestBox, &lfo2ShapeBox, &lfo2DestBox,
+                     &arpModeBox, &arpRateBox })
+        addAndMakeVisible(c);
+
+    addAndMakeVisible(arpOnButton);
+
+    for (juce::Component* c : std::initializer_list<juce::Component*>{
+                     &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level,
+                     &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune, &knobOsc2Level,
                      &knobCutoff, &knobResonance, &knobFilterEnv,
                      &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR,
                      &knobFltA, &knobFltD, &knobFltS, &knobFltR,
+                     &knobLfo1Rate, &knobLfo1Depth, &knobLfo2Rate, &knobLfo2Depth,
                      &knobDelayTime, &knobDelayFeedback, &knobDelayMix,
-                     &knobMaster })
+                     &knobChorusRate, &knobChorusDepth, &knobChorusMix,
+                     &knobArpOct, &knobMaster })
         addAndMakeVisible(c);
-
-    styleSection(lblOsc,    "Oscillator");
-    styleSection(lblFilter, "Filter");
-    styleSection(lblAmpEnv, "Amp Envelope");
-    styleSection(lblFltEnv, "Filter Envelope");
-    styleSection(lblDelay,  "Delay");
-    styleSection(lblMaster, "Master");
 }
 
 AISynthEditor::~AISynthEditor()
@@ -49,145 +79,103 @@ AISynthEditor::~AISynthEditor()
     setLookAndFeel(nullptr);
 }
 
-void AISynthEditor::styleSection(juce::Label& l, const juce::String& text)
-{
-    l.setText(text.toUpperCase(), juce::dontSendNotification);
-    l.setFont(juce::Font(9.5f, juce::Font::bold));
-    l.setColour(juce::Label::textColourId, juce::Colour(SynthLookAndFeel::colHighlight));
-    l.setJustificationType(juce::Justification::centredLeft);
-    addAndMakeVisible(l);
-}
-
-void AISynthEditor::paintSectionBg(juce::Graphics& g, juce::Rectangle<int> bounds)
-{
-    auto b = bounds.toFloat().reduced(1.f);
-    g.setColour(juce::Colour(SynthLookAndFeel::colPanel));
-    g.fillRoundedRectangle(b, 5.f);
-    g.setColour(juce::Colour(SynthLookAndFeel::colAccent));
-    g.drawRoundedRectangle(b, 5.f, 1.f);
-}
-
 void AISynthEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(SynthLookAndFeel::colBackground));
-
-    // Title bar
-    g.setColour(juce::Colour(SynthLookAndFeel::colAccent));
-    g.fillRect(0, 0, EditorW, TopBar);
-    g.setColour(juce::Colour(SynthLookAndFeel::colHighlight));
-    g.setFont(juce::Font(15.f, juce::Font::bold));
-    g.drawText("AI SYNTH", 14, 0, 200, TopBar, juce::Justification::centredLeft);
-    g.setColour(juce::Colour(SynthLookAndFeel::colTextDim));
-    g.setFont(juce::Font(9.f));
-    g.drawText("double-click knobs to enter values",
-               EditorW - 220, 0, 210, TopBar, juce::Justification::centredRight);
-
-    // Section backgrounds
-    auto area = getLocalBounds().withTrimmedTop(TopBar).reduced(Pad);
-    const int row1H = SectionTitleH + ComboH + Pad + KnobH + Pad;
-    const int row2H = SectionTitleH + KnobH + Pad;
-    const int row3H = SectionTitleH + KnobH + Pad;
-
-    auto row1 = area.removeFromTop(row1H);
-    paintSectionBg(g, row1.removeFromLeft(170));
-    row1.removeFromLeft(Pad);
-    paintSectionBg(g, row1.removeFromLeft(235));
-    row1.removeFromLeft(Pad);
-    paintSectionBg(g, row1); // master
-
-    area.removeFromTop(Pad);
-    auto row2 = area.removeFromTop(row2H);
-    paintSectionBg(g, row2.removeFromLeft(225));
-    row2.removeFromLeft(Pad);
-    paintSectionBg(g, row2);
-
-    area.removeFromTop(Pad);
-    paintSectionBg(g, area.removeFromTop(row3H));
 }
 
 void AISynthEditor::resized()
 {
-    auto area = getLocalBounds().withTrimmedTop(TopBar).reduced(Pad);
+    auto area  = getLocalBounds().reduced(8);
+    const int pad    = 6;
+    const int comboH = 22;
+    const int labelH = 16;
 
-    const int row1H = SectionTitleH + ComboH + Pad + KnobH + Pad;
-    const int row2H = SectionTitleH + KnobH + Pad;
-    const int row3H = SectionTitleH + KnobH + Pad;
+    const int row1H = 110;
+    const int row2H = 120;
+    const int row3H = 100;
+    const int row4H = 90;
 
-    // -----------------------------------------------------------------------
-    // Row 1: Oscillator | Filter | Master
-    // -----------------------------------------------------------------------
-    auto row1 = area.removeFromTop(row1H);
+    // ── ROW 1: OSC 1 | OSC 2 ──────────────────────────────────────────────
+    auto row1     = area.removeFromTop(row1H).reduced(0, pad / 2);
+    auto osc1Area = row1.removeFromLeft(row1.getWidth() / 2).reduced(pad, 0);
+    auto osc2Area = row1.reduced(pad, 0);
 
-    // Oscillator
-    {
-        auto sec = row1.removeFromLeft(170).reduced(4, 4);
-        lblOsc.setBounds(sec.removeFromTop(SectionTitleH));
-        oscWaveformBox.setBounds(sec.removeFromTop(ComboH).reduced(0, 2));
-        sec.removeFromTop(Pad);
-        layoutKnobs(sec, { &knobDetune, &knobOctave });
-    }
-    row1.removeFromLeft(Pad);
+    lblOsc1.setBounds(osc1Area.removeFromTop(labelH));
+    osc1WaveBox.setBounds(osc1Area.removeFromLeft(90).removeFromTop(comboH));
+    layoutKnobs(osc1Area, { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level });
 
-    // Filter
-    {
-        auto sec = row1.removeFromLeft(235).reduced(4, 4);
-        lblFilter.setBounds(sec.removeFromTop(SectionTitleH));
-        filterTypeBox.setBounds(sec.removeFromTop(ComboH).reduced(0, 2));
-        sec.removeFromTop(Pad);
-        layoutKnobs(sec, { &knobCutoff, &knobResonance, &knobFilterEnv });
-    }
-    row1.removeFromLeft(Pad);
+    lblOsc2.setBounds(osc2Area.removeFromTop(labelH));
+    osc2WaveBox.setBounds(osc2Area.removeFromLeft(90).removeFromTop(comboH));
+    layoutKnobs(osc2Area, { &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune, &knobOsc2Level });
 
-    // Master (remaining space in row 1)
-    {
-        auto sec = row1.reduced(4, 4);
-        lblMaster.setBounds(sec.removeFromTop(SectionTitleH));
-        sec.removeFromTop(ComboH + Pad); // align knob with other row-1 knobs
-        knobMaster.setBounds(sec.withSizeKeepingCentre(80, KnobH));
-    }
+    // ── ROW 2: Filter | AmpEnv | FltEnv ───────────────────────────────────
+    auto row2       = area.removeFromTop(row2H).reduced(0, pad / 2);
+    auto filterArea = row2.removeFromLeft(260).reduced(pad, 0);
+    auto ampEnvArea = row2.removeFromLeft(row2.getWidth() / 2).reduced(pad, 0);
+    auto fltEnvArea = row2.reduced(pad, 0);
 
-    area.removeFromTop(Pad);
+    lblFilter.setBounds(filterArea.removeFromTop(labelH));
+    filterTypeBox.setBounds(filterArea.removeFromTop(comboH));
+    layoutKnobs(filterArea, { &knobCutoff, &knobResonance, &knobFilterEnv });
 
-    // -----------------------------------------------------------------------
-    // Row 2: Amp Envelope | Filter Envelope
-    // -----------------------------------------------------------------------
-    auto row2 = area.removeFromTop(row2H);
+    lblAmpEnv.setBounds(ampEnvArea.removeFromTop(labelH));
+    layoutKnobs(ampEnvArea, { &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR });
 
-    {
-        auto sec = row2.removeFromLeft(225).reduced(4, 4);
-        lblAmpEnv.setBounds(sec.removeFromTop(SectionTitleH));
-        layoutKnobs(sec, { &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR });
-    }
-    row2.removeFromLeft(Pad);
-    {
-        auto sec = row2.reduced(4, 4);
-        lblFltEnv.setBounds(sec.removeFromTop(SectionTitleH));
-        layoutKnobs(sec, { &knobFltA, &knobFltD, &knobFltS, &knobFltR });
-    }
+    lblFltEnv.setBounds(fltEnvArea.removeFromTop(labelH));
+    layoutKnobs(fltEnvArea, { &knobFltA, &knobFltD, &knobFltS, &knobFltR });
 
-    area.removeFromTop(Pad);
+    // ── ROW 3: LFO 1 | LFO 2 ──────────────────────────────────────────────
+    auto row3     = area.removeFromTop(row3H).reduced(0, pad / 2);
+    auto lfo1Area = row3.removeFromLeft(row3.getWidth() / 2).reduced(pad, 0);
+    auto lfo2Area = row3.reduced(pad, 0);
 
-    // -----------------------------------------------------------------------
-    // Row 3: Delay
-    // -----------------------------------------------------------------------
-    {
-        auto sec = area.removeFromTop(row3H).reduced(4, 4);
-        lblDelay.setBounds(sec.removeFromTop(SectionTitleH));
-        // Delay knobs left-aligned, rest stays empty for future FX
-        auto delayKnobArea = sec.removeFromLeft(3 * 80);
-        layoutKnobs(delayKnobArea, { &knobDelayTime, &knobDelayFeedback, &knobDelayMix });
-    }
+    lblLfo1.setBounds(lfo1Area.removeFromTop(labelH));
+    lfo1ShapeBox.setBounds(lfo1Area.removeFromLeft(80).withHeight(comboH));
+    lfo1DestBox.setBounds (lfo1Area.removeFromLeft(80).withHeight(comboH));
+    layoutKnobs(lfo1Area, { &knobLfo1Rate, &knobLfo1Depth });
+
+    lblLfo2.setBounds(lfo2Area.removeFromTop(labelH));
+    lfo2ShapeBox.setBounds(lfo2Area.removeFromLeft(80).withHeight(comboH));
+    lfo2DestBox.setBounds (lfo2Area.removeFromLeft(80).withHeight(comboH));
+    layoutKnobs(lfo2Area, { &knobLfo2Rate, &knobLfo2Depth });
+
+    // ── ROW 4: Delay | Chorus | Arp | Master ──────────────────────────────
+    auto row4       = area.removeFromTop(row4H).reduced(0, pad / 2);
+    auto delayArea  = row4.removeFromLeft(180).reduced(pad, 0);
+    auto chorusArea = row4.removeFromLeft(180).reduced(pad, 0);
+    auto arpArea    = row4.removeFromLeft(200).reduced(pad, 0);
+    auto masterArea = row4.reduced(pad, 0);
+
+    lblDelay.setBounds(delayArea.removeFromTop(labelH));
+    layoutKnobs(delayArea, { &knobDelayTime, &knobDelayFeedback, &knobDelayMix });
+
+    lblChorus.setBounds(chorusArea.removeFromTop(labelH));
+    layoutKnobs(chorusArea, { &knobChorusRate, &knobChorusDepth, &knobChorusMix });
+
+    lblArp.setBounds(arpArea.removeFromTop(labelH));
+    arpOnButton.setBounds(arpArea.removeFromLeft(30).removeFromTop(22));
+    arpModeBox.setBounds(arpArea.removeFromTop(comboH).removeFromLeft(90));
+    arpRateBox.setBounds(arpArea.removeFromTop(comboH).removeFromLeft(70));
+    knobArpOct.setBounds(arpArea);
+
+    lblMaster.setBounds(masterArea.removeFromTop(labelH));
+    knobMaster.setBounds(masterArea);
 }
 
 void AISynthEditor::layoutKnobs(juce::Rectangle<int> bounds,
                                  std::initializer_list<juce::Component*> knobs)
 {
-    const int n = static_cast<int>(knobs.size());
-    if (n == 0) return;
-    const int w = bounds.getWidth() / n;
-    int x = bounds.getX();
-    for (auto* k : knobs) {
-        k->setBounds(x, bounds.getY(), w, bounds.getHeight());
-        x += w;
-    }
+    if (knobs.size() == 0) return;
+    const int w = bounds.getWidth() / static_cast<int>(knobs.size());
+    for (auto* k : knobs)
+        k->setBounds(bounds.removeFromLeft(w));
+}
+
+void AISynthEditor::styleLabel(juce::Label& l, const juce::String& text, juce::uint32 colour)
+{
+    l.setText(text, juce::dontSendNotification);
+    l.setFont(juce::Font(10.f, juce::Font::bold));
+    l.setColour(juce::Label::textColourId, juce::Colour(colour));
+    addAndMakeVisible(l);
 }

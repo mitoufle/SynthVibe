@@ -15,6 +15,14 @@ public:
     static constexpr auto colText        = 0xFFCCCCDD;
     static constexpr auto colTextDim     = 0xFF667788;
 
+    // Section accent colors
+    static constexpr auto colOscAccent    = 0xFF2255AA;
+    static constexpr auto colFilterAccent = 0xFF7722AA;
+    static constexpr auto colEnvAccent    = 0xFF226622;
+    static constexpr auto colLfoAccent    = 0xFFAA2266;
+    static constexpr auto colFxAccent     = 0xFF227799;
+    static constexpr auto colArpAccent    = 0xFFAA7722;
+
     SynthLookAndFeel()
     {
         setColour(juce::Slider::rotarySliderFillColourId,   juce::Colour(colHighlight));
