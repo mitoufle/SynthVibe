@@ -8,18 +8,38 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     std::vector<std::unique_ptr<RangedAudioParameter>> params;
 
     // -----------------------------------------------------------------------
-    // Oscillator
+    // Osc 1
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterChoice>(
-        ParamIDs::oscWaveform, "Waveform",
+        ParamIDs::osc1Waveform, "Osc1 Waveform",
         StringArray { "Sine", "Saw", "Square", "Triangle" }, 1));
-
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::oscDetune, "Detune",
-        NormalisableRange<float>(-100.f, 100.f, 0.1f), 0.f));
-
     params.push_back(std::make_unique<AudioParameterInt>(
-        ParamIDs::oscOctave, "Octave", -2, 2, 0));
+        ParamIDs::osc1Octave, "Osc1 Octave", -2, 2, 0));
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::osc1Semitone, "Osc1 Semitone", -12, 12, 0));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc1Detune, "Osc1 Detune",
+        NormalisableRange<float>(-100.f, 100.f, 0.1f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc1Level, "Osc1 Level",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 1.f));
+
+    // -----------------------------------------------------------------------
+    // Osc 2
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::osc2Waveform, "Osc2 Waveform",
+        StringArray { "Sine", "Saw", "Square", "Triangle" }, 1));
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::osc2Octave, "Osc2 Octave", -2, 2, 0));
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::osc2Semitone, "Osc2 Semitone", -12, 12, 0));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2Detune, "Osc2 Detune",
+        NormalisableRange<float>(-100.f, 100.f, 0.1f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2Level, "Osc2 Level",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));  // 0 = silent by default
 
     // -----------------------------------------------------------------------
     // Filter
@@ -99,6 +119,65 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::delayMix, "Delay Mix",
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.0f));
+
+    // -----------------------------------------------------------------------
+    // LFO 1
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfo1Shape, "LFO1 Shape",
+        StringArray { "Sine", "Saw", "Square", "Triangle" }, 0));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::lfo1Rate, "LFO1 Rate",
+        NormalisableRange<float>(0.01f, 20.f, 0.01f, 0.4f), 1.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::lfo1Depth, "LFO1 Depth",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfo1Dest, "LFO1 Dest",
+        StringArray { "Pitch", "Filter", "Amp", "Detune" }, 0));
+
+    // -----------------------------------------------------------------------
+    // LFO 2
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfo2Shape, "LFO2 Shape",
+        StringArray { "Sine", "Saw", "Square", "Triangle" }, 0));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::lfo2Rate, "LFO2 Rate",
+        NormalisableRange<float>(0.01f, 20.f, 0.01f, 0.4f), 1.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::lfo2Depth, "LFO2 Depth",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfo2Dest, "LFO2 Dest",
+        StringArray { "Pitch", "Filter", "Amp", "Detune" }, 0));
+
+    // -----------------------------------------------------------------------
+    // Chorus
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::chorusRate, "Chorus Rate",
+        NormalisableRange<float>(0.1f, 5.f, 0.01f), 0.5f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::chorusDepth, "Chorus Depth",
+        NormalisableRange<float>(0.001f, 0.015f, 0.0001f), 0.003f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::chorusMix, "Chorus Mix",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+
+    // -----------------------------------------------------------------------
+    // Arp
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterBool>(
+        ParamIDs::arpEnabled, "Arp On", false));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::arpMode, "Arp Mode",
+        StringArray { "Up", "Down", "UpDown", "Random" }, 0));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::arpRate, "Arp Rate",
+        StringArray { "1/16", "1/8", "1/4", "1/2" }, 0));
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::arpOctaveRange, "Arp Octaves", 1, 4, 1));
 
     return { params.begin(), params.end() };
 }

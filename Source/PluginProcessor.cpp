@@ -59,9 +59,9 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     VoiceParams p;
 
     p.waveform     = static_cast<Waveform>(
-                         static_cast<int>(*apvts.getRawParameterValue(ParamIDs::oscWaveform)));
-    p.detuneCents  = *apvts.getRawParameterValue(ParamIDs::oscDetune);
-    p.octave       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::oscOctave));
+                         static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Waveform)));
+    p.detuneCents  = *apvts.getRawParameterValue(ParamIDs::osc1Detune);
+    p.octave       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Octave));
 
     p.filterType   = static_cast<FilterType>(
                          static_cast<int>(*apvts.getRawParameterValue(ParamIDs::filterType)));
