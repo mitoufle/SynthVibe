@@ -20,8 +20,9 @@ void Chorus::reset()
 {
     std::fill(bufL.begin(), bufL.end(), 0.f);
     std::fill(bufR.begin(), bufR.end(), 0.f);
-    writePos = 0;
-    lfoPhase = 0.0;
+    writePos  = 0;
+    lfoPhase  = 0.0;
+    lfoPhaseR = 0.25;
 }
 
 void Chorus::process(juce::AudioBuffer<float>& buffer)
@@ -36,17 +37,22 @@ void Chorus::process(juce::AudioBuffer<float>& buffer)
 
     for (int i = 0; i < numSamples; ++i)
     {
-        const float lfo = 0.5f * (1.f + std::sin(juce::MathConstants<float>::twoPi * static_cast<float>(lfoPhase)));
+        const float lfoL = 0.5f * (1.f + std::sin(juce::MathConstants<float>::twoPi * static_cast<float>(lfoPhase)));
         lfoPhase += lfoIncrement;
         if (lfoPhase >= 1.0) lfoPhase -= 1.0;
 
-        const float delaySamples = static_cast<float>((0.007 + params.depth * lfo) * sampleRate);
+        const float lfoR = 0.5f * (1.f + std::sin(juce::MathConstants<float>::twoPi * static_cast<float>(lfoPhaseR)));
+        lfoPhaseR += lfoIncrement;
+        if (lfoPhaseR >= 1.0) lfoPhaseR -= 1.0;
+
+        const float delaySamplesL = static_cast<float>((0.007 + params.depth * lfoL) * sampleRate);
+        const float delaySamplesR = static_cast<float>((0.007 + params.depth * lfoR) * sampleRate);
 
         bufL[writePos] = chL[i];
         bufR[writePos] = chR[i];
 
-        const float wetL = readInterpolated(bufL, delaySamples);
-        const float wetR = readInterpolated(bufR, delaySamples);
+        const float wetL = readInterpolated(bufL, delaySamplesL);
+        const float wetR = readInterpolated(bufR, delaySamplesR);
 
         chL[i] = chL[i] * (1.f - params.mix) + wetL * params.mix;
         chR[i] = chR[i] * (1.f - params.mix) + wetR * params.mix;
@@ -57,11 +63,10 @@ void Chorus::process(juce::AudioBuffer<float>& buffer)
 
 float Chorus::readInterpolated(const std::vector<float>& buf, float delSamples) const noexcept
 {
-    const float readPosF = static_cast<float>(writePos) - delSamples;
-    int   readPosI       = static_cast<int>(readPosF);
-    const float frac     = readPosF - static_cast<float>(readPosI);
-    while (readPosI < 0) readPosI += bufSize;
-    readPosI %= bufSize;
-    const int next = (readPosI + 1) % bufSize;
-    return buf[readPosI] * (1.f - frac) + buf[next] * frac;
+    float readPosF = static_cast<float>(writePos) - delSamples;
+    while (readPosF < 0.f) readPosF += static_cast<float>(bufSize);
+    const int   i0   = static_cast<int>(readPosF) % bufSize;
+    const int   i1   = (i0 + 1) % bufSize;
+    const float frac = readPosF - std::floor(readPosF);
+    return buf[i0] * (1.f - frac) + buf[i1] * frac;
 }

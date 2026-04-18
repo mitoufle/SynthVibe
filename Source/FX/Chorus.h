@@ -24,7 +24,8 @@ private:
     int    writePos   = 0;
     int    bufSize    = 0;
     double sampleRate = 44100.0;
-    double lfoPhase   = 0.0;
+    double lfoPhase  = 0.0;
+    double lfoPhaseR = 0.25;  // 90° de décalage pour la largeur stéréo
     Params params;
 
     float readInterpolated(const std::vector<float>& buf, float delSamples) const noexcept;
