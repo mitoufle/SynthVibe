@@ -147,9 +147,9 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             if (params.mode == Mode::UpDown)
             {
                 stepIndex += pingDir;
-                if (stepIndex >= static_cast<int>(sequence.size()) - 1) pingDir = -1;
-                if (stepIndex <= 0) pingDir = 1;
-                stepIndex = juce::jlimit(0, static_cast<int>(sequence.size()) - 1, stepIndex);
+                const int last = static_cast<int>(sequence.size()) - 1;
+                if (stepIndex > last) { stepIndex = last; pingDir = -1; }
+                if (stepIndex < 0)    { stepIndex = 0;    pingDir =  1; }
             }
             else
             {
