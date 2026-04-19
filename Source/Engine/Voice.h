@@ -1,5 +1,5 @@
 #pragma once
-#include "Oscillator.h"
+#include "UnisonOscillator.h"
 #include "Envelope.h"
 #include "Filter.h"
 #include <juce_dsp/juce_dsp.h>
@@ -57,8 +57,8 @@ public:
     int   getMidiNote() const { return currentNote; }
 
 private:
-    Oscillator osc1;
-    Oscillator osc2;
+    UnisonOscillator osc1;
+    UnisonOscillator osc2;
     Oscillator lfo1Osc;
     Oscillator lfo2Osc;
     Envelope   ampEnv;

@@ -22,6 +22,8 @@ void Voice::setParams(const VoiceParams& p)
     osc1.setDetuneCents(p.osc1.detune);
     osc2.setWaveform(p.osc2.waveform);
     osc2.setDetuneCents(p.osc2.detune);
+    osc1.setUnison(p.unisonVoices, p.unisonSpread);
+    osc2.setUnison(p.unisonVoices, p.unisonSpread);
 
     lfo1Osc.setWaveform(p.lfo1.shape);
     lfo1Osc.setFrequency(p.lfo1.rate);
