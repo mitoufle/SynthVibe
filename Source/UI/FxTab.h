@@ -9,9 +9,12 @@ class FxTab : public juce::Component
 public:
     explicit FxTab(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts)
     {
-        for (auto* k : { (juce::Component*)&knobDelayTime, &knobDelayFeedback, &knobDelayMix,
-                         &knobChorusRate, &knobChorusDepth, &knobChorusMix })
-            addAndMakeVisible(k);
+        addAndMakeVisible(knobDelayTime);
+        addAndMakeVisible(knobDelayFeedback);
+        addAndMakeVisible(knobDelayMix);
+        addAndMakeVisible(knobChorusRate);
+        addAndMakeVisible(knobChorusDepth);
+        addAndMakeVisible(knobChorusMix);
     }
 
     void paint(juce::Graphics& g) override

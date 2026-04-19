@@ -25,12 +25,25 @@ public:
         for (auto* c : { &osc1WaveBox, &osc2WaveBox, &filterTypeBox })
             addAndMakeVisible(c);
 
-        for (auto* k : { (juce::Component*)&knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level,
-                         &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune, &knobOsc2Level,
-                         &knobCutoff, &knobResonance, &knobFilterEnv,
-                         &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR,
-                         &knobFltA, &knobFltD, &knobFltS, &knobFltR })
-            addAndMakeVisible(k);
+        addAndMakeVisible(knobOsc1Oct);
+        addAndMakeVisible(knobOsc1Semi);
+        addAndMakeVisible(knobOsc1Detune);
+        addAndMakeVisible(knobOsc1Level);
+        addAndMakeVisible(knobOsc2Oct);
+        addAndMakeVisible(knobOsc2Semi);
+        addAndMakeVisible(knobOsc2Detune);
+        addAndMakeVisible(knobOsc2Level);
+        addAndMakeVisible(knobCutoff);
+        addAndMakeVisible(knobResonance);
+        addAndMakeVisible(knobFilterEnv);
+        addAndMakeVisible(knobAmpA);
+        addAndMakeVisible(knobAmpD);
+        addAndMakeVisible(knobAmpS);
+        addAndMakeVisible(knobAmpR);
+        addAndMakeVisible(knobFltA);
+        addAndMakeVisible(knobFltD);
+        addAndMakeVisible(knobFltS);
+        addAndMakeVisible(knobFltR);
     }
 
     void paint(juce::Graphics& g) override

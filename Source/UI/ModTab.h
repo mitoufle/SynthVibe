@@ -25,9 +25,10 @@ public:
 
         for (auto* c : { &lfo1ShapeBox, &lfo1DestBox, &lfo2ShapeBox, &lfo2DestBox })
             addAndMakeVisible(c);
-        for (auto* k : { (juce::Component*)&knobLfo1Rate, &knobLfo1Depth,
-                         &knobLfo2Rate, &knobLfo2Depth })
-            addAndMakeVisible(k);
+        addAndMakeVisible(knobLfo1Rate);
+        addAndMakeVisible(knobLfo1Depth);
+        addAndMakeVisible(knobLfo2Rate);
+        addAndMakeVisible(knobLfo2Depth);
     }
 
     void paint(juce::Graphics& g) override
