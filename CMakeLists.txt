@@ -42,6 +42,7 @@ target_sources(AISynth PRIVATE
     Source/PluginEditor.cpp
     Source/Parameters/ParameterLayout.cpp
     Source/Engine/Oscillator.cpp
+    Source/Engine/UnisonOscillator.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
     Source/Engine/Voice.cpp
