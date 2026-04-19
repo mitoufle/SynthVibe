@@ -2,7 +2,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 #include "UI/LookAndFeel.h"
-#include "UI/KnobWithLabel.h"
 #include "UI/TopBar.h"
 #include "UI/BottomBar.h"
 #include "UI/SoundTab.h"
