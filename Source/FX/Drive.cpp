@@ -4,8 +4,9 @@
 void Drive::prepare(double /*sampleRate*/, int /*maxBlockSize*/) {}
 void Drive::setParams(const Params& p)
 {
-    params      = p;
-    cachedGain  = std::pow(10.f, p.driveDb / 20.f);
+    params         = p;
+    cachedGain     = std::pow(10.f, p.driveDb / 20.f);
+    cachedPostGain = 1.f / std::sqrt(cachedGain);
 }
 void Drive::reset() {}
 
@@ -23,7 +24,7 @@ void Drive::process(juce::AudioBuffer<float>& buffer)
         for (int i = 0; i < numSamples; ++i)
         {
             const float dry = data[i];
-            const float wet = processSample(dry, params.type, cachedGain);
+            const float wet = processSample(dry, params.type, cachedGain) * cachedPostGain;
             data[i] = dry * (1.f - params.mix) + wet * params.mix;
         }
     }
