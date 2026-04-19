@@ -166,6 +166,19 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
 
     // -----------------------------------------------------------------------
+    // Reverb
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::reverbRoom, "Reverb Room",
+        NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::reverbDamp, "Reverb Damp",
+        NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::reverbMix, "Reverb Mix",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+
+    // -----------------------------------------------------------------------
     // Unison
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterInt>(
