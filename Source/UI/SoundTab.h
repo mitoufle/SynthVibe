@@ -29,6 +29,8 @@ public:
         addAndMakeVisible(knobOsc1Semi);
         addAndMakeVisible(knobOsc1Detune);
         addAndMakeVisible(knobOsc1Level);
+        addAndMakeVisible(knobUnisonVoices);
+        addAndMakeVisible(knobUnisonSpread);
         addAndMakeVisible(knobOsc2Oct);
         addAndMakeVisible(knobOsc2Semi);
         addAndMakeVisible(knobOsc2Detune);
@@ -71,7 +73,9 @@ public:
         osc1Bounds = col1;
         auto c1 = col1.withTrimmedTop(titleH);
         osc1WaveBox.setBounds(c1.removeFromTop(comboH));
-        layoutKnobs(c1, { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level });
+        auto oscRow = c1.removeFromTop(c1.getHeight() / 2);
+        layoutKnobs(oscRow, { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level });
+        layoutKnobs(c1, { &knobUnisonVoices, &knobUnisonSpread });
 
         // OSC 2
         osc2Bounds = col2;
@@ -110,6 +114,8 @@ private:
     KnobWithLabel knobOsc1Semi   { "Semi",   apvts, ParamIDs::osc1Semitone,  "",    0 };
     KnobWithLabel knobOsc1Detune { "Detune", apvts, ParamIDs::osc1Detune,    " ct", 1 };
     KnobWithLabel knobOsc1Level  { "Level",  apvts, ParamIDs::osc1Level,     "",    2 };
+    KnobWithLabel knobUnisonVoices { "Voices", apvts, ParamIDs::unisonVoices, "",    0 };
+    KnobWithLabel knobUnisonSpread { "Spread", apvts, ParamIDs::unisonDetune,  " ct", 1 };
 
     KnobWithLabel knobOsc2Oct    { "Oct",    apvts, ParamIDs::osc2Octave,    "",    0 };
     KnobWithLabel knobOsc2Semi   { "Semi",   apvts, ParamIDs::osc2Semitone,  "",    0 };
