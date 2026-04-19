@@ -57,7 +57,7 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // FX chain en premier, PUIS master volume (post-fader correct)
-    fxChain.setParams(buildDelayParams(), buildChorusParams(), buildReverbParams());
+    fxChain.setParams(buildDelayParams(), buildChorusParams(), buildDriveParams(), buildReverbParams());
     fxChain.process(buffer);
 
     const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
@@ -127,6 +127,15 @@ Chorus::Params AISynthProcessor::buildChorusParams() const
     p.rate  = *apvts.getRawParameterValue(ParamIDs::chorusRate);
     p.depth = *apvts.getRawParameterValue(ParamIDs::chorusDepth);
     p.mix   = *apvts.getRawParameterValue(ParamIDs::chorusMix);
+    return p;
+}
+
+Drive::Params AISynthProcessor::buildDriveParams() const
+{
+    Drive::Params p;
+    p.type    = static_cast<Drive::Type>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::driveType)));
+    p.driveDb = *apvts.getRawParameterValue(ParamIDs::driveAmount);
+    p.mix     = *apvts.getRawParameterValue(ParamIDs::driveMix);
     return p;
 }
 

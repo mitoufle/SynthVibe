@@ -50,6 +50,7 @@ private:
     VoiceParams       buildVoiceParams()  const;
     Delay::Params     buildDelayParams()  const;
     Chorus::Params    buildChorusParams() const;
+    Drive::Params     buildDriveParams()  const;
     Reverb::Params    buildReverbParams() const;
     ArpEngine::Params buildArpParams()    const;
 
