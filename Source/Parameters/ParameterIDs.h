@@ -58,6 +58,11 @@ namespace ParamIDs
     inline constexpr const char* reverbDamp = "reverb_damp";
     inline constexpr const char* reverbMix  = "reverb_mix";
 
+    // Drive
+    inline constexpr const char* driveType   = "drive_type";
+    inline constexpr const char* driveAmount = "drive_amount";
+    inline constexpr const char* driveMix    = "drive_mix";
+
     // Unison
     inline constexpr const char* unisonVoices    = "unison_voices";
     inline constexpr const char* unisonDetune    = "unison_detune";
