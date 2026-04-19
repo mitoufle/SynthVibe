@@ -15,6 +15,14 @@ public:
         addAndMakeVisible(knobChorusRate);
         addAndMakeVisible(knobChorusDepth);
         addAndMakeVisible(knobChorusMix);
+
+        driveTypeBox.addItemList({ "Soft", "Hard", "Fold" }, 1);
+        driveTypeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+            apvts, ParamIDs::driveType, driveTypeBox);
+        addAndMakeVisible(driveTypeBox);
+        addAndMakeVisible(knobDriveAmount);
+        addAndMakeVisible(knobDriveMix);
+
         addAndMakeVisible(knobReverbRoom);
         addAndMakeVisible(knobReverbDamp);
         addAndMakeVisible(knobReverbMix);
@@ -24,6 +32,7 @@ public:
     {
         drawPanel(g, delayBounds,  "DELAY",  SynthLookAndFeel::colFxAccent);
         drawPanel(g, chorusBounds, "CHORUS", SynthLookAndFeel::colFxAccent);
+        drawPanel(g, driveBounds,  "DRIVE",  SynthLookAndFeel::colFxAccent);
         drawPanel(g, reverbBounds, "REVERB", SynthLookAndFeel::colFxAccent);
     }
 
@@ -31,10 +40,13 @@ public:
     {
         const int pad    = 8;
         const int titleH = 20;
+        const int comboH = 28;
         auto area = getLocalBounds().reduced(pad);
-        const int colW = area.getWidth() / 3;
+        const int colW = area.getWidth() / 4;
+
         delayBounds  = area.removeFromLeft(colW).reduced(pad, 0);
         chorusBounds = area.removeFromLeft(colW).reduced(pad, 0);
+        driveBounds  = area.removeFromLeft(colW).reduced(pad, 0);
         reverbBounds = area.reduced(pad, 0);
 
         auto layoutFx = [&](juce::Rectangle<int> bounds,
@@ -50,11 +62,21 @@ public:
         layoutFx(delayBounds,  knobDelayTime,   knobDelayFeedback, knobDelayMix);
         layoutFx(chorusBounds, knobChorusRate,  knobChorusDepth,   knobChorusMix);
         layoutFx(reverbBounds, knobReverbRoom,  knobReverbDamp,    knobReverbMix);
+
+        // Drive panel: ComboBox (type) | Drive knob | Mix knob
+        {
+            auto b = driveBounds.withTrimmedTop(titleH);
+            const int w = b.getWidth() / 3;
+            auto typeCol = b.removeFromLeft(w);
+            driveTypeBox.setBounds(typeCol.withSizeKeepingCentre(typeCol.getWidth() - 8, comboH));
+            knobDriveAmount.setBounds(b.removeFromLeft(w));
+            knobDriveMix.setBounds(b);
+        }
     }
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
-    juce::Rectangle<int> delayBounds, chorusBounds, reverbBounds;
+    juce::Rectangle<int> delayBounds, chorusBounds, driveBounds, reverbBounds;
 
     KnobWithLabel knobDelayTime     { "Time",     apvts, ParamIDs::delayTime,     " ms", 0 };
     KnobWithLabel knobDelayFeedback { "Feedback", apvts, ParamIDs::delayFeedback, "",    2 };
@@ -62,6 +84,12 @@ private:
     KnobWithLabel knobChorusRate    { "Rate",     apvts, ParamIDs::chorusRate,    " Hz", 2 };
     KnobWithLabel knobChorusDepth   { "Depth",    apvts, ParamIDs::chorusDepth,   "",    3 };
     KnobWithLabel knobChorusMix     { "Mix",      apvts, ParamIDs::chorusMix,     "",    2 };
+
+    juce::ComboBox driveTypeBox;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> driveTypeAttach;
+    KnobWithLabel knobDriveAmount   { "Drive",    apvts, ParamIDs::driveAmount,   " dB", 1 };
+    KnobWithLabel knobDriveMix      { "Mix",      apvts, ParamIDs::driveMix,      "",    2 };
+
     KnobWithLabel knobReverbRoom    { "Room",     apvts, ParamIDs::reverbRoom,    "",    2 };
     KnobWithLabel knobReverbDamp    { "Damp",     apvts, ParamIDs::reverbDamp,    "",    2 };
     KnobWithLabel knobReverbMix     { "Mix",      apvts, ParamIDs::reverbMix,     "",    2 };
