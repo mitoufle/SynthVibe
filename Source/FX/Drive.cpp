@@ -41,7 +41,7 @@ float Drive::processSample(float x, Type type, float gain) noexcept
 
         case Type::Fold:
         {
-            float y = gain * x;
+            float y = juce::jlimit(-1024.f, 1024.f, gain * x);
             while (y > 1.f || y < -1.f)
             {
                 if (y > 1.f) y = 2.f - y;
