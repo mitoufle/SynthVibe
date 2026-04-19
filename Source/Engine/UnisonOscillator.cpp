@@ -38,11 +38,11 @@ void UnisonOscillator::setUnison(int voices, float spread)
 void UnisonOscillator::reset()
 {
     for (int i = 0; i < MaxUnison; ++i)
-    {
         oscs[i].reset();
-        if (unisonVoices > 1)
+
+    if (unisonVoices > 1)
+        for (int i = 0; i < unisonVoices; ++i)
             oscs[i].setPhase(static_cast<double>(i) / unisonVoices);
-    }
 }
 
 float UnisonOscillator::getNextSample()
