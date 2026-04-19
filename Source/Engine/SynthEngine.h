@@ -17,6 +17,14 @@ public:
     void handleMidiMessage(const juce::MidiMessage& msg);
     void processBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples);
 
+    int getActiveVoiceCount() const noexcept
+    {
+        int count = 0;
+        for (const auto& v : voices)
+            if (v.isActive()) ++count;
+        return count;
+    }
+
 private:
     std::array<Voice, NumVoices> voices;
     VoiceParams currentParams;
