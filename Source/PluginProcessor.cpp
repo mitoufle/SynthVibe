@@ -57,7 +57,7 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // FX chain en premier, PUIS master volume (post-fader correct)
-    fxChain.setParams(buildDelayParams(), buildChorusParams());
+    fxChain.setParams(buildDelayParams(), buildChorusParams(), buildReverbParams());
     fxChain.process(buffer);
 
     const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
@@ -127,6 +127,15 @@ Chorus::Params AISynthProcessor::buildChorusParams() const
     p.rate  = *apvts.getRawParameterValue(ParamIDs::chorusRate);
     p.depth = *apvts.getRawParameterValue(ParamIDs::chorusDepth);
     p.mix   = *apvts.getRawParameterValue(ParamIDs::chorusMix);
+    return p;
+}
+
+Reverb::Params AISynthProcessor::buildReverbParams() const
+{
+    Reverb::Params p;
+    p.room = *apvts.getRawParameterValue(ParamIDs::reverbRoom);
+    p.damp = *apvts.getRawParameterValue(ParamIDs::reverbDamp);
+    p.mix  = *apvts.getRawParameterValue(ParamIDs::reverbMix);
     return p;
 }
 

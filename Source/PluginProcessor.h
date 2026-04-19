@@ -50,6 +50,7 @@ private:
     VoiceParams       buildVoiceParams()  const;
     Delay::Params     buildDelayParams()  const;
     Chorus::Params    buildChorusParams() const;
+    Reverb::Params    buildReverbParams() const;
     ArpEngine::Params buildArpParams()    const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AISynthProcessor)
