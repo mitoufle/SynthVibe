@@ -48,6 +48,12 @@ void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
         for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
             buffer.getWritePointer(ch)[i] += sample;
     }
+
+    // Update active voice count for the UI (message-thread read via atomic)
+    int count = 0;
+    for (const auto& v : voices)
+        if (v.isActive()) ++count;
+    activeVoiceCount.store(count, std::memory_order_relaxed);
 }
 
 Voice* SynthEngine::findFreeVoice() noexcept

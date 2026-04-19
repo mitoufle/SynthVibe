@@ -2,6 +2,7 @@
 #include "Voice.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <array>
+#include <atomic>
 
 class SynthEngine
 {
@@ -17,16 +18,11 @@ public:
     void handleMidiMessage(const juce::MidiMessage& msg);
     void processBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples);
 
-    int getActiveVoiceCount() const noexcept
-    {
-        int count = 0;
-        for (const auto& v : voices)
-            if (v.isActive()) ++count;
-        return count;
-    }
+    int getActiveVoiceCount() const noexcept { return activeVoiceCount.load(std::memory_order_relaxed); }
 
 private:
     std::array<Voice, NumVoices> voices;
+    std::atomic<int> activeVoiceCount { 0 };
     VoiceParams currentParams;
 
     Voice* findFreeVoice() noexcept;
