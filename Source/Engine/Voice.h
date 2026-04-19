@@ -38,6 +38,9 @@ struct VoiceParams
 
     Envelope::Params ampEnv;
     Envelope::Params fltEnv;
+
+    int   unisonVoices = 1;
+    float unisonSpread = 0.f;
 };
 
 class Voice
