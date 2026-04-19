@@ -37,6 +37,37 @@ public:
         setColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(colHighlight));
     }
 
+    void drawButtonBackground(juce::Graphics& g, juce::Button& button,
+                              const juce::Colour&, bool, bool) override
+    {
+        auto bounds = button.getLocalBounds().toFloat();
+        if (button.getToggleState())
+        {
+            g.setColour(juce::Colour(colHighlight));
+            g.fillRoundedRectangle(bounds.reduced(1.f), 4.f);
+            g.setColour(juce::Colour(colHighlight).brighter(0.2f));
+            g.drawRoundedRectangle(bounds.reduced(1.f), 4.f, 1.f);
+        }
+        else
+        {
+            g.setColour(juce::Colour(colAccent));
+            g.fillRoundedRectangle(bounds.reduced(1.f), 4.f);
+            g.setColour(juce::Colour(colKnobTrack));
+            g.drawRoundedRectangle(bounds.reduced(1.f), 4.f, 1.f);
+        }
+    }
+
+    void drawButtonText(juce::Graphics& g, juce::TextButton& button,
+                        bool, bool) override
+    {
+        g.setFont(juce::Font(11.f, juce::Font::bold));
+        g.setColour(button.getToggleState()
+                        ? juce::Colours::white
+                        : juce::Colour(colTextDim));
+        g.drawText(button.getButtonText(), button.getLocalBounds(),
+                   juce::Justification::centred);
+    }
+
     void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
                           float sliderPos, float startAngle, float endAngle,
                           juce::Slider& slider) override
