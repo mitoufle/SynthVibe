@@ -2,8 +2,9 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "LookAndFeel.h"
 
-struct KnobWithLabel : public juce::Component
+class KnobWithLabel : public juce::Component
 {
+public:
     juce::Slider slider { juce::Slider::RotaryVerticalDrag, juce::Slider::TextBoxBelow };
     juce::Label  nameLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
@@ -23,6 +24,7 @@ struct KnobWithLabel : public juce::Component
         slider.setNumDecimalPlacesToDisplay(decimalPlaces);
         slider.setTooltip("Double-click or Ctrl+click to enter a value");
         addAndMakeVisible(slider);
+        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 16);
         attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
             apvts, paramID, slider);
     }
@@ -31,7 +33,6 @@ struct KnobWithLabel : public juce::Component
     {
         auto b = getLocalBounds();
         nameLabel.setBounds(b.removeFromTop(14));
-        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, b.getWidth(), 16);
         slider.setBounds(b);
     }
 };
