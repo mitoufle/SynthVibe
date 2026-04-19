@@ -15,12 +15,16 @@ public:
         addAndMakeVisible(knobChorusRate);
         addAndMakeVisible(knobChorusDepth);
         addAndMakeVisible(knobChorusMix);
+        addAndMakeVisible(knobReverbRoom);
+        addAndMakeVisible(knobReverbDamp);
+        addAndMakeVisible(knobReverbMix);
     }
 
     void paint(juce::Graphics& g) override
     {
         drawPanel(g, delayBounds,  "DELAY",  SynthLookAndFeel::colFxAccent);
         drawPanel(g, chorusBounds, "CHORUS", SynthLookAndFeel::colFxAccent);
+        drawPanel(g, reverbBounds, "REVERB", SynthLookAndFeel::colFxAccent);
     }
 
     void resized() override
@@ -28,8 +32,10 @@ public:
         const int pad    = 8;
         const int titleH = 20;
         auto area = getLocalBounds().reduced(pad);
-        delayBounds  = area.removeFromLeft(area.getWidth() / 2).reduced(pad, 0);
-        chorusBounds = area.reduced(pad, 0);
+        const int colW = area.getWidth() / 3;
+        delayBounds  = area.removeFromLeft(colW).reduced(pad, 0);
+        chorusBounds = area.removeFromLeft(colW).reduced(pad, 0);
+        reverbBounds = area.reduced(pad, 0);
 
         auto layoutFx = [&](juce::Rectangle<int> bounds,
                             KnobWithLabel& k1, KnobWithLabel& k2, KnobWithLabel& k3)
@@ -43,11 +49,12 @@ public:
 
         layoutFx(delayBounds,  knobDelayTime,   knobDelayFeedback, knobDelayMix);
         layoutFx(chorusBounds, knobChorusRate,  knobChorusDepth,   knobChorusMix);
+        layoutFx(reverbBounds, knobReverbRoom,  knobReverbDamp,    knobReverbMix);
     }
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
-    juce::Rectangle<int> delayBounds, chorusBounds;
+    juce::Rectangle<int> delayBounds, chorusBounds, reverbBounds;
 
     KnobWithLabel knobDelayTime     { "Time",     apvts, ParamIDs::delayTime,     " ms", 0 };
     KnobWithLabel knobDelayFeedback { "Feedback", apvts, ParamIDs::delayFeedback, "",    2 };
@@ -55,6 +62,9 @@ private:
     KnobWithLabel knobChorusRate    { "Rate",     apvts, ParamIDs::chorusRate,    " Hz", 2 };
     KnobWithLabel knobChorusDepth   { "Depth",    apvts, ParamIDs::chorusDepth,   "",    3 };
     KnobWithLabel knobChorusMix     { "Mix",      apvts, ParamIDs::chorusMix,     "",    2 };
+    KnobWithLabel knobReverbRoom    { "Room",     apvts, ParamIDs::reverbRoom,    "",    2 };
+    KnobWithLabel knobReverbDamp    { "Damp",     apvts, ParamIDs::reverbDamp,    "",    2 };
+    KnobWithLabel knobReverbMix     { "Mix",      apvts, ParamIDs::reverbMix,     "",    2 };
 
     static void drawPanel(juce::Graphics& g, juce::Rectangle<int> bounds,
                           const juce::String& title, juce::uint32 accentColour)
