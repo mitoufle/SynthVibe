@@ -166,6 +166,15 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
 
     // -----------------------------------------------------------------------
+    // Unison
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::unisonVoices, "Unison Voices", 1, 7, 1));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::unisonDetune, "Unison Spread",
+        NormalisableRange<float>(0.f, 100.f, 0.1f), 0.f));
+
+    // -----------------------------------------------------------------------
     // Arp
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterBool>(
