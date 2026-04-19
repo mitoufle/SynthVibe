@@ -126,5 +126,6 @@ private:
         auto names = presetManager.getPresetNames();
         if (names.isEmpty()) return;
         presetManager.loadPreset(names[currentPresetIndex]);
+        refreshPresetLabel();
     }
 };
