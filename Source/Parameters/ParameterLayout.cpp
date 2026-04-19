@@ -179,6 +179,19 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
 
     // -----------------------------------------------------------------------
+    // Drive
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::driveType, "Drive Type",
+        StringArray { "Soft", "Hard", "Fold" }, 0));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::driveAmount, "Drive Amount",
+        NormalisableRange<float>(0.f, 24.f, 0.1f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::driveMix, "Drive Mix",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+
+    // -----------------------------------------------------------------------
     // Unison
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterInt>(
