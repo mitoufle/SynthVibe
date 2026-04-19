@@ -22,6 +22,8 @@ void Voice::setParams(const VoiceParams& p)
     osc1.setDetuneCents(p.osc1.detune);
     osc2.setWaveform(p.osc2.waveform);
     osc2.setDetuneCents(p.osc2.detune);
+    // setUnison MUST precede the setFrequency tail block below so that
+    // newly-activated unison slots receive the correct base frequency.
     osc1.setUnison(p.unisonVoices, p.unisonSpread);
     osc2.setUnison(p.unisonVoices, p.unisonSpread);
 
