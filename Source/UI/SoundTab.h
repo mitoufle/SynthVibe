@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "KnobWithLabel.h"
 #include "LookAndFeel.h"
+#include "../Parameters/ParameterIDs.h"
 
 class SoundTab : public juce::Component
 {
@@ -11,20 +12,24 @@ public:
     {
         osc1WaveBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
         osc1WaveAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            apvts, "osc1_waveform", osc1WaveBox);
+            apvts, ParamIDs::osc1Waveform, osc1WaveBox);
 
         osc2WaveBox.addItemList({ "Sine", "Saw", "Square", "Triangle" }, 1);
         osc2WaveAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            apvts, "osc2_waveform", osc2WaveBox);
+            apvts, ParamIDs::osc2Waveform, osc2WaveBox);
 
         filterTypeBox.addItemList({ "Low Pass", "High Pass", "Band Pass" }, 1);
         filterTypeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            apvts, "filter_type", filterTypeBox);
+            apvts, ParamIDs::filterType, filterTypeBox);
 
         for (auto* c : { &osc1WaveBox, &osc2WaveBox, &filterTypeBox })
             addAndMakeVisible(c);
 
-        for (auto* k : allKnobs())
+        for (auto* k : { (juce::Component*)&knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level,
+                         &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune, &knobOsc2Level,
+                         &knobCutoff, &knobResonance, &knobFilterEnv,
+                         &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR,
+                         &knobFltA, &knobFltD, &knobFltS, &knobFltR })
             addAndMakeVisible(k);
     }
 
@@ -88,38 +93,29 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
         osc1WaveAttach, osc2WaveAttach, filterTypeAttach;
 
-    KnobWithLabel knobOsc1Oct    { "Oct",    apvts, "osc1_octave",   "",    0 };
-    KnobWithLabel knobOsc1Semi   { "Semi",   apvts, "osc1_semitone", "",    0 };
-    KnobWithLabel knobOsc1Detune { "Detune", apvts, "osc1_detune",   " ct", 1 };
-    KnobWithLabel knobOsc1Level  { "Level",  apvts, "osc1_level",    "",    2 };
+    KnobWithLabel knobOsc1Oct    { "Oct",    apvts, ParamIDs::osc1Octave,    "",    0 };
+    KnobWithLabel knobOsc1Semi   { "Semi",   apvts, ParamIDs::osc1Semitone,  "",    0 };
+    KnobWithLabel knobOsc1Detune { "Detune", apvts, ParamIDs::osc1Detune,    " ct", 1 };
+    KnobWithLabel knobOsc1Level  { "Level",  apvts, ParamIDs::osc1Level,     "",    2 };
 
-    KnobWithLabel knobOsc2Oct    { "Oct",    apvts, "osc2_octave",   "",    0 };
-    KnobWithLabel knobOsc2Semi   { "Semi",   apvts, "osc2_semitone", "",    0 };
-    KnobWithLabel knobOsc2Detune { "Detune", apvts, "osc2_detune",   " ct", 1 };
-    KnobWithLabel knobOsc2Level  { "Level",  apvts, "osc2_level",    "",    2 };
+    KnobWithLabel knobOsc2Oct    { "Oct",    apvts, ParamIDs::osc2Octave,    "",    0 };
+    KnobWithLabel knobOsc2Semi   { "Semi",   apvts, ParamIDs::osc2Semitone,  "",    0 };
+    KnobWithLabel knobOsc2Detune { "Detune", apvts, ParamIDs::osc2Detune,    " ct", 1 };
+    KnobWithLabel knobOsc2Level  { "Level",  apvts, ParamIDs::osc2Level,     "",    2 };
 
-    KnobWithLabel knobCutoff    { "Cutoff",  apvts, "filter_cutoff",    " Hz", 0 };
-    KnobWithLabel knobResonance { "Res",     apvts, "filter_resonance", "",    2 };
-    KnobWithLabel knobFilterEnv { "Env Amt", apvts, "filter_env_amt",   "",    2 };
+    KnobWithLabel knobCutoff    { "Cutoff",  apvts, ParamIDs::filterCutoff,    " Hz", 0 };
+    KnobWithLabel knobResonance { "Res",     apvts, ParamIDs::filterResonance, "",    2 };
+    KnobWithLabel knobFilterEnv { "Env Amt", apvts, ParamIDs::filterEnvAmt,    "",    2 };
 
-    KnobWithLabel knobAmpA { "A", apvts, "amp_attack",  " s", 3 };
-    KnobWithLabel knobAmpD { "D", apvts, "amp_decay",   " s", 3 };
-    KnobWithLabel knobAmpS { "S", apvts, "amp_sustain", "",   2 };
-    KnobWithLabel knobAmpR { "R", apvts, "amp_release", " s", 3 };
+    KnobWithLabel knobAmpA { "A", apvts, ParamIDs::ampAttack,  " s", 3 };
+    KnobWithLabel knobAmpD { "D", apvts, ParamIDs::ampDecay,   " s", 3 };
+    KnobWithLabel knobAmpS { "S", apvts, ParamIDs::ampSustain, "",   2 };
+    KnobWithLabel knobAmpR { "R", apvts, ParamIDs::ampRelease, " s", 3 };
 
-    KnobWithLabel knobFltA { "A", apvts, "flt_attack",  " s", 3 };
-    KnobWithLabel knobFltD { "D", apvts, "flt_decay",   " s", 3 };
-    KnobWithLabel knobFltS { "S", apvts, "flt_sustain", "",   2 };
-    KnobWithLabel knobFltR { "R", apvts, "flt_release", " s", 3 };
-
-    std::initializer_list<juce::Component*> allKnobs()
-    {
-        return { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level,
-                 &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune, &knobOsc2Level,
-                 &knobCutoff, &knobResonance, &knobFilterEnv,
-                 &knobAmpA, &knobAmpD, &knobAmpS, &knobAmpR,
-                 &knobFltA, &knobFltD, &knobFltS, &knobFltR };
-    }
+    KnobWithLabel knobFltA { "A", apvts, ParamIDs::fltAttack,  " s", 3 };
+    KnobWithLabel knobFltD { "D", apvts, ParamIDs::fltDecay,   " s", 3 };
+    KnobWithLabel knobFltS { "S", apvts, ParamIDs::fltSustain, "",   2 };
+    KnobWithLabel knobFltR { "R", apvts, ParamIDs::fltRelease, " s", 3 };
 
     static void drawPanel(juce::Graphics& g, juce::Rectangle<int> bounds,
                           const juce::String& title, juce::uint32 accentColour)
