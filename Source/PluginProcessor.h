@@ -4,6 +4,7 @@
 #include "FX/FXChain.h"
 #include "Engine/ArpEngine.h"
 #include "Parameters/ParameterLayout.h"
+#include "Presets/PresetManager.h"
 
 class AISynthProcessor : public juce::AudioProcessor
 {
@@ -38,6 +39,8 @@ public:
 
     // Public so the editor and future AI layer can read/write parameters
     juce::AudioProcessorValueTreeState apvts;
+    PresetManager presetManager { apvts };
+    int getActiveVoiceCount() const noexcept { return synth.getActiveVoiceCount(); }
 
 private:
     SynthEngine synth;
