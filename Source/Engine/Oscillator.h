@@ -14,6 +14,7 @@ public:
     void setDetuneCents(float cents)  { detuneCents = cents; }
 
     void reset() { phase = 0.0; }
+    void setPhase(double p) { phase = p; }
 
     float getNextSample();
 
