@@ -54,8 +54,8 @@ namespace ParamIDs
     inline constexpr const char* chorusMix       = "chorus_mix";
 
     // Unison
-    inline constexpr const char* unisonVoices = "unison_voices";
-    inline constexpr const char* unisonDetune = "unison_detune";
+    inline constexpr const char* unisonVoices    = "unison_voices";
+    inline constexpr const char* unisonDetune    = "unison_detune";
 
     // Arp
     inline constexpr const char* arpEnabled      = "arp_enabled";
