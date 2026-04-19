@@ -53,6 +53,11 @@ namespace ParamIDs
     inline constexpr const char* chorusDepth     = "chorus_depth";
     inline constexpr const char* chorusMix       = "chorus_mix";
 
+    // Reverb
+    inline constexpr const char* reverbRoom = "reverb_room";
+    inline constexpr const char* reverbDamp = "reverb_damp";
+    inline constexpr const char* reverbMix  = "reverb_mix";
+
     // Unison
     inline constexpr const char* unisonVoices    = "unison_voices";
     inline constexpr const char* unisonDetune    = "unison_detune";
