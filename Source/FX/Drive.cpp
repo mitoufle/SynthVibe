@@ -2,7 +2,11 @@
 #include <cmath>
 
 void Drive::prepare(double /*sampleRate*/, int /*maxBlockSize*/) {}
-void Drive::setParams(const Params& p) { params = p; }
+void Drive::setParams(const Params& p)
+{
+    params      = p;
+    cachedGain  = std::pow(10.f, p.driveDb / 20.f);
+}
 void Drive::reset() {}
 
 void Drive::process(juce::AudioBuffer<float>& buffer)
@@ -12,7 +16,6 @@ void Drive::process(juce::AudioBuffer<float>& buffer)
 
     const int   numChannels = buffer.getNumChannels();
     const int   numSamples  = buffer.getNumSamples();
-    const float gain        = std::pow(10.f, params.driveDb / 20.f);
 
     for (int ch = 0; ch < numChannels; ++ch)
     {
@@ -20,7 +23,7 @@ void Drive::process(juce::AudioBuffer<float>& buffer)
         for (int i = 0; i < numSamples; ++i)
         {
             const float dry = data[i];
-            const float wet = processSample(dry, params.type, gain);
+            const float wet = processSample(dry, params.type, cachedGain);
             data[i] = dry * (1.f - params.mix) + wet * params.mix;
         }
     }
@@ -39,8 +42,11 @@ float Drive::processSample(float x, Type type, float gain) noexcept
         case Type::Fold:
         {
             float y = gain * x;
-            while (y > 1.f)  y = 2.f - y;
-            while (y < -1.f) y = -2.f - y;
+            while (y > 1.f || y < -1.f)
+            {
+                if (y > 1.f) y = 2.f - y;
+                else         y = -2.f - y;
+            }
             return y;
         }
     }

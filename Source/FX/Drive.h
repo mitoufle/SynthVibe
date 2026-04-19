@@ -20,6 +20,7 @@ public:
 
 private:
     Params params;
+    float  cachedGain = 1.f;
 
     static float processSample(float x, Type type, float gain) noexcept;
 };
