@@ -7,6 +7,8 @@ void UnisonOscillator::setSampleRate(double sr)
         o.setSampleRate(sr);
 }
 
+// Only active slots need frequency updates; inactive slots will be synced
+// when unisonVoices increases (setUnison is always called before setFrequency in setParams).
 void UnisonOscillator::setFrequency(double hz)
 {
     for (int i = 0; i < unisonVoices; ++i)
@@ -30,6 +32,7 @@ void UnisonOscillator::setUnison(int voices, float spread)
     unisonVoices = std::clamp(voices, 1, MaxUnison);
     spreadCents  = spread;
     recomputeDetune();
+    invNormGain = 1.f / std::sqrt(static_cast<float>(unisonVoices));
 }
 
 void UnisonOscillator::reset()
@@ -43,7 +46,7 @@ float UnisonOscillator::getNextSample()
     float sum = 0.f;
     for (int i = 0; i < unisonVoices; ++i)
         sum += oscs[i].getNextSample();
-    return sum / std::sqrt(static_cast<float>(unisonVoices));
+    return sum * invNormGain;
 }
 
 void UnisonOscillator::recomputeDetune()
