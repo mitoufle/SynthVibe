@@ -34,7 +34,7 @@ float Envelope::getNextSample()
             return 0.f;
 
         case Stage::Attack:
-            currentLevel += 1.f / (juce::jmax(0.0001f, params.attack) * sr);
+            currentLevel += 1.f / (std::max(0.0001f, params.attack) * sr);
             if (currentLevel >= 1.f) {
                 currentLevel = 1.f;
                 stage = Stage::Decay;
@@ -42,7 +42,7 @@ float Envelope::getNextSample()
             break;
 
         case Stage::Decay:
-            currentLevel -= (1.f - params.sustain) / (juce::jmax(0.0001f, params.decay) * sr);
+            currentLevel -= (1.f - params.sustain) / (std::max(0.0001f, params.decay) * sr);
             if (currentLevel <= params.sustain) {
                 currentLevel = params.sustain;
                 stage = Stage::Sustain;
@@ -54,7 +54,7 @@ float Envelope::getNextSample()
             break;
 
         case Stage::Release:
-            currentLevel -= releaseLevel / (juce::jmax(0.0001f, params.release) * sr);
+            currentLevel -= releaseLevel / (std::max(0.0001f, params.release) * sr);
             if (currentLevel <= 0.f) {
                 currentLevel = 0.f;
                 stage = Stage::Idle;
