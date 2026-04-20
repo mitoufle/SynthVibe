@@ -48,7 +48,9 @@ void SynthEngine::handleMidiMessage(const juce::MidiMessage& msg)
 void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
                                 int startSample, int numSamples)
 {
-    const float gain = 1.f / static_cast<float>(NumVoices);
+    int activeCount = 0;
+    for (const auto& v : voices) if (v.isActive()) ++activeCount;
+    const float gain = activeCount > 0 ? 1.f / std::sqrt(static_cast<float>(activeCount)) : 1.f;
 
     for (int i = startSample; i < startSample + numSamples; ++i)
     {
