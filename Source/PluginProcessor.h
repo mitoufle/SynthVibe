@@ -46,6 +46,7 @@ private:
     SynthEngine synth;
     FXChain     fxChain;
     ArpEngine   arp;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMasterVol;
 
     VoiceParams       buildVoiceParams()  const;
     Delay::Params     buildDelayParams()  const;

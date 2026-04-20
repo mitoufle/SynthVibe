@@ -17,6 +17,9 @@ void AISynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     synth.prepare(spec);
     fxChain.prepare(sampleRate, samplesPerBlock);
     arp.prepare();
+    smoothMasterVol.reset(sampleRate, 0.005);
+    smoothMasterVol.setCurrentAndTargetValue(
+        *apvts.getRawParameterValue(ParamIDs::masterVolume));
 }
 
 void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
@@ -60,8 +63,11 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     fxChain.setParams(buildDelayParams(), buildChorusParams(), buildDriveParams(), buildReverbParams());
     fxChain.process(buffer);
 
-    const float masterVol = *apvts.getRawParameterValue(ParamIDs::masterVolume);
-    buffer.applyGain(masterVol);
+    smoothMasterVol.setTargetValue(*apvts.getRawParameterValue(ParamIDs::masterVolume));
+    const float gainStart = smoothMasterVol.getCurrentValue();
+    smoothMasterVol.skip(buffer.getNumSamples());
+    const float gainEnd   = smoothMasterVol.getCurrentValue();
+    buffer.applyGainRamp(0, buffer.getNumSamples(), gainStart, gainEnd);
 }
 
 VoiceParams AISynthProcessor::buildVoiceParams() const
