@@ -61,6 +61,11 @@ public:
     void     setNoteOnOrder(uint64_t order)  noexcept { noteOnOrder = order; }
 
 private:
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothCutoff;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothResonance;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothOsc1Level;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothOsc2Level;
+
     UnisonOscillator osc1;
     UnisonOscillator osc2;
     Oscillator lfo1Osc;

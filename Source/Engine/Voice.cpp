@@ -13,6 +13,14 @@ void Voice::prepare(const juce::dsp::ProcessSpec& spec)
     juce::dsp::ProcessSpec monoSpec { spec.sampleRate, spec.maximumBlockSize, 1 };
     filter.prepare(monoSpec);
     filterR.prepare(monoSpec);
+    smoothCutoff.reset    (spec.sampleRate, 0.005);
+    smoothResonance.reset (spec.sampleRate, 0.005);
+    smoothOsc1Level.reset (spec.sampleRate, 0.005);
+    smoothOsc2Level.reset (spec.sampleRate, 0.005);
+    smoothCutoff.setCurrentAndTargetValue    (8000.f);
+    smoothResonance.setCurrentAndTargetValue (0.1f);
+    smoothOsc1Level.setCurrentAndTargetValue (1.f);
+    smoothOsc2Level.setCurrentAndTargetValue (0.f);
 }
 
 void Voice::setParams(const VoiceParams& p)
@@ -45,6 +53,10 @@ void Voice::setParams(const VoiceParams& p)
     filterR.setResonance(p.filterResonance);
     ampEnv.setParams(p.ampEnv);
     fltEnv.setParams(p.fltEnv);
+    smoothCutoff.setTargetValue(p.filterCutoff);
+    smoothResonance.setTargetValue(p.filterResonance);
+    smoothOsc1Level.setTargetValue(p.osc1.level);
+    smoothOsc2Level.setTargetValue(p.osc2.level);
 
     if (currentNote >= 0)
     {
@@ -113,17 +125,26 @@ std::pair<float, float> Voice::getNextSample()
     osc1.getNextSample(osc1L, osc1R);
     osc2.getNextSample(osc2L, osc2R);
 
-    float mixL = osc1L * params.osc1.level + osc2L * params.osc2.level;
-    float mixR = osc1R * params.osc1.level + osc2R * params.osc2.level;
+    const float sOsc1Level = smoothOsc1Level.getNextValue();
+    const float sOsc2Level = smoothOsc2Level.getNextValue();
+    float mixL = osc1L * sOsc1Level + osc2L * sOsc2Level;
+    float mixR = osc1R * sOsc1Level + osc2R * sOsc2Level;
 
     // Filter modulation — update both filter instances identically
+    const float sCutoff = smoothCutoff.getNextValue();
+    const float sRes    = smoothResonance.getNextValue();
+    if (smoothResonance.isSmoothing())
+    {
+        filter.setResonance(sRes);
+        filterR.setResonance(sRes);
+    }
     const float envMod = fltEnv.getNextSample();
     const bool hasFilterMod = (params.filterEnvAmt != 0.f)
                             || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
                             || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f);
-    if (hasFilterMod)
+    if (hasFilterMod || smoothCutoff.isSmoothing())
     {
-        float cutoff = params.filterCutoff * (1.f + params.filterEnvAmt * envMod);
+        float cutoff = sCutoff * (1.f + params.filterEnvAmt * envMod);
         cutoff += (params.lfo1.dest == LfoDest::Filter ? l1 * 4000.f : 0.f);
         cutoff += (params.lfo2.dest == LfoDest::Filter ? l2 * 4000.f : 0.f);
         cutoff = juce::jlimit(20.f, 20000.f, cutoff);
