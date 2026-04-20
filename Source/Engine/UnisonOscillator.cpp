@@ -27,11 +27,17 @@ void UnisonOscillator::setDetuneCents(float base)
 
 void UnisonOscillator::setUnison(int voices, float spread)
 {
+    const int prevVoices = unisonVoices;
     unisonVoices = std::clamp(voices, 1, MaxUnison);
     spreadCents  = spread;
     invNormGain  = 1.f / std::sqrt(static_cast<float>(unisonVoices));
     recomputeDetune();
     recomputePan();
+    // Stagger phases for newly activated slots so they enter spread rather than
+    // all starting at phase 0 and causing a transient click.
+    if (unisonVoices > prevVoices && unisonVoices > 1)
+        for (int i = prevVoices; i < unisonVoices; ++i)
+            oscs[i].setPhase(static_cast<double>(i) / unisonVoices);
 }
 
 void UnisonOscillator::setStereoSpread(float spread)
