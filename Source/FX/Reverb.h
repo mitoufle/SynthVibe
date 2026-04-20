@@ -19,4 +19,6 @@ public:
 private:
     juce::Reverb reverb;
     Params params;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMix;
+    juce::AudioBuffer<float> dryBuf;  // pre-allocated dry copy, avoids audio-thread alloc
 };
