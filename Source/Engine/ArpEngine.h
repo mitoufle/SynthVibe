@@ -41,6 +41,7 @@ private:
     int   lastNote       = -1;
     bool  noteIsOn       = false;
     bool  pendingNoteOff = false;   // set when arp disabled mid-note
+    std::vector<HeldNote> pendingNoteOns; // saved held notes to re-emit on disable
 
     std::mt19937 rng { std::random_device{}() };
 

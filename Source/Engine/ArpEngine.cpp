@@ -7,6 +7,17 @@ void ArpEngine::setParams(const Params& p)
     if (!p.enabled && params.enabled && noteIsOn && lastNote >= 0)
         pendingNoteOff = true;
 
+    // Transition: enabled → disabled (only fires once; params still holds old state here)
+    if (!p.enabled && params.enabled)
+    {
+        if (!heldNotes.empty())
+            pendingNoteOns.assign(heldNotes.begin(), heldNotes.end());
+    }
+
+    // Transition: disabled → enabled (clear any stale saved notes from a prior disable)
+    if (p.enabled && !params.enabled)
+        pendingNoteOns.clear();
+
     params = p;
 
     if (!p.enabled)
@@ -48,6 +59,7 @@ void ArpEngine::reset()
     lastNote       = -1;
     noteIsOn       = false;
     pendingNoteOff = false;
+    pendingNoteOns.clear();
 }
 
 void ArpEngine::prepare()
@@ -55,6 +67,7 @@ void ArpEngine::prepare()
     heldNotes.reserve(32);
     sequence.reserve(128);
     sortedBuf.reserve(32);
+    pendingNoteOns.reserve(32);
     scratchMidi.ensureSize(512);
 }
 
@@ -91,9 +104,16 @@ int ArpEngine::samplesPerStep(double bpm, double sr) const noexcept
 
 void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, double sr)
 {
-    if (pendingNoteOff && lastNote >= 0)
+    if (pendingNoteOff || !pendingNoteOns.empty())
     {
-        midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+        if (pendingNoteOff && lastNote >= 0)
+            midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+
+        int samplePos = 1; // after the noteOff
+        for (const auto& h : pendingNoteOns)
+            midi.addEvent(juce::MidiMessage::noteOn(1, h.note, h.velocity), samplePos++);
+
+        pendingNoteOns.clear();
         pendingNoteOff = false;
         noteIsOn       = false;
         lastNote       = -1;

@@ -1,2 +1,111 @@
 #include <juce_core/juce_core.h>
-// tests added in Task 2
+#include "Engine/ArpEngine.h"
+
+struct ArpEngineTests : public juce::UnitTest
+{
+    ArpEngineTests() : juce::UnitTest("ArpEngine", "AISynth") {}
+
+    void runTest() override
+    {
+        beginTest("held notes are re-emitted as noteOns when arp is disabled");
+
+        ArpEngine arp;
+        arp.prepare();
+
+        // Enable arp
+        ArpEngine::Params on;
+        on.enabled    = true;
+        on.mode       = ArpEngine::Mode::Up;
+        on.rateIndex  = 2;   // 1/4 note — slow enough that step won't fire in 32 samples
+        on.octaveRange = 1;
+        arp.setParams(on);
+
+        // User presses note 60 while arp is on.
+        // process() consumes the noteOn into heldNotes — SynthEngine sees only arp events.
+        juce::MidiBuffer midi;
+        midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.8f), 0);
+        arp.process(midi, 32, 120.0, 44100.0);
+
+        // Disable the arp while note 60 is still physically held.
+        ArpEngine::Params off = on;
+        off.enabled = false;
+        arp.setParams(off);
+
+        // process() should re-emit noteOn(60) so SynthEngine can resume the held note.
+        juce::MidiBuffer output;
+        arp.process(output, 32, 120.0, 44100.0);
+
+        bool foundNoteOn60 = false;
+        for (auto meta : output)
+            if (meta.getMessage().isNoteOn() &&
+                meta.getMessage().getNoteNumber() == 60)
+                foundNoteOn60 = true;
+
+        expect(foundNoteOn60,
+               "noteOn(60) must appear in output after arp disable so SynthEngine plays the held note");
+
+        // ----------------------------------------------------------------
+        // Test 2: held notes must NOT be re-emitted on a second process() call
+        // ----------------------------------------------------------------
+        beginTest("held notes are not re-emitted on second process() call after arp disable");
+
+        juce::MidiBuffer output2;
+        arp.process(output2, 32, 120.0, 44100.0);
+
+        bool secondNoteOn = false;
+        for (auto meta : output2)
+            if (meta.getMessage().isNoteOn() && meta.getMessage().getNoteNumber() == 60)
+                secondNoteOn = true;
+
+        expect(!secondNoteOn,
+               "noteOn(60) must not appear in second process() call after arp disable");
+
+        // ----------------------------------------------------------------
+        // Test 3: multi-note + velocity preservation
+        // ----------------------------------------------------------------
+        beginTest("all held notes with original velocities are re-emitted when arp is disabled");
+
+        ArpEngine arp2;
+        arp2.prepare();
+
+        ArpEngine::Params on2;
+        on2.enabled    = true;
+        on2.mode       = ArpEngine::Mode::Up;
+        on2.rateIndex  = 2;
+        on2.octaveRange = 1;
+        arp2.setParams(on2);
+
+        juce::MidiBuffer midi2;
+        midi2.addEvent(juce::MidiMessage::noteOn(1, 60, 0.8f), 0);
+        midi2.addEvent(juce::MidiMessage::noteOn(1, 64, 0.5f), 1);
+        arp2.process(midi2, 32, 120.0, 44100.0);
+
+        ArpEngine::Params off2 = on2;
+        off2.enabled = false;
+        arp2.setParams(off2);
+
+        juce::MidiBuffer out2;
+        arp2.process(out2, 32, 120.0, 44100.0);
+
+        bool found60 = false, found64 = false;
+        float vel60 = 0.f, vel64 = 0.f;
+        for (auto meta : out2)
+        {
+            auto msg = meta.getMessage();
+            if (msg.isNoteOn())
+            {
+                if (msg.getNoteNumber() == 60) { found60 = true; vel60 = msg.getFloatVelocity(); }
+                if (msg.getNoteNumber() == 64) { found64 = true; vel64 = msg.getFloatVelocity(); }
+            }
+        }
+
+        expect(found60 && found64,
+               "both held notes (60 and 64) must be re-emitted");
+        expectWithinAbsoluteError(vel60, 0.8f, 0.01f,
+               "note 60 velocity must be preserved");
+        expectWithinAbsoluteError(vel64, 0.5f, 0.01f,
+               "note 64 velocity must be preserved");
+    }
+};
+
+static ArpEngineTests arpEngineTests;
