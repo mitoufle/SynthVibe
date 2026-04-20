@@ -9,11 +9,14 @@ void Chorus::prepare(double sr, int /*maxBlockSize*/)
     bufR.assign(bufSize, 0.f);
     writePos  = 0;
     lfoPhase  = 0.0;
+    smoothMix.reset(sr, 0.005);
+    smoothMix.setCurrentAndTargetValue(0.f);
 }
 
 void Chorus::setParams(const Params& p)
 {
     params = p;
+    smoothMix.setTargetValue(p.mix);
 }
 
 void Chorus::reset()
@@ -27,8 +30,11 @@ void Chorus::reset()
 
 void Chorus::process(juce::AudioBuffer<float>& buffer)
 {
-    if (params.mix < 0.001f)
+    if (!smoothMix.isSmoothing() && smoothMix.getTargetValue() < 0.001f)
+    {
+        smoothMix.skip(buffer.getNumSamples());
         return;
+    }
 
     const int   numSamples   = buffer.getNumSamples();
     float*      chL          = buffer.getWritePointer(0);
@@ -37,6 +43,8 @@ void Chorus::process(juce::AudioBuffer<float>& buffer)
 
     for (int i = 0; i < numSamples; ++i)
     {
+        const float mix = smoothMix.getNextValue();
+
         const float lfoL = 0.5f * (1.f + std::sin(juce::MathConstants<float>::twoPi * static_cast<float>(lfoPhase)));
         lfoPhase += lfoIncrement;
         if (lfoPhase >= 1.0) lfoPhase -= 1.0;
@@ -54,8 +62,8 @@ void Chorus::process(juce::AudioBuffer<float>& buffer)
         const float wetL = readInterpolated(bufL, delaySamplesL);
         const float wetR = readInterpolated(bufR, delaySamplesR);
 
-        chL[i] = chL[i] * (1.f - params.mix) + wetL * params.mix;
-        chR[i] = chR[i] * (1.f - params.mix) + wetR * params.mix;
+        chL[i] = chL[i] * (1.f - mix) + wetL * mix;
+        chR[i] = chR[i] * (1.f - mix) + wetR * mix;
 
         writePos = (writePos + 1) % bufSize;
     }

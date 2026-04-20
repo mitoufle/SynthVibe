@@ -27,6 +27,7 @@ private:
     double lfoPhase  = 0.0;
     double lfoPhaseR = 0.25;  // 90° de décalage pour la largeur stéréo
     Params params;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMix;
 
     float readInterpolated(const std::vector<float>& buf, float delSamples) const noexcept;
 };
