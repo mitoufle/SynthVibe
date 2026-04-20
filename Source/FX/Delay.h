@@ -28,6 +28,7 @@ private:
     float  delaySamples = 0.f;
     double sampleRate   = 44100.0;
     Params params;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMix;
 
     void  updateDelaySamples();
     float readInterpolated(const std::vector<float>& buf, float delSamples) const noexcept;

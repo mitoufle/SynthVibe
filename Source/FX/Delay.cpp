@@ -9,12 +9,15 @@ void Delay::prepare(double sr, int /*maxBlockSize*/)
     bufR.assign(bufSize, 0.f);
     writePos = 0;
     updateDelaySamples();
+    smoothMix.reset(sr, 0.005);
+    smoothMix.setCurrentAndTargetValue(0.f);
 }
 
 void Delay::setParams(const Params& p)
 {
     params = p;
     updateDelaySamples();
+    smoothMix.setTargetValue(p.mix);
 }
 
 void Delay::reset()
@@ -44,7 +47,11 @@ float Delay::readInterpolated(const std::vector<float>& buf, float delSamples) c
 
 void Delay::process(juce::AudioBuffer<float>& buffer)
 {
-    if (params.mix < 0.0001f) return;
+    if (!smoothMix.isSmoothing() && smoothMix.getTargetValue() < 0.0001f)
+    {
+        smoothMix.skip(buffer.getNumSamples());
+        return;
+    }
 
     const int numSamples  = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
@@ -52,12 +59,12 @@ void Delay::process(juce::AudioBuffer<float>& buffer)
     float* chL = buffer.getWritePointer(0);
     float* chR = numChannels > 1 ? buffer.getWritePointer(1) : chL;
 
-    const float wet = params.mix;
-    const float dry = 1.f - wet;
-    const float fb  = params.feedback;
+    const float fb = params.feedback;
 
     for (int i = 0; i < numSamples; ++i)
     {
+        const float wet  = smoothMix.getNextValue();
+        const float dry  = 1.f - wet;
         const float dryL = chL[i];
         const float dryR = chR[i];
 
