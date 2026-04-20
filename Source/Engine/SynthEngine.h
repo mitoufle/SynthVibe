@@ -19,6 +19,7 @@ public:
     void processBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples);
 
     int getActiveVoiceCount() const noexcept { return activeVoiceCount.load(std::memory_order_relaxed); }
+    // Audio thread only — reads voice state without synchronization.
     bool hasActiveNote(int midiNote) const noexcept;
 
 private:

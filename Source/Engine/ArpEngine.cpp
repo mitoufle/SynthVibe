@@ -14,9 +14,12 @@ void ArpEngine::setParams(const Params& p)
             pendingNoteOns.assign(heldNotes.begin(), heldNotes.end());
     }
 
-    // Transition: disabled → enabled (clear any stale saved notes from a prior disable)
+    // Transition: disabled → enabled (clear any stale state from a prior disable)
     if (p.enabled && !params.enabled)
+    {
         pendingNoteOns.clear();
+        pendingNoteOff = false;
+    }
 
     params = p;
 
