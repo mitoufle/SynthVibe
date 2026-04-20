@@ -3,6 +3,7 @@
 #include "Envelope.h"
 #include "Filter.h"
 #include <juce_dsp/juce_dsp.h>
+#include <utility>
 
 enum class LfoDest { Pitch = 0, Filter, Amp, Detune };
 
@@ -39,8 +40,9 @@ struct VoiceParams
     Envelope::Params ampEnv;
     Envelope::Params fltEnv;
 
-    int   unisonVoices = 1;
-    float unisonSpread = 0.f;
+    int   unisonVoices       = 1;
+    float unisonDetuneCents  = 0.f;
+    float unisonStereoSpread = 0.5f;
 };
 
 class Voice
@@ -52,7 +54,7 @@ public:
     void noteOn (int midiNote, float velocity);
     void noteOff();
 
-    float getNextSample();
+    std::pair<float, float> getNextSample();
     bool  isActive()    const { return ampEnv.isActive(); }
     int   getMidiNote() const { return currentNote; }
 
@@ -64,6 +66,7 @@ private:
     Envelope   ampEnv;
     Envelope   fltEnv;
     Filter     filter;
+    Filter     filterR;
 
     VoiceParams params;
     int    currentNote = -1;

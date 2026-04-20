@@ -39,14 +39,19 @@ void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
 
     for (int i = startSample; i < startSample + numSamples; ++i)
     {
-        float sample = 0.f;
+        float sumL = 0.f, sumR = 0.f;
         for (auto& v : voices)
-            if (v.isActive()) sample += v.getNextSample();
+        {
+            if (v.isActive())
+            {
+                auto [l, r] = v.getNextSample();
+                sumL += l;
+                sumR += r;
+            }
+        }
 
-        sample *= gain;
-
-        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
-            buffer.getWritePointer(ch)[i] += sample;
+        buffer.getWritePointer(0)[i] += sumL * gain;
+        buffer.getWritePointer(1)[i] += sumR * gain;
     }
 
     // Update active voice count for the UI (message-thread read via atomic)

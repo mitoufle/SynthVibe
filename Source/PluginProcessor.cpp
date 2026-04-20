@@ -105,8 +105,9 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.fltEnv.sustain = *apvts.getRawParameterValue(ParamIDs::fltSustain);
     p.fltEnv.release = *apvts.getRawParameterValue(ParamIDs::fltRelease);
 
-    p.unisonVoices = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::unisonVoices));
-    p.unisonSpread = *apvts.getRawParameterValue(ParamIDs::unisonDetune);
+    p.unisonVoices       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::unisonVoices));
+    p.unisonDetuneCents  = *apvts.getRawParameterValue(ParamIDs::unisonDetune);
+    p.unisonStereoSpread = *apvts.getRawParameterValue(ParamIDs::unisonStereoSpread);
 
     return p;
 }

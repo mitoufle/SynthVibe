@@ -7,8 +7,6 @@ void UnisonOscillator::setSampleRate(double sr)
         o.setSampleRate(sr);
 }
 
-// Only active slots need frequency updates; inactive slots will be synced
-// when unisonVoices increases (setUnison is always called before setFrequency in setParams).
 void UnisonOscillator::setFrequency(double hz)
 {
     for (int i = 0; i < unisonVoices; ++i)
@@ -31,8 +29,15 @@ void UnisonOscillator::setUnison(int voices, float spread)
 {
     unisonVoices = std::clamp(voices, 1, MaxUnison);
     spreadCents  = spread;
+    invNormGain  = 1.f / std::sqrt(static_cast<float>(unisonVoices));
     recomputeDetune();
-    invNormGain = 1.f / std::sqrt(static_cast<float>(unisonVoices));
+    recomputePan();
+}
+
+void UnisonOscillator::setStereoSpread(float spread)
+{
+    stereoSpread = spread;
+    recomputePan();
 }
 
 void UnisonOscillator::reset()
@@ -45,12 +50,16 @@ void UnisonOscillator::reset()
             oscs[i].setPhase(static_cast<double>(i) / unisonVoices);
 }
 
-float UnisonOscillator::getNextSample()
+void UnisonOscillator::getNextSample(float& outL, float& outR)
 {
-    float sum = 0.f;
+    outL = 0.f;
+    outR = 0.f;
     for (int i = 0; i < unisonVoices; ++i)
-        sum += oscs[i].getNextSample();
-    return sum * invNormGain;
+    {
+        const float s = oscs[i].getNextSample() * invNormGain;
+        outL += s * lGains[i];
+        outR += s * rGains[i];
+    }
 }
 
 void UnisonOscillator::recomputeDetune()
@@ -61,5 +70,19 @@ void UnisonOscillator::recomputeDetune()
             ? spreadCents * (2.0f * i / static_cast<float>(unisonVoices - 1) - 1.0f)
             : 0.f;
         oscs[i].setDetuneCents(baseCents + offset);
+    }
+}
+
+void UnisonOscillator::recomputePan()
+{
+    constexpr float pi = 3.14159265358979f;
+    for (int i = 0; i < unisonVoices; ++i)
+    {
+        const float pan = (unisonVoices > 1)
+            ? stereoSpread * (2.f * i / static_cast<float>(unisonVoices - 1) - 1.f)
+            : 0.f;
+        const float angle = (pan + 1.f) * pi / 4.f;
+        lGains[i] = std::cos(angle);
+        rGains[i] = std::sin(angle);
     }
 }

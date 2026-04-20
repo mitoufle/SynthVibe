@@ -12,6 +12,7 @@ void Voice::prepare(const juce::dsp::ProcessSpec& spec)
     fltEnv.setSampleRate(spec.sampleRate);
     juce::dsp::ProcessSpec monoSpec { spec.sampleRate, spec.maximumBlockSize, 1 };
     filter.prepare(monoSpec);
+    filterR.prepare(monoSpec);
 }
 
 void Voice::setParams(const VoiceParams& p)
@@ -24,8 +25,10 @@ void Voice::setParams(const VoiceParams& p)
     osc2.setDetuneCents(p.osc2.detune);
     // setUnison MUST precede the setFrequency tail block below so that
     // newly-activated unison slots receive the correct base frequency.
-    osc1.setUnison(p.unisonVoices, p.unisonSpread);
-    osc2.setUnison(p.unisonVoices, p.unisonSpread);
+    osc1.setUnison(p.unisonVoices, p.unisonDetuneCents);
+    osc2.setUnison(p.unisonVoices, p.unisonDetuneCents);
+    osc1.setStereoSpread(p.unisonStereoSpread);
+    osc2.setStereoSpread(p.unisonStereoSpread);
 
     lfo1Osc.setWaveform(p.lfo1.shape);
     lfo1Osc.setFrequency(p.lfo1.rate);
@@ -37,6 +40,9 @@ void Voice::setParams(const VoiceParams& p)
     filter.setType(p.filterType);
     filter.setCutoff(p.filterCutoff);
     filter.setResonance(p.filterResonance);
+    filterR.setType(p.filterType);
+    filterR.setCutoff(p.filterCutoff);
+    filterR.setResonance(p.filterResonance);
     ampEnv.setParams(p.ampEnv);
     fltEnv.setParams(p.fltEnv);
 
@@ -54,6 +60,7 @@ void Voice::noteOn(int midiNote, float vel)
     osc1.reset();
     osc2.reset();
     filter.reset();
+    filterR.reset();
     osc1.setFrequency(midiNoteToHz(midiNote, params.osc1.octave, params.osc1.semitone));
     osc2.setFrequency(midiNoteToHz(midiNote, params.osc2.octave, params.osc2.semitone));
     ampEnv.noteOn();
@@ -66,19 +73,18 @@ void Voice::noteOff()
     fltEnv.noteOff();
 }
 
-float Voice::getNextSample()
+std::pair<float, float> Voice::getNextSample()
 {
     if (!ampEnv.isActive())
-        return 0.f;
+        return { 0.f, 0.f };
 
     // LFO outputs: always advance phase, scaled by depth
     const float l1 = lfo1Osc.getNextSample() * params.lfo1.depth;
     const float l2 = lfo2Osc.getNextSample() * params.lfo2.depth;
 
-    // Pitch modulation: only compute std::pow when an LFO is actually targeting Pitch
+    // Pitch modulation
     const bool hasPitchLfo = (params.lfo1.dest == LfoDest::Pitch && params.lfo1.depth != 0.f)
                            || (params.lfo2.dest == LfoDest::Pitch && params.lfo2.depth != 0.f);
-    // setParams() resets osc frequency each block; skipping per-sample is safe only while that invariant holds.
     if (hasPitchLfo && currentNote >= 0)
     {
         const float pitchCents = (params.lfo1.dest == LfoDest::Pitch ? l1 * 100.f : 0.f)
@@ -88,8 +94,7 @@ float Voice::getNextSample()
         osc2.setFrequency(midiNoteToHz(currentNote, params.osc2.octave, params.osc2.semitone) * pitchRatio);
     }
 
-    // Detune modulation: only apply LFO mod when an LFO targets Detune
-    // Static detune is already set by setParams() / noteOn()
+    // Detune modulation
     const bool hasDetuneLfo = (params.lfo1.dest == LfoDest::Detune && params.lfo1.depth != 0.f)
                             || (params.lfo2.dest == LfoDest::Detune && params.lfo2.depth != 0.f);
     if (hasDetuneLfo)
@@ -99,10 +104,15 @@ float Voice::getNextSample()
         osc1.setDetuneCents(params.osc1.detune + detuneMod);
     }
 
-    float sample = osc1.getNextSample() * params.osc1.level
-                 + osc2.getNextSample() * params.osc2.level;
+    // Stereo oscillator samples
+    float osc1L = 0.f, osc1R = 0.f, osc2L = 0.f, osc2R = 0.f;
+    osc1.getNextSample(osc1L, osc1R);
+    osc2.getNextSample(osc2L, osc2R);
 
-    // Filter modulation: only update cutoff when env or LFO is actually modulating it
+    float mixL = osc1L * params.osc1.level + osc2L * params.osc2.level;
+    float mixR = osc1R * params.osc1.level + osc2R * params.osc2.level;
+
+    // Filter modulation — update both filter instances identically
     const float envMod = fltEnv.getNextSample();
     const bool hasFilterMod = (params.filterEnvAmt != 0.f)
                             || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
@@ -114,9 +124,11 @@ float Voice::getNextSample()
         cutoff += (params.lfo2.dest == LfoDest::Filter ? l2 * 4000.f : 0.f);
         cutoff = juce::jlimit(20.f, 20000.f, cutoff);
         filter.setCutoff(cutoff);
+        filterR.setCutoff(cutoff);
     }
 
-    sample = filter.processSample(sample);
+    mixL = filter.processSample(mixL);
+    mixR = filterR.processSample(mixR);
 
     float ampGain = ampEnv.getNextSample() * velocity;
     const bool hasAmpLfo = (params.lfo1.dest == LfoDest::Amp && params.lfo1.depth != 0.f)
@@ -126,9 +138,8 @@ float Voice::getNextSample()
         ampGain *= 1.f + (params.lfo1.dest == LfoDest::Amp ? l1 * 0.5f : 0.f);
         ampGain *= 1.f + (params.lfo2.dest == LfoDest::Amp ? l2 * 0.5f : 0.f);
     }
-    sample *= ampGain;
 
-    return sample;
+    return { mixL * ampGain, mixR * ampGain };
 }
 
 double Voice::midiNoteToHz(int note, int octaveOffset, int semitoneOffset) noexcept
