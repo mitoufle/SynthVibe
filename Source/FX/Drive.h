@@ -22,6 +22,7 @@ private:
     Params params;
     float  cachedGain     = 1.f;
     float  cachedPostGain = 1.f;  // 1/sqrt(gain) — keeps wet level close to dry
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMix;
 
     static float processSample(float x, Type type, float gain) noexcept;
 };
