@@ -105,6 +105,7 @@ std::pair<float, float> Voice::getNextSample()
         const float detuneMod = (params.lfo1.dest == LfoDest::Detune ? l1 * 50.f : 0.f)
                               + (params.lfo2.dest == LfoDest::Detune ? l2 * 50.f : 0.f);
         osc1.setDetuneCents(params.osc1.detune + detuneMod);
+        osc2.setDetuneCents(params.osc2.detune + detuneMod);
     }
 
     // Stereo oscillator samples
