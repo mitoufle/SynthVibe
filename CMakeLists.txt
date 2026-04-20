@@ -78,3 +78,38 @@ target_link_libraries(AISynth
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
 )
+
+# ---------------------------------------------------------------------------
+# Test target  — engine-only, no plugin machinery
+# ---------------------------------------------------------------------------
+juce_add_console_app(AISynthTests PRODUCT_NAME "AISynth Tests")
+juce_generate_juce_header(AISynthTests)
+
+target_sources(AISynthTests PRIVATE
+    Tests/main.cpp
+    Tests/ArpEngineTests.cpp
+    Tests/SynthEngineTests.cpp
+    Tests/VoiceTests.cpp
+    Source/Engine/ArpEngine.cpp
+    Source/Engine/Envelope.cpp
+    Source/Engine/Filter.cpp
+    Source/Engine/Voice.cpp
+    Source/Engine/SynthEngine.cpp
+    Source/Engine/Oscillator.cpp
+    Source/Engine/UnisonOscillator.cpp
+)
+
+target_include_directories(AISynthTests PRIVATE Source)
+
+target_compile_definitions(AISynthTests PRIVATE
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+)
+
+target_link_libraries(AISynthTests PRIVATE
+    juce::juce_audio_basics
+    juce::juce_dsp
+    juce::juce_core
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags
+)
