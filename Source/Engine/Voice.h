@@ -51,12 +51,14 @@ public:
     void prepare(const juce::dsp::ProcessSpec& spec);
     void setParams(const VoiceParams& p);
 
-    void noteOn (int midiNote, float velocity);
+    void noteOn(int midiNote, float velocity, bool stolen = false);
     void noteOff();
 
     std::pair<float, float> getNextSample();
     bool  isActive()    const { return ampEnv.isActive(); }
     int   getMidiNote() const { return currentNote; }
+    uint64_t getNoteOnOrder() const noexcept { return noteOnOrder; }
+    void     setNoteOnOrder(uint64_t order)  noexcept { noteOnOrder = order; }
 
 private:
     UnisonOscillator osc1;
@@ -69,9 +71,10 @@ private:
     Filter     filterR;
 
     VoiceParams params;
-    int    currentNote = -1;
-    float  velocity    = 1.f;
-    double sampleRate  = 44100.0;
+    int      currentNote  = -1;
+    float    velocity     = 1.f;
+    double   sampleRate   = 44100.0;
+    uint64_t noteOnOrder  = 0;
 
     static double midiNoteToHz(int note, int octaveOffset, int semitoneOffset = 0) noexcept;
 };

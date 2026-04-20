@@ -3,6 +3,9 @@
 
 void Envelope::noteOn()
 {
+    // Does NOT reset currentLevel — retriggers from the current level so voice
+    // steal ramps smoothly rather than snapping to zero. Call reset() first for
+    // a hard restart.
     stage = Stage::Attack;
 }
 

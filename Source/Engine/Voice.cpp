@@ -53,14 +53,17 @@ void Voice::setParams(const VoiceParams& p)
     }
 }
 
-void Voice::noteOn(int midiNote, float vel)
+void Voice::noteOn(int midiNote, float vel, bool stolen)
 {
     currentNote = midiNote;
     velocity    = vel;
-    osc1.reset();
-    osc2.reset();
-    filter.reset();
-    filterR.reset();
+    if (!stolen)
+    {
+        osc1.reset();
+        osc2.reset();
+        filter.reset();
+        filterR.reset();
+    }
     osc1.setFrequency(midiNoteToHz(midiNote, params.osc1.octave, params.osc1.semitone));
     osc2.setFrequency(midiNoteToHz(midiNote, params.osc2.octave, params.osc2.semitone));
     ampEnv.noteOn();

@@ -19,12 +19,14 @@ public:
     void processBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples);
 
     int getActiveVoiceCount() const noexcept { return activeVoiceCount.load(std::memory_order_relaxed); }
+    bool hasActiveNote(int midiNote) const noexcept;
 
 private:
     std::array<Voice, NumVoices> voices;
     std::atomic<int> activeVoiceCount { 0 };
     VoiceParams currentParams;
+    uint64_t voiceOrderCounter = 0;
 
-    Voice* findFreeVoice() noexcept;
+    Voice* findFreeVoice(bool* stolen = nullptr) noexcept;
     Voice* findVoiceForNote(int midiNote) noexcept;
 };

@@ -13,13 +13,26 @@ void SynthEngine::setParams(const VoiceParams& p)
         v.setParams(p);
 }
 
+bool SynthEngine::hasActiveNote(int midiNote) const noexcept
+{
+    for (const auto& v : voices)
+        if (v.getMidiNote() == midiNote && v.isActive()) return true;
+    return false;
+}
+
 void SynthEngine::handleMidiMessage(const juce::MidiMessage& msg)
 {
     if (msg.isNoteOn())
     {
-        Voice* v = findVoiceForNote(msg.getNoteNumber()); // retrigger same note
-        if (!v) v = findFreeVoice();
-        if (v)  v->noteOn(msg.getNoteNumber(), msg.getFloatVelocity());
+        Voice* v = findVoiceForNote(msg.getNoteNumber());
+        bool stolen = false;
+        if (!v)
+            v = findFreeVoice(&stolen);
+        if (v)
+        {
+            v->setNoteOnOrder(++voiceOrderCounter);
+            v->noteOn(msg.getNoteNumber(), msg.getFloatVelocity(), stolen);
+        }
     }
     else if (msg.isNoteOff())
     {
@@ -61,11 +74,18 @@ void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
     activeVoiceCount.store(count, std::memory_order_relaxed);
 }
 
-Voice* SynthEngine::findFreeVoice() noexcept
+Voice* SynthEngine::findFreeVoice(bool* stolen) noexcept
 {
     for (auto& v : voices)
-        if (!v.isActive()) return &v;
-    return &voices[0]; // voice steal: grab oldest
+        if (!v.isActive()) { if (stolen) *stolen = false; return &v; }
+
+    // All voices busy — steal the one that has been playing longest.
+    Voice* oldest = &voices[0];
+    for (auto& v : voices)
+        if (v.getNoteOnOrder() < oldest->getNoteOnOrder()) oldest = &v;
+
+    if (stolen) *stolen = true;
+    return oldest;
 }
 
 Voice* SynthEngine::findVoiceForNote(int midiNote) noexcept
