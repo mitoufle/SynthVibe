@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "UI/DesignTokens.h"
 
 AISynthEditor::AISynthEditor(AISynthProcessor& p)
     : AudioProcessorEditor(&p), processor(p),
@@ -10,7 +11,7 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
       arpTab(p.apvts)
 {
     setLookAndFeel(&laf);
-    setSize(1200, 750);
+    setSize(1280, 720);
 
     const juce::StringArray tabNames { "SOUND", "MOD", "FX", "ARP" };
     for (int i = 0; i < 4; ++i)
@@ -38,7 +39,7 @@ AISynthEditor::~AISynthEditor()
 
 void AISynthEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(SynthLookAndFeel::colBackground));
+    g.fillAll(SynthVibe::Tokens::bg);
 }
 
 void AISynthEditor::resized()
