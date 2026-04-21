@@ -92,6 +92,7 @@ target_sources(AISynthTests PRIVATE
     Tests/VoiceTests.cpp
     Tests/ParameterIdMigrationTests.cpp
     Tests/DesignTokensTests.cpp
+    Tests/UIConstructionTests.cpp
     Source/Engine/ArpEngine.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
@@ -99,6 +100,7 @@ target_sources(AISynthTests PRIVATE
     Source/Engine/SynthEngine.cpp
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
+    Source/Parameters/ParameterLayout.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
@@ -113,6 +115,7 @@ target_link_libraries(AISynthTests PRIVATE
     juce::juce_audio_processors
     juce::juce_dsp
     juce::juce_core
+    juce::juce_events
     juce::juce_gui_basics
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
