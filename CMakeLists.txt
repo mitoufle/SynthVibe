@@ -91,6 +91,7 @@ target_sources(AISynthTests PRIVATE
     Tests/SynthEngineTests.cpp
     Tests/VoiceTests.cpp
     Tests/ParameterIdMigrationTests.cpp
+    Tests/DesignTokensTests.cpp
     Source/Engine/ArpEngine.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
