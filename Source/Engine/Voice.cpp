@@ -144,7 +144,7 @@ std::pair<float, float> Voice::getNextSample()
     const bool hasFilterMod = (params.filterEnvAmt != 0.f)
                             || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
                             || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f);
-    if (hasFilterMod || smoothCutoff.isSmoothing())
+    if ((hasFilterMod || smoothCutoff.isSmoothing()) && filterCoefCounter == 0)
     {
         float cutoff = sCutoff * (1.f + params.filterEnvAmt * envMod);
         cutoff += (params.lfo1.dest == LfoDest::Filter ? l1 * 4000.f : 0.f);
@@ -153,6 +153,7 @@ std::pair<float, float> Voice::getNextSample()
         filter.setCutoff(cutoff);
         filterR.setCutoff(cutoff);
     }
+    filterCoefCounter = (filterCoefCounter + 1) & (FilterCoefUpdateRate - 1);
 
     mixL = filter.processSample(mixL);
     mixR = filterR.processSample(mixR);
