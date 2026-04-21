@@ -1,85 +1,103 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "KnobWithLabel.h"
-#include "LookAndFeel.h"
+#include "DesignTokens.h"
 #include "../Presets/PresetManager.h"
 #include "../Parameters/ParameterIDs.h"
+#include "components/BrandBadge.h"
+#include "components/PresetNameField.h"
+#include "components/PromptButton.h"
+#include "components/NavArrowButton.h"
+#include "components/MasterVolKnob.h"
 
 class TopBar : public juce::Component
 {
 public:
+    std::function<void()> onPromptRequested;   // Phase 4 wires the AI modal here
+
     TopBar(juce::AudioProcessorValueTreeState& apvts, PresetManager& pm)
-        : presetManager(pm)
+        : presetManager(pm),
+          prevArrow(SynthVibe::NavArrowButton::Direction::Prev),
+          nextArrow(SynthVibe::NavArrowButton::Direction::Next),
+          masterKnob(apvts, ParamIDs::masterVolume)
     {
-        logoLabel.setText("AI Synth", juce::dontSendNotification);
-        logoLabel.setFont(juce::Font(14.f, juce::Font::bold));
-        logoLabel.setColour(juce::Label::textColourId, juce::Colour(SynthLookAndFeel::colHighlight));
-        addAndMakeVisible(logoLabel);
+        addAndMakeVisible(brand);
+        addAndMakeVisible(prevArrow);
+        addAndMakeVisible(nameField);
+        addAndMakeVisible(nextArrow);
+        addAndMakeVisible(promptBtn);
+        addAndMakeVisible(masterKnob);
 
-        presetNameLabel.setColour(juce::Label::textColourId, juce::Colour(SynthLookAndFeel::colText));
-        presetNameLabel.setJustificationType(juce::Justification::centred);
-        addAndMakeVisible(presetNameLabel);
-
-        prevButton.setButtonText("<");
-        nextButton.setButtonText(">");
-        saveButton.setButtonText("Save");
-        loadButton.setButtonText("Load");
-
-        prevButton.onClick = [this] { navigatePreset(-1); };
-        nextButton.onClick = [this] { navigatePreset(+1); };
-        saveButton.onClick = [this] { saveCurrentPreset(); };
-        loadButton.onClick = [this] { loadCurrentPreset(); };
-
-        for (auto* b : { &prevButton, &nextButton, &saveButton, &loadButton })
-            addAndMakeVisible(b);
-
-        knobMaster = std::make_unique<KnobWithLabel>("Vol", apvts, ParamIDs::masterVolume, "", 2);
-        addAndMakeVisible(*knobMaster);
+        prevArrow.onClick = [this] { navigatePreset(-1); };
+        nextArrow.onClick = [this] { navigatePreset(+1); };
+        promptBtn.onClick = [this] { if (onPromptRequested) onPromptRequested(); };
 
         refreshPresetLabel();
     }
 
     void paint(juce::Graphics& g) override
     {
-        g.setColour(juce::Colour(SynthLookAndFeel::colAccent));
-        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.f);
+        using namespace SynthVibe::Tokens;
+        auto b = getLocalBounds().toFloat();
+        g.setColour(panel);
+        g.fillRect(b);
+        g.setColour(edge);
+        g.drawHorizontalLine(getHeight() - 1, 0.f, (float) getWidth());
     }
 
     void resized() override
     {
-        auto area = getLocalBounds().reduced(6, 4);
-        logoLabel.setBounds(area.removeFromLeft(90));
-        if (knobMaster) knobMaster->setBounds(area.removeFromRight(56));
-        saveButton.setBounds(area.removeFromRight(52));
-        loadButton.setBounds(area.removeFromRight(52));
-        area.removeFromRight(4);
-        nextButton.setBounds(area.removeFromRight(28));
-        prevButton.setBounds(area.removeFromLeft(28));
-        presetNameLabel.setBounds(area);
+        using namespace SynthVibe::Tokens;
+        auto area = getLocalBounds().reduced(spaceLg, 0);
+
+        // Left column: brand (260 px)
+        auto left = area.removeFromLeft(260);
+        brand.setBounds(left.withSizeKeepingCentre(left.getWidth(), 28));
+
+        // Right column: prompt + master volume (260 px)
+        auto right = area.removeFromRight(260);
+        masterKnob.setBounds(right.removeFromRight(80));
+        right.removeFromRight(spaceSm);
+        promptBtn.setBounds(right.withSizeKeepingCentre(100, 28));
+
+        // Centre column: [prev-arrow | name-field | next-arrow]
+        // Vertically centre a 38 px tall row inside the centre region.
+        auto centre = area.withSizeKeepingCentre(area.getWidth(), 38);
+        const int arrowW = 36;   // pill-ish; tweak in Phase 2 alongside the full top-bar breakpoint sweep
+        prevArrow.setBounds(centre.removeFromLeft(arrowW));
+        centre.removeFromLeft(spaceSm);
+        nextArrow.setBounds(centre.removeFromRight(arrowW));
+        centre.removeFromRight(spaceSm);
+        nameField.setBounds(centre);
     }
 
 private:
     PresetManager& presetManager;
-    int            currentPresetIndex = 0;
+    int currentPresetIndex = 0;
 
-    juce::Label       logoLabel;
-    juce::Label       presetNameLabel;
-    juce::TextButton  prevButton, nextButton, saveButton, loadButton;
-    std::unique_ptr<KnobWithLabel> knobMaster;
+    SynthVibe::BrandBadge       brand;
+    SynthVibe::NavArrowButton   prevArrow;
+    SynthVibe::PresetNameField  nameField;
+    SynthVibe::NavArrowButton   nextArrow;
+    SynthVibe::PromptButton     promptBtn;
+    SynthVibe::MasterVolKnob    masterKnob;
 
     void refreshPresetLabel()
     {
         auto names = presetManager.getPresetNames();
         if (names.isEmpty())
         {
-            presetNameLabel.setText("Init", juce::dontSendNotification);
+            nameField.setPresetName("Init");
+            nameField.setMetaText("—");
             currentPresetIndex = 0;
+            prevArrow.setEnabled(false);
+            nextArrow.setEnabled(false);
+            return;
         }
-        else
-        {
-            currentPresetIndex = juce::jlimit(0, names.size() - 1, currentPresetIndex);
-            presetNameLabel.setText(names[currentPresetIndex], juce::dontSendNotification);
-        }
+        currentPresetIndex = juce::jlimit(0, names.size() - 1, currentPresetIndex);
+        nameField.setPresetName(names[currentPresetIndex]);
+        nameField.setMetaText(juce::String(currentPresetIndex + 1) + " / " + juce::String(names.size()));
+        prevArrow.setEnabled(currentPresetIndex > 0);
+        nextArrow.setEnabled(currentPresetIndex < names.size() - 1);
     }
 
     void navigatePreset(int delta)
@@ -87,44 +105,6 @@ private:
         auto names = presetManager.getPresetNames();
         if (names.isEmpty()) return;
         currentPresetIndex = (currentPresetIndex + delta + names.size()) % names.size();
-        presetManager.loadPreset(names[currentPresetIndex]);
-        refreshPresetLabel();
-    }
-
-    void saveCurrentPreset()
-    {
-        auto* dialog = new juce::AlertWindow("Save Preset",
-                                             "Enter preset name:",
-                                             juce::MessageBoxIconType::NoIcon);
-        dialog->addTextEditor("presetName", "New Preset", {});
-        dialog->addButton("Save",   1, juce::KeyPress(juce::KeyPress::returnKey));
-        dialog->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
-
-        juce::Component::SafePointer<TopBar> safeThis(this);
-
-        dialog->enterModalState(true,
-            juce::ModalCallbackFunction::create([safeThis, dialog](int result)
-            {
-                if (safeThis == nullptr)
-                    return;
-
-                if (result == 1)
-                {
-                    auto name = dialog->getTextEditorContents("presetName").trim();
-                    if (name.isNotEmpty())
-                    {
-                        safeThis->presetManager.savePreset(name);
-                        safeThis->refreshPresetLabel();
-                    }
-                }
-            }),
-            true); // deleteWhenDismissed
-    }
-
-    void loadCurrentPreset()
-    {
-        auto names = presetManager.getPresetNames();
-        if (names.isEmpty()) return;
         presetManager.loadPreset(names[currentPresetIndex]);
         refreshPresetLabel();
     }

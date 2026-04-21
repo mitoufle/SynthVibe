@@ -23,12 +23,11 @@ namespace SynthVibe
             addAndMakeVisible(button);
         }
 
-        // Overrides juce::Component::setEnabled so the whole component (and the inner
-        // TextButton) track enabled-state together, rather than silently shadowing it.
-        void setEnabled(bool shouldBeEnabled) override
+        // juce::Component::setEnabled is non-virtual, so we hook enablementChanged()
+        // (which Component::setEnabled triggers) to keep the inner TextButton in sync.
+        void enablementChanged() override
         {
-            juce::Component::setEnabled(shouldBeEnabled);
-            button.setEnabled(shouldBeEnabled);
+            button.setEnabled(isEnabled());
         }
 
         void resized() override
