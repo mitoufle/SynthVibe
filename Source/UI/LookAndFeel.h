@@ -80,19 +80,22 @@ public:
         const float rOuter   = size * 0.5f - 1.f;
         const float rInner   = rOuter - knobInnerBodyInset;
 
-        const float startRad = juce::degreesToRadians(knobArcStartDeg) - juce::MathConstants<float>::halfPi;
-        const float sweepRad = juce::degreesToRadians(knobArcSweepDeg);
-        const float valueRad = startRad + sliderPos * sweepRad;
+        // addCentredArc: 0 = 12 o'clock, CW. std::cos/sin on screen coords (y-down)
+        // traces CW from 3 o'clock, so the tick angle is the arc angle shifted by -pi/2.
+        const float arcStart  = juce::degreesToRadians(knobArcStartDeg);
+        const float arcSweep  = juce::degreesToRadians(knobArcSweepDeg);
+        const float arcValue  = arcStart + sliderPos * arcSweep;
+        const float tickAngle = arcValue - juce::MathConstants<float>::halfPi;
 
         // Track arc
         juce::Path track;
-        track.addCentredArc(cx, cy, rOuter, rOuter, 0.f, startRad, startRad + sweepRad, true);
+        track.addCentredArc(cx, cy, rOuter, rOuter, 0.f, arcStart, arcStart + arcSweep, true);
         g.setColour(edge);
         g.strokePath(track, juce::PathStrokeType(knobArcThickness));
 
         // Value arc
         juce::Path value;
-        value.addCentredArc(cx, cy, rOuter, rOuter, 0.f, startRad, valueRad, true);
+        value.addCentredArc(cx, cy, rOuter, rOuter, 0.f, arcStart, arcValue, true);
         const auto arcColour = slider.findColour(juce::Slider::rotarySliderFillColourId);
         g.setColour(arcColour);
         g.strokePath(value, juce::PathStrokeType(knobArcThickness));
@@ -107,10 +110,10 @@ public:
         const float tickOuter = rInner - 2.f;
         const float tickInner = rInner * 0.55f;
         juce::Path tick;
-        tick.startNewSubPath(cx + tickInner * std::cos(valueRad),
-                             cy + tickInner * std::sin(valueRad));
-        tick.lineTo         (cx + tickOuter * std::cos(valueRad),
-                             cy + tickOuter * std::sin(valueRad));
+        tick.startNewSubPath(cx + tickInner * std::cos(tickAngle),
+                             cy + tickInner * std::sin(tickAngle));
+        tick.lineTo         (cx + tickOuter * std::cos(tickAngle),
+                             cy + tickOuter * std::sin(tickAngle));
         g.setColour(arcColour);
         g.strokePath(tick, juce::PathStrokeType(1.5f));
     }
