@@ -1,19 +1,29 @@
 #pragma once
+#include <algorithm>
+#include <cmath>
 
-// ADSR envelope. Used for both amplitude and filter modulation.
 class Envelope
 {
 public:
     struct Params
     {
-        float attack  = 0.01f;  // seconds
+        float attack  = 0.01f;
         float decay   = 0.1f;
-        float sustain = 0.7f;   // 0–1 level
-        float release = 0.2f;   // seconds
+        float sustain = 0.7f;
+        float release = 0.2f;
     };
 
-    void setSampleRate(double sr) { sampleRate = sr; }
-    void setParams(const Params& p) { params = p; }
+    void setSampleRate(double sr)
+    {
+        sampleRate = sr;
+        recomputeCoeffs();
+    }
+
+    void setParams(const Params& p)
+    {
+        params = p;
+        recomputeCoeffs();
+    }
 
     void noteOn();
     void noteOff();
@@ -25,9 +35,18 @@ public:
 private:
     enum class Stage { Idle, Attack, Decay, Sustain, Release };
 
+    void recomputeCoeffs()
+    {
+        const float sr = static_cast<float>(sampleRate);
+        decayCoeff   = std::exp(-1.f / (std::max(0.0001f, params.decay)   * sr));
+        releaseCoeff = std::exp(-1.f / (std::max(0.0001f, params.release) * sr));
+    }
+
     double sampleRate    = 44100.0;
     Params params;
     Stage  stage         = Stage::Idle;
     float  currentLevel  = 0.f;
     float  releaseLevel  = 0.f;
+    float  decayCoeff    = 0.f;
+    float  releaseCoeff  = 0.f;
 };

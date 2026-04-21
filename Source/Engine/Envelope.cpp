@@ -1,5 +1,4 @@
 #include "Envelope.h"
-#include <algorithm>
 
 void Envelope::noteOn()
 {
@@ -42,8 +41,8 @@ float Envelope::getNextSample()
             break;
 
         case Stage::Decay:
-            currentLevel -= (1.f - params.sustain) / (std::max(0.0001f, params.decay) * sr);
-            if (currentLevel <= params.sustain) {
+            currentLevel = params.sustain + (currentLevel - params.sustain) * decayCoeff;
+            if (std::abs(currentLevel - params.sustain) < 1e-5f) {
                 currentLevel = params.sustain;
                 stage = Stage::Sustain;
             }
@@ -54,8 +53,8 @@ float Envelope::getNextSample()
             break;
 
         case Stage::Release:
-            currentLevel -= releaseLevel / (std::max(0.0001f, params.release) * sr);
-            if (currentLevel <= 0.f) {
+            currentLevel *= releaseCoeff;
+            if (currentLevel < 1e-5f) {
                 currentLevel = 0.f;
                 stage = Stage::Idle;
             }
