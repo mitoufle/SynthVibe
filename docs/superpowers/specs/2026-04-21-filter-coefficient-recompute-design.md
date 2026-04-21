@@ -76,7 +76,7 @@ if ((hasFilterMod || smoothCutoff.isSmoothing()) && filterCoefCounter == 0)
 filterCoefCounter = (filterCoefCounter + 1) & (FilterCoefUpdateRate - 1);
 ```
 
-The counter is advanced every sample the voice is active (regardless of whether the guard body ran), so the 1-in-16 cadence is deterministic.
+The counter is advanced every sample the voice produces output (past the `ampEnv.isActive()` early return), regardless of whether the guard body ran. The 1-in-16 cadence is therefore deterministic for any active voice; idle voices neither accrue counter state nor do coefficient work. `noteOn()` resets the counter so the first sample of a new note starts the cadence fresh.
 
 ---
 
