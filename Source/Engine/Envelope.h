@@ -46,7 +46,6 @@ private:
     Params params;
     Stage  stage         = Stage::Idle;
     float  currentLevel  = 0.f;
-    float  releaseLevel  = 0.f;
     float  decayCoeff    = 0.f;
     float  releaseCoeff  = 0.f;
 };

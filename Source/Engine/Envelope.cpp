@@ -11,7 +11,6 @@ void Envelope::noteOn()
 void Envelope::noteOff()
 {
     if (stage != Stage::Idle) {
-        releaseLevel = currentLevel;
         stage = Stage::Release;
     }
 }
@@ -20,7 +19,6 @@ void Envelope::reset()
 {
     stage        = Stage::Idle;
     currentLevel = 0.f;
-    releaseLevel = 0.f;
 }
 
 float Envelope::getNextSample()
