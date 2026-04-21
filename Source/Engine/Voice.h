@@ -61,6 +61,9 @@ public:
     void     setNoteOnOrder(uint64_t order)  noexcept { noteOnOrder = order; }
 
 private:
+    static constexpr int FilterCoefUpdateRate = 16;   // power of 2 → cheap bitmask; ~3 kHz control rate at 48 kHz
+    int filterCoefCounter = 0;
+
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothCutoff;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothResonance;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothOsc1Level;

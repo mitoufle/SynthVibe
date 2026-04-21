@@ -21,6 +21,7 @@ void Voice::prepare(const juce::dsp::ProcessSpec& spec)
     smoothResonance.setCurrentAndTargetValue (0.1f);
     smoothOsc1Level.setCurrentAndTargetValue (1.f);
     smoothOsc2Level.setCurrentAndTargetValue (0.f);
+    filterCoefCounter = 0;
 }
 
 void Voice::setParams(const VoiceParams& p)
@@ -80,6 +81,7 @@ void Voice::noteOn(int midiNote, float vel, bool stolen)
     osc2.setFrequency(midiNoteToHz(midiNote, params.osc2.octave, params.osc2.semitone));
     ampEnv.noteOn();
     fltEnv.noteOn();
+    filterCoefCounter = 0;
 }
 
 void Voice::noteOff()
