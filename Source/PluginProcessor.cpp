@@ -79,12 +79,16 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.osc1.semitone = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Semitone));
     p.osc1.detune   = *apvts.getRawParameterValue(ParamIDs::osc1Detune);
     p.osc1.level    = *apvts.getRawParameterValue(ParamIDs::osc1Level);
+    p.osc1.startingPhase = *apvts.getRawParameterValue(ParamIDs::osc1Phase);
+    p.osc1.pulseWidth    = *apvts.getRawParameterValue(ParamIDs::osc1Pwm);
 
     p.osc2.waveform = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Waveform)));
     p.osc2.octave   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Octave));
     p.osc2.semitone = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Semitone));
     p.osc2.detune   = *apvts.getRawParameterValue(ParamIDs::osc2Detune);
     p.osc2.level    = *apvts.getRawParameterValue(ParamIDs::osc2Level);
+    p.osc2.startingPhase = *apvts.getRawParameterValue(ParamIDs::osc2Phase);
+    p.osc2.pulseWidth    = *apvts.getRawParameterValue(ParamIDs::osc2Pwm);
 
     p.lfo1.shape = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo1Shape)));
     p.lfo1.rate  = *apvts.getRawParameterValue(ParamIDs::lfo1Rate);
@@ -100,6 +104,8 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.filterCutoff    = *apvts.getRawParameterValue(ParamIDs::filterCutoff);
     p.filterResonance = *apvts.getRawParameterValue(ParamIDs::filterResonance);
     p.filterEnvAmt    = *apvts.getRawParameterValue(ParamIDs::filterEnvAmt);
+    p.filterDrive     = *apvts.getRawParameterValue(ParamIDs::filterDrive);
+    p.filterKeytrack  = *apvts.getRawParameterValue(ParamIDs::filterKeytrack);
 
     p.ampEnv.attack  = *apvts.getRawParameterValue(ParamIDs::ampAttack);
     p.ampEnv.decay   = *apvts.getRawParameterValue(ParamIDs::ampDecay);
@@ -114,6 +120,10 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.unisonVoices       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1UnisonVoices));
     p.unisonDetuneCents  = *apvts.getRawParameterValue(ParamIDs::osc1UnisonDetune);
     p.unisonStereoSpread = *apvts.getRawParameterValue(ParamIDs::osc1UnisonSpread);
+
+    p.osc2UnisonVoices       = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2UnisonVoices));
+    p.osc2UnisonDetuneCents  = *apvts.getRawParameterValue(ParamIDs::osc2UnisonDetune);
+    p.osc2UnisonStereoSpread = *apvts.getRawParameterValue(ParamIDs::osc2UnisonSpread);
 
     return p;
 }
