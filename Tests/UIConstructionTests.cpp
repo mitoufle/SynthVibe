@@ -7,6 +7,7 @@
 #include "UI/components/WaveTypeSelect.h"
 #include "UI/components/FilterTypeSelect.h"
 #include "UI/components/OscilloscopeView.h"
+#include "UI/components/EnvelopeEditor.h"
 #include "UI/components/FilterResponseView.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -59,6 +60,14 @@ struct UIConstructionTests : public juce::UnitTest
             SynthVibe::FilterResponseView frv(apvts,
                 ParamIDs::filterType, ParamIDs::filterCutoff, ParamIDs::filterResonance);
             frv.setBounds(0, 0, 200, 80);
+        }
+
+        beginTest("EnvelopeEditor binds without crash");
+        {
+            SynthVibe::EnvelopeEditor env(apvts,
+                ParamIDs::ampAttack, ParamIDs::ampDecay,
+                ParamIDs::ampSustain, ParamIDs::ampRelease);
+            env.setBounds(0, 0, 240, 120);
         }
     }
 };
