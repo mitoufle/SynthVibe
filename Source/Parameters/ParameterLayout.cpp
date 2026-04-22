@@ -23,6 +23,12 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc1Level, "Osc1 Level",
         NormalisableRange<float>(0.f, 1.f, 0.001f), 1.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc1Phase, "Osc1 Phase",
+        NormalisableRange<float>(0.f, 360.f, 1.f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc1Pwm, "Osc1 PWM",
+        NormalisableRange<float>(0.01f, 0.99f, 0.001f), 0.5f));
 
     // -----------------------------------------------------------------------
     // Oscillator 2
@@ -40,6 +46,12 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc2Level, "Osc2 Level",
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));  // 0 = silent by default
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2Phase, "Osc2 Phase",
+        NormalisableRange<float>(0.f, 360.f, 1.f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2Pwm, "Osc2 PWM",
+        NormalisableRange<float>(0.01f, 0.99f, 0.001f), 0.5f));
 
     // -----------------------------------------------------------------------
     // LFO 1
@@ -90,6 +102,12 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
 
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::filterEnvAmt, "Filter Env",
+        NormalisableRange<float>(-1.f, 1.f, 0.001f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::filterDrive, "Filter Drive",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::filterKeytrack, "Filter Keytrack",
         NormalisableRange<float>(-1.f, 1.f, 0.001f), 0.f));
 
     // -----------------------------------------------------------------------
@@ -192,7 +210,7 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
 
     // -----------------------------------------------------------------------
-    // Unison
+    // Osc1 Unison
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterInt>(
         ParamIDs::osc1UnisonVoices, "Osc1 Unison Voices", 1, 7, 1));
@@ -201,6 +219,18 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 100.f, 0.1f), 0.f));
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc1UnisonSpread, "Osc1 Unison Spread",
+        NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
+
+    // -----------------------------------------------------------------------
+    // Osc2 Unison
+    // -----------------------------------------------------------------------
+    params.push_back(std::make_unique<AudioParameterInt>(
+        ParamIDs::osc2UnisonVoices, "Osc2 Unison Voices", 1, 7, 1));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2UnisonDetune, "Osc2 Unison Detune",
+        NormalisableRange<float>(0.f, 100.f, 0.1f), 0.f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::osc2UnisonSpread, "Osc2 Unison Spread",
         NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
 
     // -----------------------------------------------------------------------

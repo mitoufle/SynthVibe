@@ -18,6 +18,10 @@ namespace ParamIDs
     inline constexpr const char* osc2Semitone  = "osc2.semi";
     inline constexpr const char* osc2Detune    = "osc2.fine";
     inline constexpr const char* osc2Level     = "osc2.level";
+    inline constexpr const char* osc1Phase     = "osc1.phase";
+    inline constexpr const char* osc1Pwm       = "osc1.pwm";
+    inline constexpr const char* osc2Phase     = "osc2.phase";
+    inline constexpr const char* osc2Pwm       = "osc2.pwm";
 
     // LFO 1
     inline constexpr const char* lfo1Shape     = "lfo1.wave";
@@ -36,6 +40,8 @@ namespace ParamIDs
     inline constexpr const char* filterCutoff    = "filt.cutoff";
     inline constexpr const char* filterResonance = "filt.res";
     inline constexpr const char* filterEnvAmt    = "filt.envamt";
+    inline constexpr const char* filterDrive     = "filt.drive";
+    inline constexpr const char* filterKeytrack  = "filt.keytrack";
 
     // Amp envelope
     inline constexpr const char* ampAttack       = "env.amp.attack";
@@ -76,6 +82,11 @@ namespace ParamIDs
     inline constexpr const char* osc1UnisonVoices  = "osc1.uni.voices";
     inline constexpr const char* osc1UnisonDetune  = "osc1.uni.detune";
     inline constexpr const char* osc1UnisonSpread  = "osc1.uni.spread";
+
+    // Osc2 Unison
+    inline constexpr const char* osc2UnisonVoices = "osc2.uni.voices";
+    inline constexpr const char* osc2UnisonDetune = "osc2.uni.detune";
+    inline constexpr const char* osc2UnisonSpread = "osc2.uni.spread";
 
     // Arp
     inline constexpr const char* arpEnabled      = "arp.on";
