@@ -14,7 +14,7 @@ namespace SynthVibe
     // closely for LP/HP/BP at moderate Q, which is sufficient for a display.
     struct FilterCoefficients
     {
-        enum class Type { LowPass, HighPass, BandPass };
+        enum class Type { LowPass, HighPass, BandPass, LP24, Notch };
 
         float b0 = 1.f, b1 = 0.f, b2 = 0.f;
         float a1 = 0.f, a2 = 0.f;
@@ -45,6 +45,27 @@ namespace SynthVibe
                     c.b0 =  alpha           / a0;
                     c.b1 =  0.f;
                     c.b2 = -alpha           / a0;
+                    break;
+                case Type::LP24:
+                {
+                    // Model: one biquad representing the magnitude of two cascaded LP12s
+                    // at the same cutoff. The biquad form is the LP12 biquad but with
+                    // the numerator halved so the magnitude at cutoff is ~0.5 instead
+                    // of ~0.707, squaring the rolloff visually without a second stage.
+                    // This is an approximation that matches the audio-path cascade at
+                    // Q≈0.707 and diverges mildly at high Q; acceptable for display.
+                    const float lpB0 = (1.f - cosW0) * 0.5f / a0;
+                    const float lpB1 = (1.f - cosW0)        / a0;
+                    const float lpB2 = (1.f - cosW0) * 0.5f / a0;
+                    c.b0 = lpB0 * lpB0;
+                    c.b1 = lpB1 * lpB1;
+                    c.b2 = lpB2 * lpB2;
+                    break;
+                }
+                case Type::Notch:
+                    c.b0 =  1.f            / a0;
+                    c.b1 = -2.f * cosW0    / a0;
+                    c.b2 =  1.f            / a0;
                     break;
             }
             c.a1 = -2.f * cosW0 / a0;
