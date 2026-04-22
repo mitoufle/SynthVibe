@@ -1,6 +1,6 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
-#include <juce_core/juce_core.h>
 
 enum class Waveform { Sine = 0, Saw, Square, Triangle };
 
@@ -13,8 +13,8 @@ public:
     void setFrequency(double freqHz)  { frequency = freqHz; }
     void setWaveform(Waveform wf)     { waveform = wf; }
     void setDetuneCents(float cents)  { detuneCents = cents; }
-    void setStartingPhase(float deg)  { startingPhase = juce::jlimit(0.f, 1.f, deg / 360.f); }
-    void setPulseWidth(float duty)    { pulseWidth    = juce::jlimit(0.01f, 0.99f, duty); }
+    void setStartingPhase(float deg)  { startingPhase = std::clamp(deg / 360.f, 0.f, 1.f); }
+    void setPulseWidth(float duty)    { pulseWidth    = std::clamp(duty, 0.01f, 0.99f); }
 
     void reset()             { phase = 0.0; }
     void setPhase(double p)  { phase = p; }
