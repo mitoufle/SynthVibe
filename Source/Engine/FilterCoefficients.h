@@ -1,9 +1,12 @@
 #pragma once
 #include <cmath>
 #include <complex>
+#include <algorithm>
 
 namespace SynthVibe
 {
+    namespace detail { constexpr float kPi = 3.14159265358979323846f; }
+
     // Visualization-only RBJ biquad coefficients. The audio engine uses
     // juce::dsp::StateVariableTPTFilter in Source/Engine/Filter.cpp — this
     // helper exists so FilterResponseView can draw a magnitude curve without
@@ -20,7 +23,7 @@ namespace SynthVibe
         {
             FilterCoefficients c;
             const float fc = std::max(20.f, std::min(cutoffHz, (float) sampleRate * 0.49f));
-            const float w0 = 2.f * 3.14159265358979323846f * fc / (float) sampleRate;
+            const float w0 = 2.f * detail::kPi * fc / (float) sampleRate;
             const float cosW0 = std::cos(w0);
             const float sinW0 = std::sin(w0);
             const float alpha = sinW0 / (2.f * std::max(0.1f, q));
@@ -52,7 +55,7 @@ namespace SynthVibe
         // |H(e^{jω})| at freq Hz.
         float magnitudeAt(float freqHz, double sampleRate) const
         {
-            const float w = 2.f * 3.14159265358979323846f * freqHz / (float) sampleRate;
+            const float w = 2.f * detail::kPi * freqHz / (float) sampleRate;
             using C = std::complex<float>;
             const C z1 = std::polar(1.f, -w);
             const C z2 = z1 * z1;
