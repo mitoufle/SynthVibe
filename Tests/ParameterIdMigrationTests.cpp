@@ -32,7 +32,7 @@ struct ParameterIdMigrationTests : public juce::UnitTest
             expectWithinAbsoluteError(readFloat(ParamIDs::osc1Pwm),         0.5f, 0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::osc2Phase),       0.f,  0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::osc2Pwm),         0.5f, 0.001f);
-            expectWithinAbsoluteError(readFloat(ParamIDs::osc2UnisonVoices),1.f,  0.001f);
+            expectEquals(readFloat(ParamIDs::osc2UnisonVoices),             1.f);
             expectWithinAbsoluteError(readFloat(ParamIDs::osc2UnisonDetune),0.f,  0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::osc2UnisonSpread),0.5f, 0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::filterDrive),     0.f,  0.001f);
