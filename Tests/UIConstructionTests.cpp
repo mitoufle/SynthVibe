@@ -6,6 +6,7 @@
 #include "UI/components/PanelHeader.h"
 #include "UI/components/WaveTypeSelect.h"
 #include "UI/components/FilterTypeSelect.h"
+#include "UI/components/OscilloscopeView.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -44,6 +45,12 @@ struct UIConstructionTests : public juce::UnitTest
         {
             SynthVibe::FilterTypeSelect fts(apvts, ParamIDs::filterType);
             fts.setBounds(0, 0, 150, 28);
+        }
+
+        beginTest("OscilloscopeView binds without crash");
+        {
+            SynthVibe::OscilloscopeView scope(apvts, ParamIDs::osc1Waveform);
+            scope.setBounds(0, 0, 200, 60);
         }
     }
 };
