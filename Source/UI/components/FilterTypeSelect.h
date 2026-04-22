@@ -11,13 +11,14 @@ namespace SynthVibe
         FilterTypeSelect(juce::AudioProcessorValueTreeState& apvts,
                          const juce::String& paramID)
         {
-            const char* labels[] = { "LP", "HP", "BP" };
-            for (int i = 0; i < 3; ++i)
+            const char* labels[] = { "LP12", "LP24", "HP", "BP", "NO" };
+            for (int i = 0; i < 5; ++i)
             {
                 auto& btn = pills[i];
                 btn.setButtonText(labels[i]);
                 btn.setClickingTogglesState(true);
                 btn.setRadioGroupId(1);
+                btn.setTooltip(i == 4 ? juce::String("Notch") : juce::String(labels[i]));
                 btn.onClick = [this, i, &apvts, paramID]
                 {
                     if (auto* p = apvts.getParameter(paramID))
@@ -29,8 +30,8 @@ namespace SynthVibe
             paramAttach = std::make_unique<juce::ParameterAttachment>(
                 *apvts.getParameter(paramID),
                 [this](float v) {
-                    const int idx = juce::jlimit(0, 2, (int) std::round(v));
-                    for (int i = 0; i < 3; ++i)
+                    const int idx = juce::jlimit(0, 4, (int) std::round(v));
+                    for (int i = 0; i < 5; ++i)
                         pills[i].setToggleState(i == idx, juce::dontSendNotification);
                 });
             paramAttach->sendInitialUpdate();
@@ -39,13 +40,13 @@ namespace SynthVibe
         void resized() override
         {
             auto b = getLocalBounds();
-            const int w = b.getWidth() / 3;
-            for (int i = 0; i < 3; ++i)
+            const int w = b.getWidth() / 5;
+            for (int i = 0; i < 5; ++i)
                 pills[i].setBounds(b.removeFromLeft(w).reduced(2));
         }
 
     private:
-        juce::TextButton pills[3];
+        juce::TextButton pills[5];
         std::unique_ptr<juce::ParameterAttachment> paramAttach;
     };
 }

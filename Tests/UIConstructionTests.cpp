@@ -43,10 +43,11 @@ struct UIConstructionTests : public juce::UnitTest
             expectEquals(ws.getCombo().getSelectedId(), 2);
         }
 
-        beginTest("FilterTypeSelect constructs and binds to filt.type");
+        beginTest("FilterTypeSelect has 5 pills after reorder");
         {
             SynthVibe::FilterTypeSelect fts(apvts, ParamIDs::filterType);
-            fts.setBounds(0, 0, 150, 28);
+            fts.setBounds(0, 0, 250, 28);
+            expectEquals(fts.getWidth(), 250);
         }
 
         beginTest("OscilloscopeView binds without crash");
