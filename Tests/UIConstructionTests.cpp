@@ -35,8 +35,8 @@ struct UIConstructionTests : public juce::UnitTest
         {
             SynthVibe::WaveTypeSelect ws(apvts, ParamIDs::osc1Waveform);
             ws.setBounds(0, 0, 120, 26);
-            // Default waveform index should be Sine (1).
-            expectEquals(ws.getCombo().getSelectedId(), 1);
+            // osc1.wave default index is 1 ("Saw"); ComboBox IDs are 1-based, so ID = index + 1 = 2.
+            expectEquals(ws.getCombo().getSelectedId(), 2);
         }
     }
 };
