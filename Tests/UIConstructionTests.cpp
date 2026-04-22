@@ -5,6 +5,7 @@
 #include "UI/components/ArcKnob.h"
 #include "UI/components/PanelHeader.h"
 #include "UI/components/WaveTypeSelect.h"
+#include "UI/components/FilterTypeSelect.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -37,6 +38,12 @@ struct UIConstructionTests : public juce::UnitTest
             ws.setBounds(0, 0, 120, 26);
             // osc1.wave default index is 1 ("Saw"); ComboBox IDs are 1-based, so ID = index + 1 = 2.
             expectEquals(ws.getCombo().getSelectedId(), 2);
+        }
+
+        beginTest("FilterTypeSelect constructs and binds to filt.type");
+        {
+            SynthVibe::FilterTypeSelect fts(apvts, ParamIDs::filterType);
+            fts.setBounds(0, 0, 150, 28);
         }
     }
 };
