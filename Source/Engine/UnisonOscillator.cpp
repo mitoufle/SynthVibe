@@ -92,3 +92,31 @@ void UnisonOscillator::recomputePan()
         rGains[i] = std::sin(angle);
     }
 }
+
+void UnisonOscillator::setStartingPhase(float deg)
+{
+    for (auto& o : oscs)
+        o.setStartingPhase(deg);
+}
+
+void UnisonOscillator::setPulseWidth(float duty)
+{
+    for (auto& o : oscs)
+        o.setPulseWidth(duty);
+}
+
+void UnisonOscillator::resetAllPhasesToStart()
+{
+    for (int i = 0; i < MaxUnison; ++i)
+        oscs[i].resetPhaseToStart();
+
+    // For multi-voice unison, stack the detune stagger on top of the starting
+    // phase so the slots don't all lock to the same phase and cancel out spread.
+    if (unisonVoices > 1)
+        for (int i = 0; i < unisonVoices; ++i)
+        {
+            const double stagger = static_cast<double>(i) / unisonVoices;
+            const double base    = oscs[i].getPhase();
+            oscs[i].setPhase(std::fmod(base + stagger, 1.0));
+        }
+}

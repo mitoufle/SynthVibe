@@ -14,6 +14,9 @@ public:
     void setDetuneCents(float baseCents);
     void setUnison(int voices, float spreadCents);
     void setStereoSpread(float spread);   // 0 = centre, 1 = full width
+    void setStartingPhase(float deg);
+    void setPulseWidth(float duty);
+    void resetAllPhasesToStart();
     void reset();
     void getNextSample(float& outL, float& outR);
 

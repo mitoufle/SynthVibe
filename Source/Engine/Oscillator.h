@@ -19,6 +19,7 @@ public:
     void reset()             { phase = 0.0; }
     void setPhase(double p)  { phase = p; }
     void resetPhaseToStart() { phase = static_cast<double>(startingPhase); }
+    double getPhase() const  { return phase; }
 
     float getNextSample();
 
