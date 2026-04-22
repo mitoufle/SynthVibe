@@ -28,9 +28,11 @@ namespace SynthVibe
             const float resN   = apvtsRef.getRawParameterValue(resID)->load();
             const float q      = juce::jmap(juce::jlimit(0.f, 1.f, resN), 0.5f, 12.f);
 
-            const Type t = typeIdx == 0 ? Type::LowPass
-                         : typeIdx == 1 ? Type::HighPass
-                                        : Type::BandPass;
+            const Type t = typeIdx == 0 ? Type::LowPass      // LP12
+                         : typeIdx == 1 ? Type::LP24
+                         : typeIdx == 2 ? Type::HighPass
+                         : typeIdx == 3 ? Type::BandPass
+                         :                Type::Notch;
             const double sr = 48000.0;
             const auto coeffs = FilterCoefficients::compute(t, cutoff, q, sr);
 
