@@ -39,10 +39,15 @@ float Oscillator::getNextSample()
             break;
 
         case Waveform::Square:
-            sample  = phase < 0.5 ? 1.f : -1.f;
+        {
+            const double pw = static_cast<double>(pulseWidth);
+            sample  = phase < pw ? 1.f : -1.f;
+            // Rising edge at phase=0
             sample += polyBlep(phase, dt);
-            sample -= polyBlep(std::fmod(phase + 0.5, 1.0), dt);
+            // Falling edge at phase=pulseWidth — wrap into [0,1)
+            sample -= polyBlep(std::fmod(phase - pw + 1.0, 1.0), dt);
             break;
+        }
 
         case Waveform::Triangle:
             sample = phase < 0.5 ? static_cast<float>(4.0 * phase - 1.0)

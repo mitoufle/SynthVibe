@@ -95,6 +95,7 @@ target_sources(AISynthTests PRIVATE
     Tests/UIConstructionTests.cpp
     Tests/ExponentialEnvelopeTests.cpp
     Tests/FilterCoefficientsTests.cpp
+    Tests/OscillatorTests.cpp
     Source/Engine/ArpEngine.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
