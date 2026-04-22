@@ -3,6 +3,7 @@
 #include "Parameters/ParameterLayout.h"
 #include "Parameters/ParameterIDs.h"
 #include "UI/components/ArcKnob.h"
+#include "UI/components/PanelHeader.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -21,6 +22,13 @@ struct UIConstructionTests : public juce::UnitTest
         knob.setBounds(0, 0, 60, 80);
 
         expectEquals(knob.getSlider().getValue(), 8000.0);    // default from ParameterLayout
+
+        beginTest("PanelHeader constructs");
+        {
+            SynthVibe::PanelHeader h("OSC 1", SynthVibe::Tokens::osc);
+            h.setBounds(0, 0, 200, 20);
+            expect(h.isVisible() == false); // not yet added to a parent
+        }
     }
 };
 
