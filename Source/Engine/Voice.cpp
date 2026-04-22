@@ -35,9 +35,14 @@ void Voice::setParams(const VoiceParams& p)
     // setUnison MUST precede the setFrequency tail block below so that
     // newly-activated unison slots receive the correct base frequency.
     osc1.setUnison(p.unisonVoices, p.unisonDetuneCents);
-    osc2.setUnison(p.unisonVoices, p.unisonDetuneCents);
     osc1.setStereoSpread(p.unisonStereoSpread);
-    osc2.setStereoSpread(p.unisonStereoSpread);
+    osc2.setUnison(p.osc2UnisonVoices, p.osc2UnisonDetuneCents);
+    osc2.setStereoSpread(p.osc2UnisonStereoSpread);
+
+    osc1.setStartingPhase(p.osc1.startingPhase);
+    osc1.setPulseWidth   (p.osc1.pulseWidth);
+    osc2.setStartingPhase(p.osc2.startingPhase);
+    osc2.setPulseWidth   (p.osc2.pulseWidth);
 
     lfo1Osc.setWaveform(p.lfo1.shape);
     lfo1Osc.setFrequency(p.lfo1.rate);
@@ -49,15 +54,22 @@ void Voice::setParams(const VoiceParams& p)
     filter.setType(p.filterType);
     filter.setCutoff(p.filterCutoff);
     filter.setResonance(p.filterResonance);
+    filter.setDrive(p.filterDrive);
     filterR.setType(p.filterType);
     filterR.setCutoff(p.filterCutoff);
     filterR.setResonance(p.filterResonance);
+    filterR.setDrive(p.filterDrive);
     ampEnv.setParams(p.ampEnv);
     fltEnv.setParams(p.fltEnv);
     smoothCutoff.setTargetValue(p.filterCutoff);
     smoothResonance.setTargetValue(p.filterResonance);
     smoothOsc1Level.setTargetValue(p.osc1.level);
     smoothOsc2Level.setTargetValue(p.osc2.level);
+
+    if (currentNote >= 0 && p.filterKeytrack != 0.f)
+        keytrackMultiplier = std::pow(2.f, (currentNote - 60.f) / 12.f * p.filterKeytrack);
+    else
+        keytrackMultiplier = 1.f;
 
     if (currentNote >= 0)
     {
@@ -69,11 +81,14 @@ void Voice::setParams(const VoiceParams& p)
 void Voice::noteOn(int midiNote, float vel, bool stolen)
 {
     currentNote = midiNote;
+    keytrackMultiplier = params.filterKeytrack != 0.f
+        ? std::pow(2.f, (currentNote - 60.f) / 12.f * params.filterKeytrack)
+        : 1.f;
     velocity    = vel;
     if (!stolen)
     {
-        osc1.reset();
-        osc2.reset();
+        osc1.resetAllPhasesToStart();
+        osc2.resetAllPhasesToStart();
         filter.reset();
         filterR.reset();
     }
@@ -143,10 +158,11 @@ std::pair<float, float> Voice::getNextSample()
     const float envMod = fltEnv.getNextSample();
     const bool hasFilterMod = (params.filterEnvAmt != 0.f)
                             || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
-                            || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f);
+                            || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f)
+                            || (params.filterKeytrack != 0.f);
     if ((hasFilterMod || smoothCutoff.isSmoothing()) && filterCoefCounter == 0)
     {
-        float cutoff = sCutoff * (1.f + params.filterEnvAmt * envMod);
+        float cutoff = sCutoff * keytrackMultiplier * (1.f + params.filterEnvAmt * envMod);
         cutoff += (params.lfo1.dest == LfoDest::Filter ? l1 * 4000.f : 0.f);
         cutoff += (params.lfo2.dest == LfoDest::Filter ? l2 * 4000.f : 0.f);
         cutoff = juce::jlimit(20.f, 20000.f, cutoff);

@@ -9,11 +9,13 @@ enum class LfoDest { Pitch = 0, Filter, Amp, Detune };
 
 struct OscParams
 {
-    Waveform waveform = Waveform::Saw;
-    int      octave   = 0;
-    int      semitone = 0;
-    float    detune   = 0.f;
-    float    level    = 1.f;
+    Waveform waveform       = Waveform::Saw;
+    int      octave         = 0;
+    int      semitone       = 0;
+    float    detune         = 0.f;
+    float    level          = 1.f;
+    float    startingPhase  = 0.f;  // degrees, 0–360
+    float    pulseWidth     = 0.5f; // 0.01–0.99, only used by Square
 };
 
 struct LfoParams
@@ -36,13 +38,19 @@ struct VoiceParams
     float      filterCutoff    = 8000.f;
     float      filterResonance = 0.1f;
     float      filterEnvAmt    = 0.f;
+    float      filterDrive     = 0.f;   // 0–1
+    float      filterKeytrack  = 0.f;   // −1..+1
 
     Envelope::Params ampEnv;
     Envelope::Params fltEnv;
 
-    int   unisonVoices       = 1;
-    float unisonDetuneCents  = 0.f;
-    float unisonStereoSpread = 0.5f;
+    int   unisonVoices       = 1;    // osc1
+    float unisonDetuneCents  = 0.f;  // osc1
+    float unisonStereoSpread = 0.5f; // osc1
+
+    int   osc2UnisonVoices       = 1;
+    float osc2UnisonDetuneCents  = 0.f;
+    float osc2UnisonStereoSpread = 0.5f;
 };
 
 class Voice
@@ -83,6 +91,7 @@ private:
     float    velocity     = 1.f;
     double   sampleRate   = 44100.0;
     uint64_t noteOnOrder  = 0;
+    float    keytrackMultiplier = 1.f;
 
     static double midiNoteToHz(int note, int octaveOffset, int semitoneOffset = 0) noexcept;
 };
