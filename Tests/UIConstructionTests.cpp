@@ -4,6 +4,7 @@
 #include "Parameters/ParameterIDs.h"
 #include "UI/components/ArcKnob.h"
 #include "UI/components/PanelHeader.h"
+#include "UI/components/WaveTypeSelect.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -28,6 +29,14 @@ struct UIConstructionTests : public juce::UnitTest
             SynthVibe::PanelHeader h("OSC 1", SynthVibe::Tokens::osc);
             h.setBounds(0, 0, 200, 20);
             expect(h.isVisible() == false); // not yet added to a parent
+        }
+
+        beginTest("WaveTypeSelect binds to osc1.wave");
+        {
+            SynthVibe::WaveTypeSelect ws(apvts, ParamIDs::osc1Waveform);
+            ws.setBounds(0, 0, 120, 26);
+            // Default waveform index should be Sine (1).
+            expectEquals(ws.getCombo().getSelectedId(), 1);
         }
     }
 };
