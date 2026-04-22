@@ -32,7 +32,7 @@ struct VoiceParams
     LfoParams lfo1;
     LfoParams lfo2;
 
-    FilterType filterType      = FilterType::LowPass;
+    FilterType filterType      = FilterType::LP12;
     float      filterCutoff    = 8000.f;
     float      filterResonance = 0.1f;
     float      filterEnvAmt    = 0.f;
