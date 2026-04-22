@@ -195,12 +195,12 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     // Unison
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterInt>(
-        ParamIDs::unisonVoices, "Unison Voices", 1, 7, 1));
+        ParamIDs::osc1UnisonVoices, "Osc1 Unison Voices", 1, 7, 1));
     params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::unisonDetune, "Unison Detune",
+        ParamIDs::osc1UnisonDetune, "Osc1 Unison Detune",
         NormalisableRange<float>(0.f, 100.f, 0.1f), 0.f));
     params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::unisonStereoSpread, "Unison Stereo Spread",
+        ParamIDs::osc1UnisonSpread, "Osc1 Unison Spread",
         NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
 
     // -----------------------------------------------------------------------

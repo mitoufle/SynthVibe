@@ -72,10 +72,10 @@ namespace ParamIDs
     inline constexpr const char* driveAmount     = "fx.drive.amount";
     inline constexpr const char* driveMix        = "fx.drive.mix";
 
-    // Unison
-    inline constexpr const char* unisonVoices       = "osc1.uni.voices";
-    inline constexpr const char* unisonDetune       = "osc1.uni.detune";
-    inline constexpr const char* unisonStereoSpread = "osc1.uni.spread";
+    // Osc1 Unison
+    inline constexpr const char* osc1UnisonVoices  = "osc1.uni.voices";
+    inline constexpr const char* osc1UnisonDetune  = "osc1.uni.detune";
+    inline constexpr const char* osc1UnisonSpread  = "osc1.uni.spread";
 
     // Arp
     inline constexpr const char* arpEnabled      = "arp.on";
