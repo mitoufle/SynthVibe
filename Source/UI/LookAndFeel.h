@@ -18,9 +18,6 @@ public:
     static constexpr auto colKnobTrack   = 0xFF2D2839;
     static constexpr auto colText        = 0xFFEBE5F0;
     static constexpr auto colTextDim     = 0xFF7A7287;
-    static constexpr auto colOscAccent    = 0xFF9ABFE8;
-    static constexpr auto colFilterAccent = 0xFFE8A3C7;
-    static constexpr auto colEnvAccent    = 0xFFA0D4A8;
     static constexpr auto colLfoAccent    = 0xFFC693E8;
     static constexpr auto colFxAccent     = 0xFF86D4D4;
     static constexpr auto colArpAccent    = 0xFFE8C06A;
