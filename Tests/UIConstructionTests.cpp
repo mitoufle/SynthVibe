@@ -9,6 +9,7 @@
 #include "UI/components/OscilloscopeView.h"
 #include "UI/components/EnvelopeEditor.h"
 #include "UI/components/FilterResponseView.h"
+#include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -69,6 +70,13 @@ struct UIConstructionTests : public juce::UnitTest
                 ParamIDs::ampAttack, ParamIDs::ampDecay,
                 ParamIDs::ampSustain, ParamIDs::ampRelease);
             env.setBounds(0, 0, 240, 120);
+        }
+
+        beginTest("SoundTab constructs with Phase 2b grid");
+        {
+            SoundTab tab(apvts);
+            tab.setBounds(0, 0, 1280, 560);
+            expect(tab.getWidth() == 1280, "SoundTab should construct at Phase 2b width");
         }
     }
 };
