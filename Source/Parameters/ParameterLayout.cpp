@@ -90,7 +90,7 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterChoice>(
         ParamIDs::filterType, "Filter Type",
-        StringArray { "Low Pass", "High Pass", "Band Pass" }, 0));
+        StringArray { "LP12", "LP24", "HP", "BP", "Notch" }, 0));
 
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::filterCutoff, "Cutoff",
