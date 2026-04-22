@@ -51,6 +51,9 @@ void AISynthEditor::resized()
 
     auto area = getLocalBounds().reduced(pad);
 
+    const auto bp = SynthVibe::breakpointForWidth(getWidth());
+    juce::ignoreUnused(bp); // consumed by Phase 3/4 tab rewrites
+
     topBar.setBounds(area.removeFromTop(topBarH));
     area.removeFromTop(pad);
 
