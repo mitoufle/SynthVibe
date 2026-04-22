@@ -172,7 +172,7 @@ In `CMakeLists.txt`, inside `target_sources(AISynthTests PRIVATE ...)`, add `Tes
 
 - [ ] **Step 3: Run tests, confirm the new test fails**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: `ExponentialEnvelope / decay converges exponentially toward sustain` fails because decay is still linear.
 
 - [ ] **Step 4: Update `Envelope.h` to pre-compute exp coefficients**
@@ -285,7 +285,7 @@ Leave `noteOn`, `noteOff`, `reset` unchanged.
 
 - [ ] **Step 6: Run tests, confirm they pass**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all `ExponentialEnvelope` tests pass. Existing `VoiceTests`/`SynthEngineTests` still pass.
 
 - [ ] **Step 7: Commit**
@@ -432,7 +432,7 @@ namespace SynthVibe
 
 - [ ] **Step 5: Run tests, confirm pass**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all `FilterCoefficients` tests pass.
 
 - [ ] **Step 6: Commit**
@@ -556,7 +556,7 @@ Include at the top: `#include "UI/components/PanelHeader.h"`.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -706,7 +706,7 @@ Include `#include "UI/components/WaveTypeSelect.h"` at top.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -798,7 +798,7 @@ Include `#include "UI/components/FilterTypeSelect.h"`.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -914,7 +914,7 @@ Include `#include "UI/components/OscilloscopeView.h"`.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -1025,7 +1025,7 @@ Include `#include "UI/components/FilterResponseView.h"`.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -1265,7 +1265,7 @@ Include `#include "UI/components/EnvelopeEditor.h"`.
 
 - [ ] **Step 3: Build & run tests**
 
-Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build-with-vs.bat && build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -1462,7 +1462,7 @@ Expected: build succeeds.
 
 - [ ] **Step 3: Run tests**
 
-Run: `build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass.
 
 - [ ] **Step 4: Commit**
@@ -1527,7 +1527,7 @@ Expected: `build\AISynth_artefacts\Release\VST3\AI Synth.vst3` exists.
 
 - [ ] **Step 2: Full test run**
 
-Run: `build\AISynthTests_artefacts\Release\AI Synth Tests.exe`
+Run: `build\AISynthTests_artefacts\Release\AISynthTests.exe`
 Expected: all tests pass — `ParameterIdMigration`, `DesignTokens`, `UIConstruction`, `Voice`, `SynthEngine`, `Arp`, `ExponentialEnvelope`, `FilterCoefficients`.
 
 - [ ] **Step 3: Deploy**
