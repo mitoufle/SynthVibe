@@ -3,6 +3,8 @@
 
 namespace SynthVibe
 {
+    // APPEND-ONLY: index = APVTS choice value persisted in user presets.
+    // Do NOT insert or reorder entries; only add new entries at the end.
     const std::array<ModDestination, 13> kDestinations = {{
         { "",                        "None"        },
         { ParamIDs::filterCutoff,    "Cutoff"      },
