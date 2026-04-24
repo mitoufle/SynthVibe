@@ -2,6 +2,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "KnobWithLabel.h"
 #include "LookAndFeel.h"
+#include "DesignTokens.h"
+#include "components/ModMatrixTable.h"
 #include "../Parameters/ParameterIDs.h"
 
 class ModTab : public juce::Component
@@ -29,7 +31,12 @@ public:
         addAndMakeVisible(knobLfo1Depth);
         addAndMakeVisible(knobLfo2Rate);
         addAndMakeVisible(knobLfo2Depth);
+
+        matrix = std::make_unique<SynthVibe::ModMatrixTable>(apvts);
+        addAndMakeVisible(*matrix);
     }
+
+    SynthVibe::ModMatrixTable* getMatrix() noexcept { return matrix.get(); }
 
     void paint(juce::Graphics& g) override
     {
@@ -39,14 +46,18 @@ public:
 
     void resized() override
     {
-        const int pad    = 8;
+        using namespace SynthVibe::Tokens;
+        auto area = getLocalBounds().reduced(spaceMd);
+
+        // Top 35%: two LFO panels side-by-side. Bottom 65%: mod matrix.
+        auto top = area.removeFromTop(juce::roundToInt(area.getHeight() * 0.35f));
+        area.removeFromTop(spaceMd);   // gap between the two regions
+
+        lfo1Bounds = top.removeFromLeft(top.getWidth() / 2).reduced(spaceSm, 0);
+        lfo2Bounds = top.reduced(spaceSm, 0);
+
         const int comboH = 26;
         const int titleH = 20;
-
-        auto area = getLocalBounds().reduced(pad);
-        lfo1Bounds = area.removeFromLeft(area.getWidth() / 2).reduced(pad, 0);
-        lfo2Bounds = area.reduced(pad, 0);
-
         auto layoutLfo = [&](juce::Rectangle<int> bounds,
                              juce::ComboBox& shapeBox, juce::ComboBox& destBox,
                              KnobWithLabel& rate, KnobWithLabel& depth)
@@ -61,6 +72,9 @@ public:
 
         layoutLfo(lfo1Bounds, lfo1ShapeBox, lfo1DestBox, knobLfo1Rate, knobLfo1Depth);
         layoutLfo(lfo2Bounds, lfo2ShapeBox, lfo2DestBox, knobLfo2Rate, knobLfo2Depth);
+
+        if (matrix != nullptr)
+            matrix->setBounds(area);
     }
 
 private:
@@ -75,6 +89,8 @@ private:
     KnobWithLabel knobLfo1Depth { "Depth", apvts, ParamIDs::lfo1Depth, "",    2 };
     KnobWithLabel knobLfo2Rate  { "Rate",  apvts, ParamIDs::lfo2Rate,  " Hz", 2 };
     KnobWithLabel knobLfo2Depth { "Depth", apvts, ParamIDs::lfo2Depth, "",    2 };
+
+    std::unique_ptr<SynthVibe::ModMatrixTable> matrix;
 
     static void drawPanel(juce::Graphics& g, juce::Rectangle<int> bounds,
                           const juce::String& title, juce::uint32 accentColour)

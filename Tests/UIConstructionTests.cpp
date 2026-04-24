@@ -16,6 +16,7 @@
 #include "UI/components/ModRow.h"
 #include "UI/components/ModMatrixTable.h"
 #include "UI/SoundTab.h"
+#include "UI/ModTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -158,6 +159,15 @@ struct UIConstructionTests : public juce::UnitTest
             SoundTab tab(apvts);
             tab.setBounds(0, 0, 1280, 560);
             expect(tab.getWidth() == 1280, "SoundTab should construct at Phase 2b width");
+        }
+
+        beginTest("ModTab constructs with mod matrix attached");
+        {
+            ModTab tab(apvts);
+            tab.setBounds(0, 0, 1280, 560);
+            expectEquals(tab.getWidth(), 1280);
+            expect(tab.getMatrix() != nullptr, "ModTab should own a ModMatrixTable");
+            expectEquals(tab.getMatrix()->getNumRows(), 8);
         }
     }
 };
