@@ -13,4 +13,8 @@ namespace SynthVibe
     // Index is persisted in the APVTS choice param; adding new destinations
     // MUST only append to the end so existing presets keep resolving correctly.
     extern const std::array<ModDestination, 13> kDestinations;
+
+    // 10-entry source table — shared by ParameterLayout (DAW automation labels)
+    // and ModSourcePicker (UI dropdown labels). Same append-only rule as kDestinations.
+    extern const std::array<const char*, 10> kModSources;
 }

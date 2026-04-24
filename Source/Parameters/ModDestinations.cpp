@@ -20,4 +20,10 @@ namespace SynthVibe
         { ParamIDs::ampAttack,       "Amp Attack"  },
         { ParamIDs::ampRelease,      "Amp Release" },
     }};
+
+    // APPEND-ONLY: index = APVTS choice value persisted in user presets.
+    const std::array<const char*, 10> kModSources = {{
+        "None", "LFO 1", "LFO 2", "Env Amp", "Env Filt",
+        "Velocity", "Modwheel", "Aftertouch", "Keytrack", "Random"
+    }};
 }

@@ -252,10 +252,9 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     // Modulation Matrix — 16 slots (UI shows 1..8; 9..16 reserved)
     // -----------------------------------------------------------------------
     {
-        const StringArray srcLabels {
-            "None", "LFO 1", "LFO 2", "Env Amp", "Env Filt",
-            "Velocity", "Modwheel", "Aftertouch", "Keytrack", "Random"
-        };
+        StringArray srcLabels;
+        for (const char* s : SynthVibe::kModSources)
+            srcLabels.add(s);
 
         StringArray dstLabels;
         for (const auto& d : SynthVibe::kDestinations)
