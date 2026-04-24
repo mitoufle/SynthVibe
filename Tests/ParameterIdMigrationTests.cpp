@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Parameters/ParameterLayout.h"
 #include "Parameters/ParameterIDs.h"
+#include "Parameters/ModDestinations.h"
 
 struct ParameterIdMigrationTests : public juce::UnitTest
 {
@@ -23,6 +24,16 @@ struct ParameterIdMigrationTests : public juce::UnitTest
         expectEquals(juce::String(ParamIDs::mod1Curve),  juce::String("mod.1.curve"));
         expectEquals(juce::String(ParamIDs::mod8Src),    juce::String("mod.8.src"));
         expectEquals(juce::String(ParamIDs::mod16Curve), juce::String("mod.16.curve"));
+
+        beginTest("kDestinations[] maps curated 13 entries (none + 12 targets)");
+        expectEquals((int) SynthVibe::kDestinations.size(), 13);
+        expect(juce::String(SynthVibe::kDestinations[0].paramId).isEmpty(),
+               "slot 0 is the 'none' sentinel (empty paramId)");
+        expectEquals(juce::String(SynthVibe::kDestinations[0].label), juce::String("None"));
+        expectEquals(juce::String(SynthVibe::kDestinations[1].paramId), juce::String(ParamIDs::filterCutoff));
+        expectEquals(juce::String(SynthVibe::kDestinations[1].label),   juce::String("Cutoff"));
+        expectEquals(juce::String(SynthVibe::kDestinations[12].paramId), juce::String(ParamIDs::ampRelease));
+        expectEquals(juce::String(SynthVibe::kDestinations[12].label),   juce::String("Amp Release"));
 
         beginTest("Phase 2b new parameters are registered with correct defaults");
         {

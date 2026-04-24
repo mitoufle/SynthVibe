@@ -41,6 +41,7 @@ target_sources(AISynth PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Parameters/ParameterLayout.cpp
+    Source/Parameters/ModDestinations.cpp
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
     Source/Engine/Envelope.cpp
@@ -104,6 +105,7 @@ target_sources(AISynthTests PRIVATE
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
     Source/Parameters/ParameterLayout.cpp
+    Source/Parameters/ModDestinations.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
