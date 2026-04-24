@@ -63,8 +63,9 @@ public:
     void noteOff();
 
     std::pair<float, float> getNextSample();
-    bool  isActive()    const { return ampEnv.isActive(); }
-    int   getMidiNote() const { return currentNote; }
+    bool  isActive()     const { return ampEnv.isActive(); }
+    bool  isSustaining() const { return ampEnv.isSustaining(); }
+    int   getMidiNote()  const { return currentNote; }
     uint64_t getNoteOnOrder() const noexcept { return noteOnOrder; }
     void     setNoteOnOrder(uint64_t order)  noexcept { noteOnOrder = order; }
 

@@ -30,7 +30,11 @@ public:
     void reset();
 
     float getNextSample();
-    bool  isActive() const { return stage != Stage::Idle; }
+    bool  isActive()     const { return stage != Stage::Idle; }
+    // True only while the key is held (Attack/Decay/Sustain). False during
+    // Release tails — used by the polyphonic gain compensation so dying
+    // tails don't keep the per-voice gain depressed.
+    bool  isSustaining() const { return stage != Stage::Idle && stage != Stage::Release; }
 
 private:
     enum class Stage { Idle, Attack, Decay, Sustain, Release };

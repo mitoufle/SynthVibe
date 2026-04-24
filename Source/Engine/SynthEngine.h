@@ -28,6 +28,10 @@ private:
     VoiceParams currentParams;
     uint64_t voiceOrderCounter = 0;
 
+    // Smooths the polyphonic 1/√N gain so that a held note doesn't audibly
+    // swell as previous notes' release tails finish.
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothPolyGain;
+
     Voice* findFreeVoice(bool* stolen = nullptr) noexcept;
     Voice* findVoiceForNote(int midiNote) noexcept;
 };

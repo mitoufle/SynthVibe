@@ -4,6 +4,8 @@ void SynthEngine::prepare(const juce::dsp::ProcessSpec& spec)
 {
     for (auto& v : voices)
         v.prepare(spec);
+    smoothPolyGain.reset(spec.sampleRate, 0.025);
+    smoothPolyGain.setCurrentAndTargetValue(1.f);
 }
 
 void SynthEngine::setParams(const VoiceParams& p)
@@ -48,9 +50,15 @@ void SynthEngine::handleMidiMessage(const juce::MidiMessage& msg)
 void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
                                 int startSample, int numSamples)
 {
-    int activeCount = 0;
-    for (const auto& v : voices) if (v.isActive()) ++activeCount;
-    const float gain = activeCount > 0 ? 1.f / std::sqrt(static_cast<float>(activeCount)) : 1.f;
+    // Compensation only counts voices the user is actively holding. Release
+    // tails are still mixed below (via isActive()), but they no longer pull
+    // the per-voice gain down — that's what made held notes appear to swell
+    // as old tails decayed. The smoother turns sustain→release transitions
+    // into an inaudible 25 ms ramp.
+    int sustainCount = 0;
+    for (const auto& v : voices) if (v.isSustaining()) ++sustainCount;
+    const float targetGain = sustainCount > 0 ? 1.f / std::sqrt(static_cast<float>(sustainCount)) : 1.f;
+    smoothPolyGain.setTargetValue(targetGain);
 
     for (int i = startSample; i < startSample + numSamples; ++i)
     {
@@ -65,8 +73,9 @@ void SynthEngine::processBlock(juce::AudioBuffer<float>& buffer,
             }
         }
 
-        buffer.getWritePointer(0)[i] += sumL * gain;
-        buffer.getWritePointer(1)[i] += sumR * gain;
+        const float g = smoothPolyGain.getNextValue();
+        buffer.getWritePointer(0)[i] += sumL * g;
+        buffer.getWritePointer(1)[i] += sumR * g;
     }
 
     // Update active voice count for the UI (message-thread read via atomic)
