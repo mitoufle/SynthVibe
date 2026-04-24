@@ -1,7 +1,7 @@
-Run deploy.bat to copy the built VST3 plugin to the Windows VST3 folder.
+Run deploy.ps1 to copy the built VST3 plugin to the Windows VST3 folder with auto-incremented version name.
 
 ```bash
-cd C:\Users\mitoufle\ClaudePRJ\AISynth && cmd /c deploy.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\mitoufle\ClaudePRJ\AISynth\deploy.ps1" 2>&1; echo "Exit: $?"
 ```
 
-Report the exit code and whether the file now exists at `C:\Program Files\Common Files\VST3\`.
+Report the output, exit code, and list all `AI Synth v*.vst3` entries in `C:\Program Files\Common Files\VST3\`.
