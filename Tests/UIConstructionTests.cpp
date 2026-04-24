@@ -77,8 +77,13 @@ struct UIConstructionTests : public juce::UnitTest
         {
             SynthVibe::CurveSelect cs(apvts, ParamIDs::mod1Curve);
             cs.setBounds(0, 0, 120, 22);
-            // default curve index = 0 ("lin")
-            expectEquals(cs.getCurrentIndex(), 0);
+            expectEquals(cs.getCurrentIndex(), 0);                  // default "lin"
+
+            // Round-trip: prove the ParameterAttachment is live, not just constructed.
+            auto* p = apvts.getParameter(ParamIDs::mod1Curve);
+            p->setValueNotifyingHost(p->convertTo0to1(2.f));
+            expectEquals(cs.getCurrentIndex(), 2);                  // "log"
+            p->setValueNotifyingHost(p->convertTo0to1(0.f));        // restore
         }
 
         beginTest("SoundTab constructs with Phase 2b grid");
