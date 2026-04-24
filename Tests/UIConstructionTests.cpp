@@ -14,6 +14,7 @@
 #include "UI/components/ModDestPicker.h"
 #include "UI/components/BipolarAmountBar.h"
 #include "UI/components/ModRow.h"
+#include "UI/components/ModMatrixTable.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -143,6 +144,13 @@ struct UIConstructionTests : public juce::UnitTest
             row.setBounds(0, 0, 640, 28);
             expect(row.getWidth() == 640);
             expect(row.getHeight() == 28);
+        }
+
+        beginTest("ModMatrixTable renders 8 rows");
+        {
+            SynthVibe::ModMatrixTable table(apvts);
+            table.setBounds(0, 0, 720, 360);
+            expectEquals(table.getNumRows(), 8);
         }
 
         beginTest("SoundTab constructs with Phase 2b grid");
