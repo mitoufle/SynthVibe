@@ -1,5 +1,6 @@
 #include "ParameterLayout.h"
 #include "ParameterIDs.h"
+#include "ModDestinations.h"
 
 using namespace juce;
 
@@ -246,6 +247,57 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         StringArray { "1/16", "1/8", "1/4", "1/2" }, 0));
     params.push_back(std::make_unique<AudioParameterInt>(
         ParamIDs::arpOctaveRange, "Arp Octaves", 1, 4, 1));
+
+    // -----------------------------------------------------------------------
+    // Modulation Matrix — 16 slots (UI shows 1..8; 9..16 reserved)
+    // -----------------------------------------------------------------------
+    {
+        const StringArray srcLabels {
+            "None", "LFO 1", "LFO 2", "Env Amp", "Env Filt",
+            "Velocity", "Modwheel", "Aftertouch", "Keytrack", "Random"
+        };
+
+        StringArray dstLabels;
+        for (const auto& d : SynthVibe::kDestinations)
+            dstLabels.add(d.label);
+
+        const StringArray curveLabels { "lin", "exp", "log", "s" };
+
+        struct SlotIds { const char* src; const char* dst; const char* amount; const char* curve; };
+        const SlotIds slots[16] = {
+            { ParamIDs::mod1Src,  ParamIDs::mod1Dst,  ParamIDs::mod1Amount,  ParamIDs::mod1Curve  },
+            { ParamIDs::mod2Src,  ParamIDs::mod2Dst,  ParamIDs::mod2Amount,  ParamIDs::mod2Curve  },
+            { ParamIDs::mod3Src,  ParamIDs::mod3Dst,  ParamIDs::mod3Amount,  ParamIDs::mod3Curve  },
+            { ParamIDs::mod4Src,  ParamIDs::mod4Dst,  ParamIDs::mod4Amount,  ParamIDs::mod4Curve  },
+            { ParamIDs::mod5Src,  ParamIDs::mod5Dst,  ParamIDs::mod5Amount,  ParamIDs::mod5Curve  },
+            { ParamIDs::mod6Src,  ParamIDs::mod6Dst,  ParamIDs::mod6Amount,  ParamIDs::mod6Curve  },
+            { ParamIDs::mod7Src,  ParamIDs::mod7Dst,  ParamIDs::mod7Amount,  ParamIDs::mod7Curve  },
+            { ParamIDs::mod8Src,  ParamIDs::mod8Dst,  ParamIDs::mod8Amount,  ParamIDs::mod8Curve  },
+            { ParamIDs::mod9Src,  ParamIDs::mod9Dst,  ParamIDs::mod9Amount,  ParamIDs::mod9Curve  },
+            { ParamIDs::mod10Src, ParamIDs::mod10Dst, ParamIDs::mod10Amount, ParamIDs::mod10Curve },
+            { ParamIDs::mod11Src, ParamIDs::mod11Dst, ParamIDs::mod11Amount, ParamIDs::mod11Curve },
+            { ParamIDs::mod12Src, ParamIDs::mod12Dst, ParamIDs::mod12Amount, ParamIDs::mod12Curve },
+            { ParamIDs::mod13Src, ParamIDs::mod13Dst, ParamIDs::mod13Amount, ParamIDs::mod13Curve },
+            { ParamIDs::mod14Src, ParamIDs::mod14Dst, ParamIDs::mod14Amount, ParamIDs::mod14Curve },
+            { ParamIDs::mod15Src, ParamIDs::mod15Dst, ParamIDs::mod15Amount, ParamIDs::mod15Curve },
+            { ParamIDs::mod16Src, ParamIDs::mod16Dst, ParamIDs::mod16Amount, ParamIDs::mod16Curve },
+        };
+
+        for (int i = 0; i < 16; ++i)
+        {
+            const auto& s = slots[i];
+            const auto label = "Mod " + String(i + 1) + " ";
+            params.push_back(std::make_unique<AudioParameterChoice>(
+                s.src, label + "Src", srcLabels, 0));
+            params.push_back(std::make_unique<AudioParameterChoice>(
+                s.dst, label + "Dst", dstLabels, 0));
+            params.push_back(std::make_unique<AudioParameterFloat>(
+                s.amount, label + "Amount",
+                NormalisableRange<float>(-1.f, 1.f, 0.001f), 0.f));
+            params.push_back(std::make_unique<AudioParameterChoice>(
+                s.curve, label + "Curve", curveLabels, 0));
+        }
+    }
 
     return { params.begin(), params.end() };
 }

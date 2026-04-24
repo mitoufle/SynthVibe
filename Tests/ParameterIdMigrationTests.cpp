@@ -35,6 +35,32 @@ struct ParameterIdMigrationTests : public juce::UnitTest
         expectEquals(juce::String(SynthVibe::kDestinations[12].paramId), juce::String(ParamIDs::ampRelease));
         expectEquals(juce::String(SynthVibe::kDestinations[12].label),   juce::String("Amp Release"));
 
+        beginTest("Mod slots register with correct defaults");
+        {
+            juce::AudioProcessorGraph dummyGraph;
+            juce::AudioProcessorValueTreeState apvts(
+                dummyGraph, nullptr, "AISynthState", ParameterLayout::create());
+
+            auto readFloat = [&](const char* id) {
+                auto* p = apvts.getRawParameterValue(id);
+                expect(p != nullptr, juce::String("missing param: ") + id);
+                return p ? p->load() : 0.f;
+            };
+
+            // Source default = 0 ("none")
+            expectEquals(readFloat(ParamIDs::mod1Src), 0.f);
+            // Destination default = 0 ("none")
+            expectEquals(readFloat(ParamIDs::mod1Dst), 0.f);
+            // Amount default = 0 (centre of -1..+1)
+            expectWithinAbsoluteError(readFloat(ParamIDs::mod1Amount), 0.f, 0.001f);
+            // Curve default = 0 ("lin")
+            expectEquals(readFloat(ParamIDs::mod1Curve), 0.f);
+
+            // Reserved slots 9..16 also present
+            expect(apvts.getRawParameterValue(ParamIDs::mod16Amount) != nullptr,
+                   "reserved slot 16 amount must be registered");
+        }
+
         beginTest("Phase 2b new parameters are registered with correct defaults");
         {
             juce::AudioProcessorGraph dummyGraph;
