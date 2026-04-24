@@ -41,9 +41,15 @@ private:
 
     void recomputeCoeffs()
     {
+        // -60 dB convention: after `decay`/`release` seconds the envelope has
+        // dropped to 10⁻³ of its starting distance to the target. Treating the
+        // parameter as a raw time constant (exp(-1/...)) left audible tails
+        // of ~11×release because reaching the Idle threshold (1e-5) takes
+        // many time constants. 6.908 = -ln(10⁻³).
+        constexpr float k = 6.908f;
         const float sr = static_cast<float>(sampleRate);
-        decayCoeff   = std::exp(-1.f / (std::max(0.0001f, params.decay)   * sr));
-        releaseCoeff = std::exp(-1.f / (std::max(0.0001f, params.release) * sr));
+        decayCoeff   = std::exp(-k / (std::max(0.0001f, params.decay)   * sr));
+        releaseCoeff = std::exp(-k / (std::max(0.0001f, params.release) * sr));
     }
 
     double sampleRate    = 44100.0;

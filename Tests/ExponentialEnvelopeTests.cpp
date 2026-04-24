@@ -10,34 +10,34 @@ struct ExponentialEnvelopeTests : public juce::UnitTest
     {
         const double sr = 48000.0;
 
-        beginTest("decay converges exponentially toward sustain");
+        // Engine convention: after `decay`/`release` seconds the envelope has
+        // closed ~99.9 % of the gap to its target (−60 dB, i.e. exp(−6.908)).
+        beginTest("decay reaches sustain within −60 dB at t = decay");
         {
             Envelope env;
             env.setSampleRate(sr);
             Envelope::Params p;
             p.attack  = 0.001f;
-            p.decay   = 0.050f;   // tau = 50 ms
+            p.decay   = 0.050f;
             p.sustain = 0.5f;
             p.release = 0.1f;
             env.setParams(p);
             env.noteOn();
 
-            // Skip the 48-sample attack then sample 4 tau into decay.
             const int skip = static_cast<int>(0.001 * sr) + 2;
             for (int i = 0; i < skip; ++i) env.getNextSample();
 
-            const int stepsFourTau = static_cast<int>(4.0 * p.decay * sr);
-            for (int i = 0; i < stepsFourTau; ++i) env.getNextSample();
+            const int stepsOneDecay = static_cast<int>(p.decay * sr);
+            for (int i = 0; i < stepsOneDecay; ++i) env.getNextSample();
 
             const float level = env.getNextSample();
-            // After 4 tau, (1 - sustain) * exp(-4) ≈ 0.5 * 0.0183 ≈ 0.00916.
-            const float expected = p.sustain + (1.f - p.sustain) * std::exp(-4.f);
-            expect(std::abs(level - expected) < 0.01f,
+            // Remaining distance to sustain should be under 2 × 10⁻³.
+            expect(std::abs(level - p.sustain) < 0.002f,
                    juce::String("decay level ") + juce::String(level)
-                 + " differs from expected " + juce::String(expected));
+                 + " should be within −60 dB of sustain " + juce::String(p.sustain));
         }
 
-        beginTest("release decays exponentially from noteOff level");
+        beginTest("release reaches −60 dB at t = release");
         {
             Envelope env;
             env.setSampleRate(sr);
@@ -45,21 +45,21 @@ struct ExponentialEnvelopeTests : public juce::UnitTest
             p.attack  = 0.001f;
             p.decay   = 0.001f;
             p.sustain = 1.0f;
-            p.release = 0.100f;   // tau = 100 ms
+            p.release = 0.100f;
             env.setParams(p);
             env.noteOn();
 
-            // Reach sustain (=1) within a few ms.
             for (int i = 0; i < 1000; ++i) env.getNextSample();
 
             env.noteOff();
-            const int stepsOneTau = static_cast<int>(p.release * sr);
-            for (int i = 0; i < stepsOneTau; ++i) env.getNextSample();
+            const int stepsOneRelease = static_cast<int>(p.release * sr);
+            for (int i = 0; i < stepsOneRelease; ++i) env.getNextSample();
 
             const float level = env.getNextSample();
-            // After 1 tau, level should be ~ 1.0 * exp(-1) ≈ 0.368.
-            expect(std::abs(level - std::exp(-1.f)) < 0.02f,
-                   juce::String("release at 1 tau was ") + juce::String(level));
+            // At t = release, level ≈ exp(−6.908) ≈ 10⁻³.
+            expect(level < 0.002f,
+                   juce::String("release at t=release was ") + juce::String(level)
+                 + " (expected below −60 dB)");
         }
 
         beginTest("noteOn during release retriggers smoothly (no snap)");
