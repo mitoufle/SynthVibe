@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../DesignTokens.h"
+#include "PlotFrame.h"
 
 namespace SynthVibe
 {
@@ -24,7 +25,7 @@ namespace SynthVibe
 
         void paint(juce::Graphics& g) override
         {
-            auto b = getLocalBounds().toFloat().reduced(2.f);
+            auto b = drawPlotFrame(g, getLocalBounds().toFloat());
             const float midY = b.getCentreY();
             const float amp  = b.getHeight() * 0.35f;
 

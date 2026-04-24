@@ -96,13 +96,15 @@ public:
     void paint(juce::Graphics& g) override
     {
         using namespace SynthVibe::Tokens;
+        // Interior panels use panel2 (one step above the editor's bg) so they
+        // lift visually — matches the frame/panel relationship in the hi-fi mock.
         for (auto r : { osc1Bounds, osc2Bounds, filterBounds, ampEnvBounds, fltEnvBounds })
         {
             auto f = r.toFloat().reduced(2.f);
-            g.setColour(panel);
-            g.fillRoundedRectangle(f, radiusMd);
+            g.setColour(panel2);
+            g.fillRoundedRectangle(f, radiusLg);
             g.setColour(edge);
-            g.drawRoundedRectangle(f, radiusMd, 1.f);
+            g.drawRoundedRectangle(f, radiusLg, 1.f);
         }
     }
 
@@ -112,15 +114,19 @@ public:
     {
         using namespace SynthVibe::Tokens;
         const int headerH = 20;
-        const int scopeH  = 60;
         const int selectH = 26;
 
+        // 2-column layout: OSCs stacked on the left, Filter + 2 Envelopes on
+        // the right. Matches the Night Plum hi-fi mock. 40/60 split gives the
+        // right column enough room for the filter knobs and envelope editors.
         auto area = getLocalBounds().reduced(spaceSm);
-        const int colW = area.getWidth() / 3;
-        auto col1 = area.removeFromLeft(colW).reduced(spaceXs, 0);
-        auto col2 = area.removeFromLeft(colW).reduced(spaceXs, 0);
-        auto col3 = area.reduced(spaceXs, 0);
+        const int leftW = area.getWidth() * 40 / 100;
+        auto leftCol  = area.removeFromLeft(leftW).reduced(spaceXs, 0);
+        auto rightCol = area.reduced(spaceXs, 0);
 
+        // Each OSC panel: header on top; body is a horizontal split with the
+        // scope on the left and the WaveTypeSelect + 3×3 knob grid on the
+        // right. Scope is ~40 % of the body width to read clearly at a glance.
         auto layoutOscPanel = [&](juce::Rectangle<int>& outBounds,
                                   juce::Rectangle<int> col,
                                   SynthVibe::PanelHeader& header,
@@ -134,8 +140,12 @@ public:
             auto c = col.reduced(spaceSm);
             header.setBounds(c.removeFromTop(headerH));
             c.removeFromTop(spaceXs);
-            scope.setBounds(c.removeFromTop(scopeH));
-            c.removeFromTop(spaceXs);
+
+            const int scopeW = c.getWidth() * 40 / 100;
+            auto scopeBox = c.removeFromLeft(scopeW);
+            c.removeFromLeft(spaceSm);
+            scope.setBounds(scopeBox);
+
             waveSel.setBounds(c.removeFromTop(selectH));
             c.removeFromTop(spaceSm);
             const int rowH = c.getHeight() / 3;
@@ -144,42 +154,52 @@ public:
             layoutKnobsRow(c, unisonRow);
         };
 
-        layoutOscPanel(osc1Bounds, col1,
+        const int oscH = leftCol.getHeight() / 2;
+        layoutOscPanel(osc1Bounds, leftCol.removeFromTop(oscH),
                        osc1Header, osc1Scope, osc1Wave,
                        { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune },
                        { &knobOsc1Phase, &knobOsc1Pwm, &knobOsc1Level },
                        { &knobUniVoices, &knobUniDetune, &knobUniSpread });
 
-        layoutOscPanel(osc2Bounds, col2,
+        layoutOscPanel(osc2Bounds, leftCol,
                        osc2Header, osc2Scope, osc2Wave,
                        { &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune },
                        { &knobOsc2Phase, &knobOsc2Pwm, &knobOsc2Level },
                        { &knobOsc2UniVoices, &knobOsc2UniDetune, &knobOsc2UniSpread });
 
-        const int filterH = col3.getHeight() * 34 / 100;
-        const int envH    = (col3.getHeight() - filterH) / 2;
+        // Right column: Filter 40 %, AmpEnv 30 %, FltEnv 30 %. Filter gets
+        // the extra height so its 5-pill selector + 2 knob rows stay legible.
+        const int filterH = rightCol.getHeight() * 40 / 100;
+        const int envH    = (rightCol.getHeight() - filterH) / 2;
 
-        filterBounds = col3.removeFromTop(filterH);
+        filterBounds = rightCol.removeFromTop(filterH);
         auto cf = filterBounds.reduced(spaceSm);
         filterHeader.setBounds(cf.removeFromTop(headerH));
         cf.removeFromTop(spaceXs);
-        filterResponse.setBounds(cf.removeFromTop(cf.getHeight() / 2));
-        cf.removeFromTop(spaceXs);
+
+        // Filter body is horizontal: response viz on the left, type selector
+        // + knobs stacked on the right. The old all-vertical split squeezed
+        // the knobs to ~30 px tall, which made them unreadable.
+        const int vizW = cf.getWidth() * 42 / 100;
+        auto vizBox = cf.removeFromLeft(vizW);
+        cf.removeFromLeft(spaceSm);
+        filterResponse.setBounds(vizBox);
+
         filterType.setBounds(cf.removeFromTop(selectH));
-        cf.removeFromTop(spaceXs);
+        cf.removeFromTop(spaceSm);
         const int filterKnobRowH = cf.getHeight() / 2;
         layoutKnobsRow(cf.removeFromTop(filterKnobRowH),
                        { &knobCutoff, &knobResonance, &knobFilterEnv });
         layoutKnobsRow(cf,
                        { &knobFilterDrive, &knobFilterKeytrack, nullptr });
 
-        ampEnvBounds = col3.removeFromTop(envH);
+        ampEnvBounds = rightCol.removeFromTop(envH);
         auto ca = ampEnvBounds.reduced(spaceSm);
         ampEnvHeader.setBounds(ca.removeFromTop(headerH));
         ca.removeFromTop(spaceXs);
         ampEnv.setBounds(ca);
 
-        fltEnvBounds = col3;
+        fltEnvBounds = rightCol;
         auto cfe = fltEnvBounds.reduced(spaceSm);
         fltEnvHeader.setBounds(cfe.removeFromTop(headerH));
         cfe.removeFromTop(spaceXs);

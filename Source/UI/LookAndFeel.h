@@ -83,23 +83,45 @@ public:
         const float arcSweep  = juce::degreesToRadians(knobArcSweepDeg);
         const float arcValue  = arcStart + sliderPos * arcSweep;
         const float tickAngle = arcValue - juce::MathConstants<float>::halfPi;
+        const auto arcColour  = slider.findColour(juce::Slider::rotarySliderFillColourId);
 
-        // Track arc
+        // Unfilled travel track — kept subtle vs the mock's zero-track look,
+        // so users can still see where the knob is heading to.
         juce::Path track;
         track.addCentredArc(cx, cy, rOuter, rOuter, 0.f, arcStart, arcStart + arcSweep, true);
-        g.setColour(edge);
-        g.strokePath(track, juce::PathStrokeType(knobArcThickness));
+        g.setColour(edge.withAlpha(0.45f));
+        g.strokePath(track, juce::PathStrokeType(knobArcThickness * 0.75f));
 
-        // Value arc
+        // Value arc — the mock glows the arc via a 3 px drop-shadow at 50 %
+        // alpha. Emulated here as a wider low-alpha underlay stroked beneath
+        // the sharp arc on top.
         juce::Path value;
         value.addCentredArc(cx, cy, rOuter, rOuter, 0.f, arcStart, arcValue, true);
-        const auto arcColour = slider.findColour(juce::Slider::rotarySliderFillColourId);
+        g.setColour(arcColour.withAlpha(0.35f));
+        g.strokePath(value, juce::PathStrokeType(knobArcThickness + 3.f));
         g.setColour(arcColour);
         g.strokePath(value, juce::PathStrokeType(knobArcThickness));
 
-        // Inner body
-        g.setColour(panel2);
+        // Inner body — vertical gradient (top lighter → bottom darker) gives
+        // the mock's soft 3D read under the arc.
+        juce::ColourGradient body(panel2.brighter(0.08f),
+                                  cx, cy - rInner,
+                                  panel.darker(0.10f),
+                                  cx, cy + rInner,
+                                  false);
+        g.setGradientFill(body);
         g.fillEllipse(cx - rInner, cy - rInner, rInner * 2.f, rInner * 2.f);
+
+        // Top highlight — 6 % white radial reflection near the top.
+        juce::ColourGradient topHL(juce::Colours::white.withAlpha(0.06f),
+                                   cx, cy - rInner * 0.4f,
+                                   juce::Colours::transparentWhite,
+                                   cx, cy + rInner * 0.2f,
+                                   true);
+        g.setGradientFill(topHL);
+        g.fillEllipse(cx - rInner, cy - rInner, rInner * 2.f, rInner * 2.f);
+
+        // Edge ring
         g.setColour(edge);
         g.drawEllipse(cx - rInner, cy - rInner, rInner * 2.f, rInner * 2.f, 1.f);
 

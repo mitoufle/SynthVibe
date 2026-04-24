@@ -8,7 +8,8 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
       soundTab(p.apvts),
       modTab(p.apvts),
       fxTab(p.apvts),
-      arpTab(p.apvts)
+      arpTab(p.apvts),
+      keyboard(p.keyboardState)
 {
     setLookAndFeel(&laf);
     setSize(1280, 720);
@@ -16,8 +17,7 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
     const juce::StringArray tabNames { "SOUND", "MOD", "FX", "ARP" };
     for (int i = 0; i < 4; ++i)
     {
-        tabButtons[i].setButtonText(tabNames[i]);
-        tabButtons[i].setClickingTogglesState(false);
+        tabButtons[i].setLabel(tabNames[i]);
         tabButtons[i].onClick = [this, i] { showTab(i); };
         addAndMakeVisible(tabButtons[i]);
     }
@@ -28,6 +28,7 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
     addAndMakeVisible(modTab);
     addAndMakeVisible(fxTab);
     addAndMakeVisible(arpTab);
+    addAndMakeVisible(keyboard);
 
     showTab(0);
 }
@@ -39,7 +40,21 @@ AISynthEditor::~AISynthEditor()
 
 void AISynthEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(SynthVibe::Tokens::bg);
+    using namespace SynthVibe::Tokens;
+    g.fillAll(bg);
+
+    // Tab-bar strip sits on panel colour (brighter than bg) with a 1 px edge
+    // line on its lower border — matches the mock's sub-header band under
+    // the top bar.
+    if (! tabBarBounds.isEmpty())
+    {
+        g.setColour(panel);
+        g.fillRect(tabBarBounds);
+        g.setColour(edge);
+        g.drawHorizontalLine(tabBarBounds.getBottom() - 1,
+                             (float) tabBarBounds.getX(),
+                             (float) tabBarBounds.getRight());
+    }
 }
 
 void AISynthEditor::resized()
@@ -47,6 +62,7 @@ void AISynthEditor::resized()
     const int topBarH    = 38;
     const int tabBarH    = 30;
     const int bottomBarH = 26;
+    const int keyboardH  = 70;
     const int pad        = 6;
 
     auto area = getLocalBounds().reduced(pad);
@@ -58,12 +74,15 @@ void AISynthEditor::resized()
     area.removeFromTop(pad);
 
     auto tabRow = area.removeFromTop(tabBarH);
+    tabBarBounds = tabRow; // cached for paint()
     const int tabW = tabRow.getWidth() / 4;
     for (int i = 0; i < 4; ++i)
-        tabButtons[i].setBounds(tabRow.removeFromLeft(tabW).reduced(2, 0));
+        tabButtons[i].setBounds(tabRow.removeFromLeft(tabW));
 
     area.removeFromTop(pad);
     bottomBar.setBounds(area.removeFromBottom(bottomBarH));
+    area.removeFromBottom(pad);
+    keyboard.setBounds(area.removeFromBottom(keyboardH));
     area.removeFromBottom(pad);
 
     soundTab.setBounds(area);
@@ -81,7 +100,7 @@ void AISynthEditor::showTab(int index)
     arpTab  .setVisible(index == 3);
 
     for (int i = 0; i < 4; ++i)
-        tabButtons[i].setToggleState(i == index, juce::dontSendNotification);
+        tabButtons[i].setActive(i == index);
 
     repaint();
 }

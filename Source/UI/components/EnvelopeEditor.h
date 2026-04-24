@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../DesignTokens.h"
 #include "../Fonts.h"
+#include "PlotFrame.h"
 
 namespace SynthVibe
 {
@@ -40,8 +41,16 @@ namespace SynthVibe
             const float s = apvtsRef.getRawParameterValue(sID)->load();
             const float r = apvtsRef.getRawParameterValue(rID)->load();
 
-            auto b = getLocalBounds().toFloat().reduced(6.f);
-            b.removeFromBottom(14.f); // space for readout line
+            auto frameBounds = getPlotFrameBounds();
+            auto b = drawPlotFrame(g, frameBounds);
+
+            // Mock shows a subtle "DRAG CORNERS" hint at the top-right of the
+            // plot so users discover the interaction on first look.
+            g.setColour(Tokens::ink4);
+            g.setFont(Fonts::mono(Tokens::Font::tiny));
+            g.drawText("DRAG CORNERS",
+                       frameBounds.toNearestInt().reduced(8, 6),
+                       juce::Justification::topRight);
 
             const auto yFor = [&](float level) {
                 return b.getBottom() - level * b.getHeight();
@@ -120,8 +129,7 @@ namespace SynthVibe
         void mouseDrag(const juce::MouseEvent& e) override
         {
             if (dragNode < 0) return;
-            auto b = getLocalBounds().toFloat().reduced(6.f);
-            b.removeFromBottom(14.f);
+            auto b = getPlotInnerBounds();
 
             const float normX = juce::jlimit(0.f, 1.f, (e.position.x - b.getX()) / b.getWidth());
             const float normY = juce::jlimit(0.f, 1.f, 1.f - (e.position.y - b.getY()) / b.getHeight());
@@ -163,6 +171,25 @@ namespace SynthVibe
         }
 
     private:
+        // The plot frame is the full component minus the readout strip and the
+        // ~4 px gap that separates it from the frame. The inner (draw) rect is
+        // what drawPlotFrame returns — paint, mouseDrag and findNearestNode
+        // all use it so hit-testing matches what's drawn.
+        static constexpr float kReadoutH = 14.f;
+        static constexpr float kReadoutGap = 4.f;
+        static constexpr float kPlotInnerInset = 4.f;
+
+        juce::Rectangle<float> getPlotFrameBounds() const noexcept
+        {
+            auto f = getLocalBounds().toFloat();
+            f.removeFromBottom(kReadoutH + kReadoutGap);
+            return f;
+        }
+        juce::Rectangle<float> getPlotInnerBounds() const noexcept
+        {
+            return getPlotFrameBounds().reduced(kPlotInnerInset);
+        }
+
         // Fixed-zone allocation: each ADSR parameter owns a slice of the panel
         // width. This decouples each node's X position from the others' values,
         // so e.g. a long attack no longer squashes the release node off-screen
@@ -230,8 +257,7 @@ namespace SynthVibe
             const float d = apvtsRef.getRawParameterValue(dID)->load();
             const float s = apvtsRef.getRawParameterValue(sID)->load();
             const float r = apvtsRef.getRawParameterValue(rID)->load();
-            auto b = getLocalBounds().toFloat().reduced(6.f);
-            b.removeFromBottom(14.f);
+            auto b = getPlotInnerBounds();
 
             const juce::Point<float> nodes[] = {
                 { xForAttack(a, b),       b.getBottom() - 1.f * b.getHeight() },

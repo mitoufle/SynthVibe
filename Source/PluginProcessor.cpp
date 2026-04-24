@@ -28,6 +28,11 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
+    // Merge UI keyboard events with host-sent MIDI so both paths reach the
+    // synth through the same sample-accurate dispatch loop below.
+    keyboardState.processNextMidiBuffer(midiMessages, 0,
+                                        buffer.getNumSamples(), true);
+
     // Snapshot APVTS une seule fois par bloc (évite 26 getRawParameterValue × N events)
     const VoiceParams vp = buildVoiceParams();
 

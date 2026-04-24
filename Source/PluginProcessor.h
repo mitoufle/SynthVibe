@@ -42,6 +42,11 @@ public:
     PresetManager presetManager { apvts };
     int getActiveVoiceCount() const noexcept { return synth.getActiveVoiceCount(); }
 
+    // Collects UI-driven key presses (from the editor's MidiKeyboardComponent).
+    // Its events are merged into the MIDI buffer at the top of processBlock so
+    // UI clicks and host-sent MIDI travel through the same path.
+    juce::MidiKeyboardState keyboardState;
+
 private:
     SynthEngine synth;
     FXChain     fxChain;

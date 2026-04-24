@@ -9,6 +9,8 @@
 #include "UI/ModTab.h"
 #include "UI/FxTab.h"
 #include "UI/ArpTab.h"
+#include "UI/components/MainTab.h"
+#include "UI/components/SynthKeyboard.h"
 
 class AISynthEditor : public juce::AudioProcessorEditor
 {
@@ -26,13 +28,16 @@ private:
     TopBar    topBar;
     BottomBar bottomBar;
 
-    juce::TextButton tabButtons[4];
+    SynthVibe::MainTab tabButtons[4];
+    juce::Rectangle<int> tabBarBounds;
     int currentTab = 0;
 
     SoundTab soundTab;
     ModTab   modTab;
     FxTab    fxTab;
     ArpTab   arpTab;
+
+    SynthVibe::SynthKeyboard keyboard;
 
     void showTab(int index);
 

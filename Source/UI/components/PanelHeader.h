@@ -22,7 +22,9 @@ namespace SynthVibe
             g.setColour(dotColour);
             g.fillEllipse(dotX - dotR, dotY - dotR, dotR * 2.f, dotR * 2.f);
 
-            g.setColour(ink2);
+            // Mock uses the brightest ink for the title and letter-spacing 0.22em,
+            // so the mono panel title reads as the section's primary label.
+            g.setColour(ink);
             g.setFont(Fonts::mono(Font::panelTitle));
             g.drawText(titleText,
                        (int) (dotX + dotR + spaceSm),
@@ -30,10 +32,6 @@ namespace SynthVibe
                        (int) (b.getWidth() - (dotX + dotR + spaceSm)),
                        (int) b.getHeight(),
                        juce::Justification::centredLeft);
-
-            g.setColour(edge);
-            g.drawHorizontalLine((int) b.getBottom() - 1,
-                                 b.getX(), b.getRight());
         }
 
     private:

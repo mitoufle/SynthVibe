@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../DesignTokens.h"
+#include "PlotFrame.h"
 #include "../../Engine/FilterCoefficients.h"
 
 namespace SynthVibe
@@ -36,7 +37,7 @@ namespace SynthVibe
             const double sr = 48000.0;
             const auto coeffs = FilterCoefficients::compute(t, cutoff, q, sr);
 
-            auto b = getLocalBounds().toFloat().reduced(4.f);
+            auto b = drawPlotFrame(g, getLocalBounds().toFloat());
             const int N = 120;
             const float fLow  = 20.f;
             const float fHigh = 20000.f;
