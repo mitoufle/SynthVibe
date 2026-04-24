@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AISynth — Wireframe Explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f1ec;
+    --paper: #fbf9f4;
+    --ink: #1c1b1a;
+    --ink-2: #3b3936;
+    --ink-3: #6a6763;
+    --ink-4: #9a9691;
+    --rule: #cfcbc3;
+    --rule-soft: #e4dfd6;
+    --accent: #d94a2b;
+    --note: #8a5a1a;
+    --grid: rgba(28,27,26,0.045);
+  }
+
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .page {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 32px 40px 120px;
+  }
+
+  /* ---- Header ---- */
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+  }
+  .head h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 44px;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: 0.5px;
+  }
+  .head h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-align: right;
+  }
+  .head .meta .proj { color: var(--ink); font-weight: 700; }
+
+  .intro {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+    margin-bottom: 36px;
+  }
+  .intro p { margin: 0 0 10px; color: var(--ink-2); max-width: 62ch; }
+  .intro .note {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--note);
+    line-height: 1.2;
+  }
+  .intro .note::before { content: '→ '; color: var(--accent); }
+  .system {
+    border: 1px dashed var(--ink-3);
+    padding: 16px 18px;
+    background: var(--paper);
+  }
+  .system h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .system ul { margin: 0; padding-left: 18px; }
+  .system li { font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
+
+  /* ---- Tweaks panel ---- */
+  .tweaks {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 260px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 14px 14px 12px;
+    z-index: 50;
+    display: none;
+    font-size: 12px;
+  }
+  .tweaks.open { display: block; }
+  .tweaks h4 {
+    margin: 0 0 10px;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    line-height: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .tweaks h4 span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+  }
+  .tweaks .group { margin-bottom: 12px; }
+  .tweaks .group > label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .swatch {
+    height: 32px;
+    border: 1px solid var(--ink);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .swatch.active { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .swatch div { flex: 1; }
+  .tweaks .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tweaks button.pill, .tweaks .pill {
+    border: 1px solid var(--ink);
+    background: transparent;
+    padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .tweaks .pill.on { background: var(--ink); color: var(--paper); }
+
+  .tweaks-toggle {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 49;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    padding: 6px 14px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+  }
+  .tweaks-toggle.hidden { display: none; }
+
+  /* ---- Tab bar ---- */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    border: 1px solid var(--ink);
+    border-bottom: none;
+    background: var(--paper);
+    padding: 10px 14px 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 150px;
+    transform: translateY(1px);
+  }
+  .tabs button .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.1em;
+  }
+  .tabs button .name { font-family: 'Caveat', cursive; font-size: 20px; line-height: 1; color: var(--ink); }
+  .tabs button.active {
+    background: var(--bg);
+    color: var(--ink);
+    box-shadow: inset 0 3px 0 var(--accent);
+  }
+  .tabs button.active .num { color: var(--accent); }
+
+  /* ---- Wireframe frame ---- */
+  .frame-wrap {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 28px;
+    box-shadow: 6px 6px 0 var(--ink);
+    position: relative;
+  }
+  .frame-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 24px;
+  }
+  .frame-header h2 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 34px;
+    margin: 0 0 4px;
+    line-height: 1;
+  }
+  .frame-header .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .frame-header .tagline {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--note);
+    text-align: right;
+    max-width: 380px;
+    line-height: 1.15;
+  }
+
+  /* The plugin canvas — 1200x750 scaled via max-width */
+  .plugin {
+    width: 100%;
+    aspect-ratio: 1200 / 750;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+    font-size: 12px;
+    container-type: inline-size;
+  }
+
+  /* scale ink inside plugin so 1200px design numbers roughly map */
+  .plugin * { box-sizing: border-box; }
+
+  /* Common wireframe primitives */
+  .wf-box {
+    border: 1.2px solid var(--ink);
+    background: var(--paper);
+    position: relative;
+  }
+  .wf-dashed { border: 1.2px dashed var(--ink-3); }
+  .wf-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .wf-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .wf-hand { font-family: 'Caveat', cursive; font-size: 16px; color: var(--note); line-height: 1.1; }
+  .wf-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-2); }
+
+  /* Annotation callouts */
+  .annot {
+    position: absolute;
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--note);
+    line-height: 1.1;
+    pointer-events: none;
+    max-width: 180px;
+  }
+  .annot .arrow {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  body.no-annot .annot { display: none; }
+
+  /* Knobs and controls */
+  .knob {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.2px solid var(--ink);
+    background:
+      conic-gradient(from 225deg, var(--accent) 0% 60%, transparent 60% 75%, var(--rule) 75% 100%);
+    position: relative;
+  }
+  .knob::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+  }
+  .knob::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 2px;
+    height: 10px;
+    background: var(--ink);
+    transform: translateX(-50%) rotate(35deg);
+    transform-origin: 50% 14px;
+  }
+  .knob-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .knob-group .wf-label { font-size: 8.5px; }
+
+  .slider-v { width: 18px; height: 80px; border: 1.2px solid var(--ink); position: relative; background: var(--paper); }
+  .slider-v::before {
+    content: '';
+    position: absolute;
+    left: -3px; right: -3px;
+    height: 4px;
+    background: var(--accent);
+    top: 30%;
+    border: 1px solid var(--ink);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--ink);
+    padding: 3px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+  .chip.accent { background: var(--accent); color: white; border-color: var(--ink); }
+
+  .kbd {
+    display: flex;
+    border-top: 1.2px solid var(--ink);
+    background: var(--paper);
+    height: 54px;
+    position: relative;
+  }
+  .kbd .white { flex: 1; border-right: 1px solid var(--ink); position: relative; }
+  .kbd .white:last-child { border-right: none; }
+  .kbd .black {
+    position: absolute;
+    width: 2.1%;
+    height: 60%;
+    background: var(--ink);
+    top: 0;
+  }
+  .kbd-note {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5px;
+    color: var(--ink-4);
+  }
+
+  /* Scope / visualizer */
+  .scope {
+    border: 1.2px solid var(--ink);
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+  .scope svg { width: 100%; height: 100%; display: block; }
+  .scope .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--rule-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--rule-soft) 1px, transparent 1px);
+    background-size: 10% 25%;
+  }
+
+  /* Side-by-side sometimes */
+  .stage {
+    display: grid;
+    gap: 20px;
+  }
+
+  /* Next steps */
+  .next {
+    margin-top: 40px;
+    padding: 22px 26px;
+    border: 1px dashed var(--ink);
+    background: var(--paper);
+  }
+  .next h3 {
+    font-family: 'Caveat', cursive;
+    font-size: 28px;
+    margin: 0 0 10px;
+  }
+  .next ul { margin: 0; padding-left: 20px; }
+  .next li { margin-bottom: 6px; color: var(--ink-2); }
+
+  /* Variant-local accent override gets applied to .plugin */
+  .plugin[data-accent="red"]   { --accent-local: #d94a2b; }
+  .plugin[data-accent="blue"]  { --accent-local: #2f64c4; }
+  .plugin[data-accent="green"] { --accent-local: #3f7f3f; }
+  .plugin[data-accent="plum"]  { --accent-local: #7c4680; }
+  .plugin[data-accent="gold"]  { --accent-local: #a5832b; }
+  .plugin[data-accent="ink"]   { --accent-local: #1c1b1a; }
+  .plugin[data-accent="teal"]  { --accent-local: #1f7a7a; }
+
+  .plugin .accent-fg { color: var(--accent-local, var(--accent)); }
+  .plugin .accent-bg { background: var(--accent-local, var(--accent)); color: white; }
+  .plugin .accent-border { border-color: var(--accent-local, var(--accent)); }
+  .plugin .knob { background:
+      conic-gradient(from 225deg, var(--accent-local, var(--accent)) 0% 60%, transparent 60% 75%, var(--rule) 75% 100%); }
+  .plugin .slider-v::before { background: var(--accent-local, var(--accent)); }
+
+  .print-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-4);
+    margin-top: 14px;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="head">
+    <h1>AISynth <em>·</em> wireframe explorations</h1>
+    <div class="meta">
+      <div class="proj">SynthVibe / AI Synth VST</div>
+      <div>v0.1 · lo-fi · 7 variations</div>
+      <div>1200 × 750 plugin window</div>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div>
+      <p>Seven different takes on the plugin window. Each one solves the same puzzle — <strong>natural-language sound design, 8-voice engine, AI preset history</strong> — but reaches for a different product personality and parameter metaphor.</p>
+      <p>Interactions stay consistent across all seven: the AI prompt lives in a <em>pull-down modal</em> that returns 3–4 variations to A/B; every prompt becomes an auto-saved preset; a mini keyboard sits at the bottom; a live oscilloscope is always running somewhere.</p>
+      <p class="note">Try the Tweaks button (bottom-right) to swap accent colors and toggle the sketchy annotations.</p>
+    </div>
+    <div class="system">
+      <h3>Design system</h3>
+      <ul>
+        <li><strong>Type:</strong> Inter (UI) · JetBrains Mono (values, labels) · Caveat (handwritten annotations)</li>
+        <li><strong>Palette:</strong> warm paper base (#fbf9f4), ink (#1c1b1a), one accent per variant</li>
+        <li><strong>Primitives:</strong> boxes, dashed placeholders, stroked knobs, monospace param readouts</li>
+        <li><strong>Reference:</strong> Vital-clean information density, but rougher edges + our own voice</li>
+      </ul>
+    </div>
+  </section>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <main id="stage" class="stage"></main>
+
+  <section class="next">
+    <h3>Next steps once we pick a direction</h3>
+    <ul>
+      <li>Lock one or two favorite layouts, then do a higher-fidelity pass with real type hierarchy and final spacing.</li>
+      <li>Design the AI pull-down modal flow (empty state → generating → 3–4 variation cards → apply).</li>
+      <li>Design the preset history drawer (auto-saved every prompt, with the prompt text visible).</li>
+      <li>Define the section-accent color system across OSC / Filter / Env / LFO / FX / Arp.</li>
+    </ul>
+  </section>
+
+</div>
+
+<button class="tweaks-toggle" id="tweaks-toggle">Tweaks ✎</button>
+<aside class="tweaks" id="tweaks">
+  <h4>Tweaks <span>AISYNTH / WF</span></h4>
+  <div class="group">
+    <label>Global accent palette</label>
+    <div class="swatches" id="swatches"></div>
+  </div>
+  <div class="group">
+    <label>Annotations</label>
+    <div class="row">
+      <button class="pill on" id="annot-on">ON</button>
+      <button class="pill" id="annot-off">OFF</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>Close</label>
+    <div class="row">
+      <button class="pill" id="tweaks-close">Hide panel</button>
+    </div>
+  </div>
+</aside>
+
+<script type="text/babel" data-presets="env" data-plugins="transform-modules-umd">
+  // no-op placeholder to make sure babel doesn't run anything here
+</script>
+
+<script>
+/* ============================================================
+   AISynth Wireframes — vanilla JS renderer
+   ============================================================ */
+
+const VARIATIONS = [
+  {
+    id: 'v1',
+    num: '01',
+    name: 'Classic tabs',
+    sub: 'spec-faithful baseline · Vital-clean',
+    tagline: "The spec as written, tightened. Tabs + knobs + envelope visualizers. Our safe, ship-it baseline.",
+    accent: 'red',
+    vibe: 'Pro studio tool · modern · minimalist',
+  },
+  {
+    id: 'v2',
+    num: '02',
+    name: 'Single canvas',
+    sub: 'no tabs · everything at once',
+    tagline: "One screen, all sections visible. Power-user density. Oscilloscope is the hero.",
+    accent: 'blue',
+    vibe: 'Pro studio tool · dense',
+  },
+  {
+    id: 'v3',
+    num: '03',
+    name: 'AI-forward',
+    sub: 'prompt is the star · reveal engine below',
+    tagline: "Prompt bar commands the top half. Synth params hide until you need them. Bold stance.",
+    accent: 'plum',
+    vibe: 'Futuristic · AI-forward',
+  },
+  {
+    id: 'v4',
+    num: '04',
+    name: 'Semantic sliders',
+    sub: 'feelings, not params',
+    tagline: "Warm↔Bright · Soft↔Aggressive. Macro first, deep params in a drawer. For non-engineers.",
+    accent: 'green',
+    vibe: 'Playful · creative',
+  },
+  {
+    id: 'v5',
+    num: '05',
+    name: 'Hardware homage',
+    sub: 'chunky modules · metal feel',
+    tagline: "Module rows like a hardware synth. Heavier borders, LED-style readouts. For tactile folks.",
+    accent: 'gold',
+    vibe: 'Retro hardware',
+  },
+  {
+    id: 'v6',
+    num: '06',
+    name: 'Signal flow',
+    sub: 'nodes wired left → right',
+    tagline: "OSC → Filter → Amp → FX drawn as a flow. Patch points visible. Great for learning.",
+    accent: 'teal',
+    vibe: 'Pro · pedagogical',
+  },
+  {
+    id: 'v7',
+    num: '07',
+    name: 'Minimal monochrome',
+    sub: 'one accent · infinite whitespace',
+    tagline: "Aggressive whitespace. Color reserved for the one thing that matters right now.",
+    accent: 'ink',
+    vibe: 'Modern · minimalist',
+  },
+];
+
+const PALETTES = [
+  { id: 'red',   label: 'Ember',   accent: '#d94a2b', paper: '#fbf9f4', ink: '#1c1b1a' },
+  { id: 'blue',  label: 'Cobalt',  accent: '#2f64c4', paper: '#f5f7fb', ink: '#141822' },
+  { id: 'green', label: 'Moss',    accent: '#3f7f3f', paper: '#f4f6f1', ink: '#1a1f17' },
+  { id: 'plum',  label: 'Plum',    accent: '#7c4680', paper: '#f8f4f8', ink: '#1d161f' },
+  { id: 'ink',   label: 'Ink',     accent: '#1c1b1a', paper: '#f2f1ec', ink: '#1c1b1a' },
+];
+
+/* ---------- Shared plugin chrome ---------- */
+
+function topBar() {
+  return `
+    <div class="wf-box" style="position:absolute;top:0;left:0;right:0;height:8%;display:flex;align-items:center;padding:0 14px;gap:14px;border-top:none;border-left:none;border-right:none;">
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div class="wf-title accent-fg" style="font-size:13px;letter-spacing:0.18em;">AISYNTH</div>
+        <div class="wf-label">v0.1</div>
+      </div>
+      <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:10px;">
+        <div class="wf-label">◀</div>
+        <div class="chip" style="min-width:180px;justify-content:center;">glassy pad — morning</div>
+        <div class="wf-label">▶</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="chip" style="cursor:default;">✶ prompt</button>
+        <div class="chip">save</div>
+        <div class="chip">load</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="wf-label">vol</div>
+          <div class="knob" style="width:22px;height:22px;"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bottomStatus(extra = '') {
+  return `
+    <div class="wf-box" style="position:absolute;left:0;right:0;bottom:9.5%;height:4.5%;border-left:none;border-right:none;display:flex;align-items:center;padding:0 14px;gap:16px;">
+      <div class="wf-label">voices</div>
+      <div style="display:flex;gap:2px;">
+        ${Array.from({length:8}).map((_,i)=>`<div style="width:10px;height:10px;border:1px solid var(--ink);${i<4?'background:var(--accent-local, var(--accent));':''}"></div>`).join('')}
+      </div>
+      <div class="wf-num">4/8</div>
+      <div style="flex:1;"></div>
+      <div class="wf-label">cpu</div>
+      <div class="wf-num">12%</div>
+      <div class="wf-label" style="margin-left:14px;">latency</div>
+      <div class="wf-num">3.2ms</div>
+      ${extra}
+    </div>
+  `;
+}
+
+function keyboard() {
+  // build 21 white + sprinkle blacks
+  const whiteCount = 21;
+  let whites = '';
+  for (let i = 0; i < whiteCount; i++) {
+    whites += `<div class="white">${i%7===0?`<div class="kbd-note">C${Math.floor(i/7)+2}</div>`:''}</div>`;
+  }
+  // rough black positions (pct of keyboard width, based on 21 whites)
+  const bw = 100 / whiteCount;
+  const blacks = [];
+  for (let o = 0; o < 3; o++) {
+    const base = o * 7;
+    [0,1,3,4,5].forEach((k)=>{
+      blacks.push(bw * (base + k + 1) - bw*0.3);
+    });
+  }
+  const blackHTML = blacks.map(left => `<div class="black" style="left:${left}%;"></div>`).join('');
+  return `
+    <div class="kbd" style="position:absolute;left:0;right:0;bottom:0;height:9.5%;">
+      ${whites}
+      ${blackHTML}
+    </div>
+  `;
+}
+
+/* ---------- Variation renderers (each returns the inside of .plugin) ---------- */
+
+function renderV1() {
+  // Classic tabs — OSC1+OSC2 stacked left, generous Filter + Amp Env + Flt Env on the right
+  const oscRow = (title, wave, sub) => `
+    <div class="wf-box" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div class="wf-title">${title}</div>
+          <div class="chip" style="padding:1px 6px;font-size:9px;">${wave} ▾</div>
+        </div>
+        <div class="wf-label">${sub}</div>
+      </div>
+      <div style="display:flex;gap:10px;flex:1;min-height:0;align-items:stretch;">
+        <div class="scope" style="flex:1.1;">
+          <svg viewBox="0 0 200 70" preserveAspectRatio="none">
+            ${wave==='saw'
+              ? `<path d="M0,35 L30,10 L30,60 L60,10 L60,60 L90,10 L90,60 L120,10 L120,60 L150,10 L150,60 L180,10 L180,60 L200,35" stroke="var(--accent-local, var(--accent))" stroke-width="1.5" fill="none"/>`
+              : `<path d="M0,20 L20,20 L20,50 L40,50 L40,20 L60,20 L60,50 L80,50 L80,20 L100,20 L100,50 L120,50 L120,20 L140,20 L140,50 L160,50 L160,20 L180,20 L180,50 L200,50" stroke="var(--accent-local, var(--accent))" stroke-width="1.5" fill="none"/>`}
+          </svg>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center;flex:1.4;">
+          ${['OCT','SEMI','DETUNE','LEVEL'].map(l=>`<div class="knob-group"><div class="knob" style="width:34px;height:34px;"></div><div class="wf-label" style="font-size:8.5px;">${l}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  return `
+    ${topBar()}
+    <!-- tab bar -->
+    <div style="position:absolute;top:8%;left:0;right:0;height:5.5%;border-bottom:1px solid var(--ink);display:flex;">
+      ${['SOUND','MOD','FX','ARP'].map((t,i)=>`
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-right:1px solid var(--rule);${i===0?'box-shadow:inset 0 -3px 0 var(--accent-local, var(--accent));':''}">
+          <span class="wf-title" style="${i===0?'':'color:var(--ink-3);'}">${t}</span>
+          ${i===0?`<span class="wf-label accent-fg">●</span>`:''}
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- content -->
+    <div style="position:absolute;top:14.5%;left:2%;right:2%;bottom:15%;display:grid;grid-template-columns:0.85fr 1.3fr;gap:12px;">
+
+      <!-- Left column: OSC 1 + OSC 2 stacked -->
+      <div style="display:flex;flex-direction:column;gap:10px;min-height:0;">
+        ${oscRow('OSC 1','saw','unison · 1v')}
+        ${oscRow('OSC 2','square','pwm · 50%')}
+      </div>
+
+      <!-- Right column: FILTER (bigger), AMP ENV (big viz), FLT ENV (big viz) -->
+      <div style="display:flex;flex-direction:column;gap:10px;min-height:0;">
+        <!-- FILTER -->
+        <div class="wf-box" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px;flex:1.1;min-height:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <div class="wf-title">FILTER</div>
+              <div class="chip" style="padding:1px 6px;font-size:9px;">LP 24db ▾</div>
+            </div>
+            <div class="wf-label">cutoff 820hz · res 0.34</div>
+          </div>
+          <div style="display:flex;gap:10px;flex:1;min-height:0;">
+            <div class="scope" style="flex:1.3;">
+              <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+                <path d="M0,50 L120,50 Q155,50 170,25 Q180,12 195,92 L300,96" stroke="var(--accent-local, var(--accent))" stroke-width="1.6" fill="none"/>
+                <circle cx="170" cy="25" r="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center;flex:1.4;">
+              ${['CUT','RES','DRIVE','ENV'].map(l=>`<div class="knob-group"><div class="knob" style="width:36px;height:36px;"></div><div class="wf-label" style="font-size:8.5px;">${l}</div></div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- AMP ENV — big editable viz, no knobs (drag the curve) -->
+        <div class="wf-box" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <div class="wf-title">AMP ENV</div>
+              <div class="wf-label">A 0.02 · D 0.4 · S 0.7 · R 1.2</div>
+            </div>
+            <div class="wf-label accent-fg">drag nodes to edit</div>
+          </div>
+          <div class="scope" style="flex:1;min-height:0;">
+            <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+              <!-- subtle grid -->
+              <path d="M0,50 L400,50" stroke="var(--rule-soft)" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <path d="M100,0 L100,100 M200,0 L200,100 M300,0 L300,100" stroke="var(--rule-soft)" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <!-- envelope shape -->
+              <path d="M0,95 L40,8 L100,45 L280,45 L380,95" stroke="var(--accent-local, var(--accent))" stroke-width="2" fill="none"/>
+              <path d="M0,95 L40,8 L100,45 L280,45 L380,95 L380,100 L0,100 Z" fill="var(--accent-local, var(--accent))" opacity="0.08"/>
+              <circle cx="0" cy="95" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="40" cy="8" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="100" cy="45" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="280" cy="45" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="380" cy="95" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <text x="42" y="4" font-family="JetBrains Mono" font-size="7" fill="var(--ink-3)">A</text>
+              <text x="102" y="41" font-family="JetBrains Mono" font-size="7" fill="var(--ink-3)">D</text>
+              <text x="190" y="41" font-family="JetBrains Mono" font-size="7" fill="var(--ink-3)">S</text>
+              <text x="344" y="91" font-family="JetBrains Mono" font-size="7" fill="var(--ink-3)">R</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- FLT ENV — big editable viz -->
+        <div class="wf-box" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <div class="wf-title">FILTER ENV</div>
+              <div class="wf-label">A 0.05 · D 0.7 · S 0.3 · R 0.9</div>
+            </div>
+            <div class="wf-label">amount +0.6</div>
+          </div>
+          <div class="scope" style="flex:1;min-height:0;">
+            <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+              <path d="M0,50 L400,50" stroke="var(--rule-soft)" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <path d="M100,0 L100,100 M200,0 L200,100 M300,0 L300,100" stroke="var(--rule-soft)" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <path d="M0,95 L60,15 L160,70 L280,70 L380,95" stroke="var(--accent-local, var(--accent))" stroke-width="2" fill="none" stroke-dasharray="5 3"/>
+              <circle cx="0" cy="95" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="60" cy="15" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="160" cy="70" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="280" cy="70" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+              <circle cx="380" cy="95" r="4.5" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:9%;left:38%;">slim tab bar <span class="arrow">↑</span></div>
+    <div class="annot" style="top:18%;left:2%;width:140px;">OSCs stacked · scope + knobs side-by-side <span class="arrow">↓</span></div>
+    <div class="annot" style="top:48%;left:42%;width:170px;">envelopes fill the space · drag any node to shape them <span class="arrow">→</span></div>
+  `;
+}
+
+function renderV2() {
+  // Single canvas — no tabs, everything at once.
+  return `
+    ${topBar()}
+    <!-- big oscilloscope top band -->
+    <div style="position:absolute;top:8.5%;left:2%;right:2%;height:16%;display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+      <div class="scope" style="background:var(--paper);">
+        <svg viewBox="0 0 400 80" preserveAspectRatio="none">
+          <path d="M0,40 ${Array.from({length:80}).map((_,i)=>{
+            const x = i*5; const y = 40 + Math.sin(i*0.35)*26 * Math.exp(-Math.abs(i-30)*0.005);
+            return `L${x},${y.toFixed(1)}`;
+          }).join(' ')}" stroke="var(--accent-local, var(--accent))" stroke-width="1.3" fill="none"/>
+        </svg>
+        <div style="position:absolute;top:6px;left:8px;" class="wf-label">oscilloscope · output</div>
+      </div>
+      <div class="wf-box" style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+        <div class="wf-title">SPECTRUM</div>
+        <div style="flex:1;display:flex;align-items:flex-end;gap:2px;">
+          ${Array.from({length:40}).map((_,i)=>{
+            const h = 10 + Math.abs(Math.sin(i*0.4)*70) * Math.exp(-i*0.05);
+            return `<div style="flex:1;height:${h}%;background:var(--accent-local, var(--accent));opacity:${0.3+i/80};"></div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- grid of modules -->
+    <div style="position:absolute;top:25.5%;left:2%;right:2%;bottom:15%;display:grid;grid-template-columns:repeat(4, 1fr);grid-template-rows:1fr 1fr;gap:8px;">
+      ${[
+        {t:'OSC 1', knobs:['oct','semi','det','lvl']},
+        {t:'OSC 2', knobs:['oct','semi','det','lvl']},
+        {t:'FILTER', knobs:['cut','res','drv','env']},
+        {t:'AMP ENV', knobs:['A','D','S','R']},
+        {t:'FLT ENV', knobs:['A','D','S','R']},
+        {t:'LFO 1', knobs:['rate','depth','phs','dst']},
+        {t:'DELAY', knobs:['time','fb','mix','—']},
+        {t:'CHORUS', knobs:['rate','dpt','mix','—']},
+      ].map(m=>`
+        <div class="wf-box" style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+          <div class="wf-title">${m.t}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;flex:1;">
+            ${m.knobs.map(k=>`<div class="knob-group"><div class="knob" style="width:28px;height:28px;"></div><div class="wf-label">${k}</div></div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:10%;left:40%;">scope is the hero · always on <span class="arrow">↓</span></div>
+    <div class="annot" style="bottom:18%;left:2%;width:180px;">every module visible · no clicks to reach anything <span class="arrow">↑</span></div>
+  `;
+}
+
+function renderV3() {
+  // AI-forward — prompt dominates, engine below
+  return `
+    ${topBar()}
+
+    <!-- big prompt area -->
+    <div style="position:absolute;top:10%;left:3%;right:3%;height:36%;display:grid;grid-template-columns:1.4fr 1fr;gap:14px;">
+      <div class="wf-box accent-border" style="padding:20px;display:flex;flex-direction:column;gap:12px;border-width:2px;">
+        <div class="wf-label">describe the sound</div>
+        <div style="font-family:'Caveat',cursive;font-size:34px;line-height:1.1;color:var(--ink);">
+          "warm analog pad, slow swell, a little wobble, like a foggy morning"
+        </div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="chip accent-bg">⚡ generate 4</div>
+          <div class="chip">🎲 surprise me</div>
+          <div class="chip">＋ attach reference</div>
+          <div style="flex:1;"></div>
+          <div class="wf-label">claude haiku 4.5 · 1.2s avg</div>
+        </div>
+      </div>
+      <div class="wf-box" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <div class="wf-label">4 variations</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;flex:1;">
+          ${[1,2,3,4].map(i=>`
+            <div class="wf-box ${i===2?'accent-border':''}" style="padding:8px;display:flex;flex-direction:column;gap:4px;${i===2?'border-width:2px;':''}">
+              <div class="wf-num">var ${i}</div>
+              <div class="scope" style="flex:1;">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <path d="M0,20 ${Array.from({length:25}).map((_,k)=>`L${k*4},${20+Math.sin(k*0.5+i)*10*Math.exp(-Math.abs(k-12)*0.05)}`).join(' ')}"
+                    stroke="var(--accent-local, var(--accent))" stroke-width="1" fill="none"/>
+                </svg>
+              </div>
+              <div class="wf-label" style="font-size:8px;">${['soft · slow','breathy · wide','wobbly · dark','clean · bright'][i-1]}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact engine strip -->
+    <div style="position:absolute;top:47%;left:3%;right:3%;bottom:15%;display:flex;flex-direction:column;gap:6px;">
+      <div class="wf-label" style="display:flex;justify-content:space-between;">
+        <span>engine · applied from var 2</span>
+        <span style="font-family:'Caveat',cursive;font-size:15px;color:var(--note);">click any knob to tweak by hand ↓</span>
+      </div>
+      <div style="flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;">
+        ${['OSC1','OSC2','FILT','AMP','LFO','FX'].map(t=>`
+          <div class="wf-box" style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+            <div class="wf-title" style="font-size:9px;">${t}</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;flex:1;">
+              ${[0,1,2,3].map(()=>`<div class="knob-group"><div class="knob" style="width:22px;height:22px;"></div></div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:12%;right:4%;">AI is the protagonist <span class="arrow">↑</span></div>
+    <div class="annot" style="bottom:19%;left:3%;width:220px;">engine collapses into a compact strip — still editable but not the focus <span class="arrow">↑</span></div>
+  `;
+}
+
+function renderV4() {
+  // Semantic sliders
+  return `
+    ${topBar()}
+    <div style="position:absolute;top:10%;left:3%;right:3%;bottom:15%;display:grid;grid-template-columns:1.2fr 1fr;gap:14px;">
+      <!-- Semantic macros -->
+      <div class="wf-box" style="padding:16px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="wf-title">FEEL</div>
+          <div class="wf-label">macro mode</div>
+        </div>
+        ${[
+          ['WARM','BRIGHT', 0.35],
+          ['SOFT','AGGRESSIVE', 0.65],
+          ['DRY','WET', 0.5],
+          ['STILL','MOVING', 0.4],
+          ['TIGHT','WIDE', 0.7],
+        ].map(([a,b,pos])=>`
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;justify-content:space-between;">
+              <div class="wf-num">${a}</div>
+              <div class="wf-num">${b}</div>
+            </div>
+            <div style="position:relative;height:14px;">
+              <div style="position:absolute;inset:5px 0;border-top:1.2px solid var(--ink);"></div>
+              <div style="position:absolute;left:${pos*100}%;top:0;transform:translateX(-50%);width:14px;height:14px;background:var(--accent-local, var(--accent));border:1.2px solid var(--ink);"></div>
+            </div>
+          </div>
+        `).join('')}
+        <div style="flex:1;"></div>
+        <div class="wf-hand">everything maps down to the real engine — you can still open the drawer →</div>
+      </div>
+
+      <!-- Right: live viz + expand drawer -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="scope" style="flex:1.3;">
+          <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+            <path d="M0,100 ${Array.from({length:80}).map((_,i)=>{
+              const x = i*5; const y = 100 + Math.sin(i*0.25)*50 * Math.exp(-Math.abs(i-40)*0.01);
+              return `L${x},${y.toFixed(1)}`;
+            }).join(' ')}" stroke="var(--accent-local, var(--accent))" stroke-width="1.5" fill="none"/>
+          </svg>
+          <div class="wf-label" style="position:absolute;top:8px;left:8px;">scope</div>
+        </div>
+        <div class="wf-box" style="padding:10px;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;justify-content:space-between;">
+            <div class="wf-title">AMP ENV</div>
+            <div class="wf-label">derived</div>
+          </div>
+          <div class="scope" style="height:60px;">
+            <svg viewBox="0 0 200 60" preserveAspectRatio="none">
+              <path d="M0,55 L30,10 L70,28 L150,28 L180,55" stroke="var(--accent-local, var(--accent))" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+        </div>
+        <div class="wf-box wf-dashed" style="padding:10px;display:flex;justify-content:space-between;align-items:center;">
+          <div class="wf-hand">deep params (knobs & all) →</div>
+          <div class="chip">expand ▾</div>
+        </div>
+      </div>
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:12%;right:3%;width:170px;">no jargon on the surface · real params one click away <span class="arrow">→</span></div>
+    <div class="annot" style="top:66%;left:3%;">macros drive everything — non-engineers stay in flow <span class="arrow">←</span></div>
+  `;
+}
+
+function renderV5() {
+  // Hardware homage — chunky rows
+  return `
+    ${topBar()}
+    <!-- three chunky module rows -->
+    <div style="position:absolute;top:10%;left:2%;right:2%;bottom:15%;display:grid;grid-template-rows:1fr 1fr 0.9fr;gap:8px;">
+      ${[
+        { t: 'OSCILLATORS', cells:[
+          {sub:'OSC 1', knobs:6},
+          {sub:'OSC 2', knobs:6},
+          {sub:'MIX', knobs:3},
+        ]},
+        { t: 'FILTER  ·  ENVELOPES', cells:[
+          {sub:'FILTER', knobs:4},
+          {sub:'AMP ENV', knobs:4},
+          {sub:'FLT ENV', knobs:4},
+        ]},
+        { t: 'FX  ·  ARP', cells:[
+          {sub:'DELAY', knobs:3},
+          {sub:'CHORUS', knobs:3},
+          {sub:'DRIVE', knobs:2},
+          {sub:'ARP', knobs:3},
+        ]},
+      ].map(row=>`
+        <div class="wf-box" style="border-width:2px;padding:0;display:flex;">
+          <div style="writing-mode:vertical-rl;transform:rotate(180deg);padding:10px 4px;border-right:2px solid var(--ink);background:var(--rule-soft);display:flex;align-items:center;justify-content:center;">
+            <div class="wf-title" style="letter-spacing:0.3em;">${row.t}</div>
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:${row.cells.map(c=>`${c.knobs}fr`).join(' ')};">
+            ${row.cells.map((c,i)=>`
+              <div style="padding:10px 12px;${i<row.cells.length-1?'border-right:1.5px solid var(--ink);':''}display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div class="wf-title">${c.sub}</div>
+                  <div class="chip" style="background:var(--ink);color:var(--paper);font-size:9px;padding:1px 5px;">${['ON','ON','ON','ON'][i]||'ON'}</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;flex:1;">
+                  ${Array.from({length:c.knobs}).map(()=>`
+                    <div class="knob-group">
+                      <div class="knob" style="width:38px;height:38px;"></div>
+                      <div class="wf-label" style="font-size:8px;">${['atk','dec','sus','rel','cut','res'][Math.floor(Math.random()*6)]}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:11%;left:2%;width:180px;">row labels like a rack unit <span class="arrow">→</span></div>
+    <div class="annot" style="bottom:19%;right:3%;">big knobs · on/off lamps per module <span class="arrow">↑</span></div>
+  `;
+}
+
+function renderV6() {
+  // Signal flow — left to right nodes
+  return `
+    ${topBar()}
+    <!-- signal flow graph -->
+    <div style="position:absolute;top:10%;left:2%;right:2%;bottom:15%;display:flex;flex-direction:column;gap:10px;">
+      <div style="flex:1;position:relative;">
+        <!-- flow line -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--ink)"/>
+            </marker>
+          </defs>
+          <path d="M 11% 40% L 22% 40%" stroke="var(--ink)" stroke-width="1.3" fill="none" marker-end="url(#arrowhead)"/>
+          <path d="M 11% 60% L 22% 60%" stroke="var(--ink)" stroke-width="1.3" fill="none" marker-end="url(#arrowhead)"/>
+          <path d="M 36% 50% L 47% 50%" stroke="var(--ink)" stroke-width="1.3" fill="none" marker-end="url(#arrowhead)"/>
+          <path d="M 61% 50% L 72% 50%" stroke="var(--ink)" stroke-width="1.3" fill="none" marker-end="url(#arrowhead)"/>
+          <path d="M 86% 50% L 97% 50%" stroke="var(--ink)" stroke-width="1.3" fill="none" marker-end="url(#arrowhead)"/>
+          <!-- env dashed connections -->
+          <path d="M 82% 82% Q 60% 70%, 49% 57%" stroke="var(--accent-local, var(--accent))" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
+          <path d="M 82% 82% Q 85% 65%, 85% 55%" stroke="var(--accent-local, var(--accent))" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
+        </svg>
+        <!-- nodes -->
+        <div style="position:absolute;left:1%;top:25%;width:10%;height:30%;" class="wf-box wf-dashed" >
+          <div style="padding:6px;"><div class="wf-title">OSC 1</div><div class="wf-label">saw</div>
+          <div class="scope" style="height:30px;margin-top:6px;">
+            <svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M0,15 L15,3 L15,27 L30,3 L30,27 L45,3 L45,27 L60,15" stroke="var(--accent-local,var(--accent))" stroke-width="1" fill="none"/></svg>
+          </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:1%;top:55%;width:10%;height:30%;" class="wf-box wf-dashed" >
+          <div style="padding:6px;"><div class="wf-title">OSC 2</div><div class="wf-label">square</div>
+          <div class="scope" style="height:30px;margin-top:6px;">
+            <svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M0,8 L10,8 L10,22 L20,22 L20,8 L30,8 L30,22 L40,22 L40,8 L50,8 L50,22 L60,22" stroke="var(--accent-local,var(--accent))" stroke-width="1" fill="none"/></svg>
+          </div>
+          </div>
+        </div>
+        <!-- mixer junction -->
+        <div style="position:absolute;left:22%;top:40%;width:14%;height:20%;" class="wf-box wf-dashed" >
+          <div style="padding:6px;text-align:center;"><div class="wf-title">MIX</div>
+            <div style="display:flex;justify-content:space-around;margin-top:6px;">
+              <div class="knob-group"><div class="knob" style="width:26px;height:26px;"></div><div class="wf-label" style="font-size:8px;">O1</div></div>
+              <div class="knob-group"><div class="knob" style="width:26px;height:26px;"></div><div class="wf-label" style="font-size:8px;">O2</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:47%;top:33%;width:14%;height:34%;" class="wf-box accent-border" style="border-width:2px;position:absolute;left:47%;top:33%;width:14%;height:34%;padding:8px;">
+          <div class="wf-title">FILTER · LP</div>
+          <div class="scope" style="height:52%;margin-top:6px;">
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+              <path d="M0,20 L40,20 Q55,20 60,10 Q65,8 70,30 L100,36" stroke="var(--accent-local,var(--accent))" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:space-around;margin-top:6px;">
+            ${['cut','res','drv'].map(l=>`<div class="knob-group"><div class="knob" style="width:22px;height:22px;"></div><div class="wf-label" style="font-size:8px;">${l}</div></div>`).join('')}
+          </div>
+        </div>
+        <div style="position:absolute;left:72%;top:40%;width:14%;height:20%;" class="wf-box wf-dashed">
+          <div style="padding:6px;"><div class="wf-title">AMP</div>
+          <div class="scope" style="height:28px;margin-top:6px;">
+            <svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M0,28 L10,4 L18,15 L45,15 L58,28" stroke="var(--accent-local,var(--accent))" stroke-width="1.2" fill="none"/></svg>
+          </div>
+          </div>
+        </div>
+        <!-- Envelopes / LFO at bottom sending dashed lines up -->
+        <div style="position:absolute;left:75%;top:75%;width:22%;height:18%;" class="wf-box wf-dashed">
+          <div style="padding:6px;display:flex;gap:10px;">
+            <div style="flex:1;"><div class="wf-title">AMP ENV</div><div class="scope" style="height:28px;margin-top:4px;"><svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M0,28 L10,4 L18,15 L45,15 L58,28" stroke="var(--accent-local,var(--accent))" stroke-width="1" fill="none"/></svg></div></div>
+            <div style="flex:1;"><div class="wf-title">FLT ENV</div><div class="scope" style="height:28px;margin-top:4px;"><svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M0,28 L8,10 L22,20 L50,20 L58,28" stroke="var(--accent-local,var(--accent))" stroke-width="1" fill="none" stroke-dasharray="2 2"/></svg></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- bottom strip: FX chain as connected blocks -->
+      <div style="height:34%;display:grid;grid-template-columns:repeat(5, 1fr);gap:6px;align-items:stretch;">
+        ${['DRIVE','CHORUS','DELAY','REVERB','OUT'].map((t,i)=>`
+          <div class="wf-box ${t==='OUT'?'accent-border':''}" style="padding:8px;display:flex;flex-direction:column;gap:6px;${t==='OUT'?'border-width:2px;':''}">
+            <div style="display:flex;justify-content:space-between;">
+              <div class="wf-title">${t}</div>
+              ${t!=='OUT'?`<div class="chip" style="font-size:8px;padding:0 4px;">ON</div>`:''}
+            </div>
+            <div style="display:flex;gap:6px;justify-content:space-around;flex:1;align-items:center;">
+              ${Array.from({length:t==='OUT'?1:3}).map(()=>`<div class="knob-group"><div class="knob" style="width:24px;height:24px;"></div></div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:11%;left:12%;">signal flows left→right · inspectable & pedagogical <span class="arrow">→</span></div>
+    <div class="annot" style="bottom:38%;left:58%;">dashed = modulation <span class="arrow">↓</span></div>
+  `;
+}
+
+function renderV7() {
+  // Minimal monochrome
+  return `
+    ${topBar()}
+    <div style="position:absolute;top:12%;left:6%;right:6%;bottom:16%;display:grid;grid-template-columns:1fr 1fr;gap:60px;">
+      <!-- left: big scope + current sound -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <div>
+          <div class="wf-label">now playing</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:28px;margin-top:4px;line-height:1.1;">glassy pad <span class="accent-fg">·</span> morning</div>
+          <div class="wf-label" style="margin-top:6px;">from prompt · 14 min ago</div>
+        </div>
+        <div class="scope" style="flex:1;border:none;border-top:1.2px solid var(--ink);border-bottom:1.2px solid var(--ink);">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+            <path d="M0,60 ${Array.from({length:80}).map((_,i)=>{
+              const x = i*5;
+              const y = 60 + Math.sin(i*0.25)*36 * Math.exp(-Math.abs(i-40)*0.012);
+              return `L${x},${y.toFixed(1)}`;
+            }).join(' ')}" stroke="var(--ink)" stroke-width="1.2" fill="none"/>
+          </svg>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          ${['OSC','FILTER','AMP','LFO','FX','ARP'].map((s,i)=>`
+            <div style="display:flex;flex-direction:column;">
+              <div class="wf-label" style="${i===1?'color:var(--accent-local, var(--accent));':''}">${s}</div>
+              <div class="wf-num" style="font-size:14px;margin-top:2px;">${['saw + sq','lp · 820','adsr','slow','delay·rev','off'][i]}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <!-- right: only one section expanded at a time -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;gap:8px;align-items:baseline;">
+          <div class="wf-label">editing</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:22px;" class="accent-fg">FILTER</div>
+        </div>
+        <div class="scope" style="height:120px;border:none;border-top:1.2px solid var(--ink);border-bottom:1.2px solid var(--ink);">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+            <path d="M0,60 L160,60 Q200,60 220,25 Q232,15 245,100 L400,110" stroke="var(--accent-local, var(--accent))" stroke-width="1.5" fill="none"/>
+          </svg>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:6px;">
+          ${[['CUTOFF','820 hz'],['RESO','0.34'],['DRIVE','+2db'],['ENV','+0.6']].map(([l,v])=>`
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="wf-label">${l}</div>
+              <div style="height:3px;background:var(--rule);position:relative;">
+                <div style="position:absolute;left:0;top:0;height:100%;width:60%;background:var(--accent-local, var(--accent));"></div>
+              </div>
+              <div class="wf-num">${v}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="flex:1;"></div>
+        <div class="wf-hand">click any section on the left to edit it here <span class="arrow">↑</span></div>
+      </div>
+    </div>
+
+    ${bottomStatus()}
+    ${keyboard()}
+
+    <div class="annot" style="top:12%;right:6%;width:190px;">color says one thing at a time. everything else is ink & paper. <span class="arrow">→</span></div>
+  `;
+}
+
+const RENDERERS = { v1: renderV1, v2: renderV2, v3: renderV3, v4: renderV4, v5: renderV5, v6: renderV6, v7: renderV7 };
+
+/* ---------- App shell ---------- */
+
+const STATE_KEY = 'aisynth-wf-state-v1';
+function loadState() {
+  try { return Object.assign({ tab: 'v1', palette: 'red', annot: true }, JSON.parse(localStorage.getItem(STATE_KEY) || '{}')); }
+  catch { return { tab: 'v1', palette: 'red', annot: true }; }
+}
+function saveState(s) { try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch {} }
+let state = loadState();
+
+function buildTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = VARIATIONS.map(v => `
+    <button data-id="${v.id}" ${v.id===state.tab?'class="active"':''} data-screen-label="${v.num} ${v.name}">
+      <span class="num">${v.num} · ${v.vibe.split('·')[0].trim()}</span>
+      <span class="name">${v.name}</span>
+    </button>
+  `).join('');
+  tabs.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.tab = b.dataset.id;
+      saveState(state);
+      renderTab();
+      document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x.dataset.id === state.tab));
+    });
+  });
+}
+
+function renderTab() {
+  const v = VARIATIONS.find(x => x.id === state.tab);
+  const stage = document.getElementById('stage');
+  stage.innerHTML = `
+    <div class="frame-wrap" data-screen-label="${v.num} ${v.name}">
+      <div class="frame-header">
+        <div>
+          <div class="sub">${v.num} · ${v.vibe}</div>
+          <h2>${v.name}</h2>
+          <div class="sub">${v.sub}</div>
+        </div>
+        <div class="tagline">"${v.tagline}"</div>
+      </div>
+      <div class="plugin" data-accent="${state.palette === 'red' ? v.accent : state.palette}">
+        ${RENDERERS[v.id]()}
+      </div>
+      <div class="print-note">1200 × 750 plugin window · rendered at container width · aspect-ratio preserved</div>
+    </div>
+  `;
+}
+
+function buildSwatches() {
+  const root = document.getElementById('swatches');
+  root.innerHTML = PALETTES.map(p => `
+    <div class="swatch ${state.palette===p.id?'active':''}" data-id="${p.id}" title="${p.label}">
+      <div style="background:${p.paper};"></div>
+      <div style="background:${p.accent};height:10px;flex:0;"></div>
+      <div style="background:${p.ink};height:6px;flex:0;"></div>
+    </div>
+  `).join('');
+  root.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      state.palette = sw.dataset.id;
+      saveState(state);
+      applyPalette();
+      buildSwatches();
+      renderTab();
+    });
+  });
+}
+
+function applyPalette() {
+  const p = PALETTES.find(x => x.id === state.palette) || PALETTES[0];
+  document.documentElement.style.setProperty('--accent', p.accent);
+  document.documentElement.style.setProperty('--paper', p.paper);
+  document.documentElement.style.setProperty('--ink', p.ink);
+}
+
+/* Tweaks panel */
+const toggleBtn = document.getElementById('tweaks-toggle');
+const tweaks = document.getElementById('tweaks');
+toggleBtn.addEventListener('click', () => {
+  tweaks.classList.add('open');
+  toggleBtn.classList.add('hidden');
+});
+document.getElementById('tweaks-close').addEventListener('click', () => {
+  tweaks.classList.remove('open');
+  toggleBtn.classList.remove('hidden');
+});
+document.getElementById('annot-on').addEventListener('click', () => {
+  document.body.classList.remove('no-annot');
+  state.annot = true; saveState(state);
+  document.getElementById('annot-on').classList.add('on');
+  document.getElementById('annot-off').classList.remove('on');
+});
+document.getElementById('annot-off').addEventListener('click', () => {
+  document.body.classList.add('no-annot');
+  state.annot = false; saveState(state);
+  document.getElementById('annot-off').classList.add('on');
+  document.getElementById('annot-on').classList.remove('on');
+});
+
+if (!state.annot) document.body.classList.add('no-annot');
+
+/* edit mode protocol */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') { tweaks.classList.add('open'); toggleBtn.classList.add('hidden'); }
+  if (e.data.type === '__deactivate_edit_mode') { tweaks.classList.remove('open'); toggleBtn.classList.remove('hidden'); }
+});
+try { window.parent.postMessage({type:'__edit_mode_available'}, '*'); } catch {}
+
+applyPalette();
+buildTabs();
+buildSwatches();
+renderTab();
+
+</script>
+
+</body>
+</html>
