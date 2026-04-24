@@ -11,6 +11,7 @@
 #include "UI/components/FilterResponseView.h"
 #include "UI/components/CurveSelect.h"
 #include "UI/components/ModSourcePicker.h"
+#include "UI/components/ModDestPicker.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -98,6 +99,21 @@ struct UIConstructionTests : public juce::UnitTest
             auto* p = apvts.getParameter(ParamIDs::mod1Src);
             p->setValueNotifyingHost(p->convertTo0to1(3.f));    // index 3 = "Env Amp"
             expectEquals(src.getCombo().getSelectedId(), 4);    // ComboBox ID = index + 1
+            p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
+        }
+
+        beginTest("ModDestPicker reads kDestinations[] and defaults to 'None'");
+        {
+            SynthVibe::ModDestPicker dst(apvts, ParamIDs::mod1Dst);
+            dst.setBounds(0, 0, 140, 24);
+            // Default destination index = 0 ("None"); ComboBox IDs are 1-based → 1.
+            expectEquals(dst.getCombo().getSelectedId(), 1);
+            expectEquals(dst.getCombo().getNumItems(), 13);
+
+            // Round-trip: prove the attachment is live.
+            auto* p = apvts.getParameter(ParamIDs::mod1Dst);
+            p->setValueNotifyingHost(p->convertTo0to1(2.f));    // index 2 = "Resonance"
+            expectEquals(dst.getCombo().getSelectedId(), 3);
             p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
         }
 
