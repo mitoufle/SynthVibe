@@ -96,6 +96,8 @@ namespace ParamIDs
 
     // Modulation Matrix — 16 slots declared (UI exposes 1..8; 9..16 reserved for future expansion
     // so presets saved today will not need migration when slot count grows).
+    // Suffix is 'dst' (paired with 'src') per docs/ClaudeDesign/docs/param-audit.md; this
+    // intentionally diverges from the older lfo*Dest naming.
     inline constexpr const char* mod1Src  = "mod.1.src";
     inline constexpr const char* mod1Dst  = "mod.1.dst";
     inline constexpr const char* mod1Amount = "mod.1.amount";
