@@ -12,6 +12,7 @@
 #include "UI/components/CurveSelect.h"
 #include "UI/components/ModSourcePicker.h"
 #include "UI/components/ModDestPicker.h"
+#include "UI/components/BipolarAmountBar.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -114,6 +115,22 @@ struct UIConstructionTests : public juce::UnitTest
             auto* p = apvts.getParameter(ParamIDs::mod1Dst);
             p->setValueNotifyingHost(p->convertTo0to1(2.f));    // index 2 = "Resonance"
             expectEquals(dst.getCombo().getSelectedId(), 3);
+            p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
+        }
+
+        beginTest("BipolarAmountBar reads amount float param");
+        {
+            SynthVibe::BipolarAmountBar bar(apvts, ParamIDs::mod1Amount);
+            bar.setBounds(0, 0, 180, 18);
+            // Default mod.1.amount = 0
+            expectWithinAbsoluteError(bar.getValue(), 0.f, 0.001f);
+
+            // Round-trip: prove the attachment is live.
+            auto* p = apvts.getParameter(ParamIDs::mod1Amount);
+            p->setValueNotifyingHost(p->convertTo0to1(0.5f));
+            expectWithinAbsoluteError(bar.getValue(), 0.5f, 0.001f);
+            p->setValueNotifyingHost(p->convertTo0to1(-0.7f));
+            expectWithinAbsoluteError(bar.getValue(), -0.7f, 0.001f);
             p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
         }
 
