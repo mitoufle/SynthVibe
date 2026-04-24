@@ -9,6 +9,7 @@
 #include "UI/components/OscilloscopeView.h"
 #include "UI/components/EnvelopeEditor.h"
 #include "UI/components/FilterResponseView.h"
+#include "UI/components/CurveSelect.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -70,6 +71,14 @@ struct UIConstructionTests : public juce::UnitTest
                 ParamIDs::ampAttack, ParamIDs::ampDecay,
                 ParamIDs::ampSustain, ParamIDs::ampRelease);
             env.setBounds(0, 0, 240, 120);
+        }
+
+        beginTest("CurveSelect binds to a choice param");
+        {
+            SynthVibe::CurveSelect cs(apvts, ParamIDs::mod1Curve);
+            cs.setBounds(0, 0, 120, 22);
+            // default curve index = 0 ("lin")
+            expectEquals(cs.getCurrentIndex(), 0);
         }
 
         beginTest("SoundTab constructs with Phase 2b grid");
