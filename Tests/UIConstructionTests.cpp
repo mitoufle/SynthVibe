@@ -13,6 +13,7 @@
 #include "UI/components/ModSourcePicker.h"
 #include "UI/components/ModDestPicker.h"
 #include "UI/components/BipolarAmountBar.h"
+#include "UI/components/ModRow.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -132,6 +133,16 @@ struct UIConstructionTests : public juce::UnitTest
             p->setValueNotifyingHost(p->convertTo0to1(-0.7f));
             expectWithinAbsoluteError(bar.getValue(), -0.7f, 0.001f);
             p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
+        }
+
+        beginTest("ModRow composes src/dst/amount/curve for slot 1");
+        {
+            SynthVibe::ModRow row(apvts,
+                ParamIDs::mod1Src, ParamIDs::mod1Dst,
+                ParamIDs::mod1Amount, ParamIDs::mod1Curve);
+            row.setBounds(0, 0, 640, 28);
+            expect(row.getWidth() == 640);
+            expect(row.getHeight() == 28);
         }
 
         beginTest("SoundTab constructs with Phase 2b grid");
