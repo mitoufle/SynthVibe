@@ -10,6 +10,7 @@
 #include "UI/components/EnvelopeEditor.h"
 #include "UI/components/FilterResponseView.h"
 #include "UI/components/CurveSelect.h"
+#include "UI/components/ModSourcePicker.h"
 #include "UI/SoundTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
@@ -84,6 +85,20 @@ struct UIConstructionTests : public juce::UnitTest
             p->setValueNotifyingHost(p->convertTo0to1(2.f));
             expectEquals(cs.getCurrentIndex(), 2);                  // "log"
             p->setValueNotifyingHost(p->convertTo0to1(0.f));        // restore
+        }
+
+        beginTest("ModSourcePicker binds and defaults to 'None'");
+        {
+            SynthVibe::ModSourcePicker src(apvts, ParamIDs::mod1Src);
+            src.setBounds(0, 0, 110, 24);
+            // Default source index = 0 ("None"); ComboBox IDs are 1-based → 1.
+            expectEquals(src.getCombo().getSelectedId(), 1);
+
+            // Round-trip: prove the attachment is live.
+            auto* p = apvts.getParameter(ParamIDs::mod1Src);
+            p->setValueNotifyingHost(p->convertTo0to1(3.f));    // index 3 = "Env Amp"
+            expectEquals(src.getCombo().getSelectedId(), 4);    // ComboBox ID = index + 1
+            p->setValueNotifyingHost(p->convertTo0to1(0.f));    // restore
         }
 
         beginTest("SoundTab constructs with Phase 2b grid");
