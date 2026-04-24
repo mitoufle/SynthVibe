@@ -46,7 +46,8 @@ namespace SynthVibe
             {
                 const float u = (float) i / N;
                 const float freq = fLow * std::pow(fHigh / fLow, u);
-                const float mag  = coeffs.magnitudeAt(freq, sr);
+                float mag  = coeffs.magnitudeAt(freq, sr);
+                if (t == Type::LP24) mag = mag * mag;   // cascade = |H|²
                 const float db   = juce::Decibels::gainToDecibels(mag + 1e-6f);
                 const float y    = juce::jmap(juce::jlimit(-36.f, 12.f, db),
                                               -36.f, 12.f, b.getBottom(), b.getY());

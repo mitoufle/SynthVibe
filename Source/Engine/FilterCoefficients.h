@@ -48,19 +48,18 @@ namespace SynthVibe
                     break;
                 case Type::LP24:
                 {
-                    // Model: one biquad representing the magnitude of two cascaded LP12s
-                    // at the same cutoff. The biquad form is the LP12 biquad but with
-                    // the numerator halved so the magnitude at cutoff is ~0.5 instead
-                    // of ~0.707, squaring the rolloff visually without a second stage.
-                    // This is an approximation that matches the audio-path cascade at
-                    // Q≈0.707 and diverges mildly at high Q; acceptable for display.
-                    const float lpB0 = (1.f - cosW0) * 0.5f / a0;
-                    const float lpB1 = (1.f - cosW0)        / a0;
-                    const float lpB2 = (1.f - cosW0) * 0.5f / a0;
-                    c.b0 = lpB0 * lpB0;
-                    c.b1 = lpB1 * lpB1;
-                    c.b2 = lpB2 * lpB2;
-                    break;
+                    // Audio path cascades two LP12 stages, each at √Q, so the total
+                    // magnitude response is |H_LP(ω; √Q)|². Return single-stage
+                    // coefficients at √Q; callers must square |magnitudeAt|.
+                    const float qStage      = std::sqrt(std::max(0.1f, q));
+                    const float alphaStage  = sinW0 / (2.f * qStage);
+                    const float a0Stage     = 1.f + alphaStage;
+                    c.b0 = (1.f - cosW0) * 0.5f / a0Stage;
+                    c.b1 = (1.f - cosW0)        / a0Stage;
+                    c.b2 = (1.f - cosW0) * 0.5f / a0Stage;
+                    c.a1 = -2.f * cosW0 / a0Stage;
+                    c.a2 = (1.f - alphaStage) / a0Stage;
+                    return c;
                 }
                 case Type::Notch:
                     c.b0 =  1.f            / a0;

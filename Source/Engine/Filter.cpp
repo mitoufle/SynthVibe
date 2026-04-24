@@ -46,6 +46,14 @@ void Filter::setResonance(float normalised)
     updateCoefficients();
 }
 
+float Filter::effectiveStageResonance() const noexcept
+{
+    // LP24 cascades two identical-Q lowpass stages; Q² at cutoff would clip
+    // at high resonance. Using √Q per stage keeps the cascade's peak at ≈ Q,
+    // matching LP12 loudness and preventing crackling.
+    return filterType == FilterType::LP24 ? std::sqrt(resonance) : resonance;
+}
+
 void Filter::setDrive(float normalised)
 {
     drive = juce::jlimit(0.f, 1.f, normalised);
@@ -78,8 +86,11 @@ float Filter::processSample(float input)
 
         case FilterType::Notch:
         {
+            // JUCE TPT yBP peaks at Q, not 0 dB. Canonical SVF notch identity
+            // in TPT form is: notch = input − R2·yBP where R2 = 1/Q.
             const float bp = svf1.processSample(0, input);
-            return input - 2.f * bp;
+            const float R2 = 1.f / juce::jmax(0.1f, resonance);
+            return input - R2 * bp;
         }
     }
     return input;
@@ -87,8 +98,9 @@ float Filter::processSample(float input)
 
 void Filter::updateCoefficients()
 {
+    const float q = effectiveStageResonance();
     svf1.setCutoffFrequency(cutoff);
-    svf1.setResonance(resonance);
+    svf1.setResonance(q);
     svf2.setCutoffFrequency(cutoff);
-    svf2.setResonance(resonance);
+    svf2.setResonance(q);
 }

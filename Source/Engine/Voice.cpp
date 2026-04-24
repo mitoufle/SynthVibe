@@ -51,13 +51,13 @@ void Voice::setParams(const VoiceParams& p)
     lfo2Osc.setFrequency(p.lfo2.rate);
     lfo2Osc.setDetuneCents(0.f);
 
+    // NOTE: cutoff and resonance are NOT pushed directly to the filter here.
+    // The per-sample loop in getNextSample() is the single writer (driven by
+    // smoothCutoff/smoothResonance + envelope/LFO/keytrack) so that block-rate
+    // jumps don't fight per-sample modulation. Only setType/setDrive go direct.
     filter.setType(p.filterType);
-    filter.setCutoff(p.filterCutoff);
-    filter.setResonance(p.filterResonance);
     filter.setDrive(p.filterDrive);
     filterR.setType(p.filterType);
-    filterR.setCutoff(p.filterCutoff);
-    filterR.setResonance(p.filterResonance);
     filterR.setDrive(p.filterDrive);
     ampEnv.setParams(p.ampEnv);
     fltEnv.setParams(p.fltEnv);
@@ -147,20 +147,14 @@ std::pair<float, float> Voice::getNextSample()
     float mixL = osc1L * sOsc1Level + osc2L * sOsc2Level;
     float mixR = osc1R * sOsc1Level + osc2R * sOsc2Level;
 
-    // Filter modulation — update both filter instances identically
+    // Filter modulation — single writer for both filter instances. Always
+    // refresh on the downsampled boundary so that user-driven param changes,
+    // smoother ramps, env/LFO, and keytrack all flow through one path.
+    // fltEnv must advance every sample to stay phase-correct with the voice.
     const float sCutoff = smoothCutoff.getNextValue();
     const float sRes    = smoothResonance.getNextValue();
-    if (smoothResonance.isSmoothing())
-    {
-        filter.setResonance(sRes);
-        filterR.setResonance(sRes);
-    }
-    const float envMod = fltEnv.getNextSample();
-    const bool hasFilterMod = (params.filterEnvAmt != 0.f)
-                            || (params.lfo1.dest == LfoDest::Filter && params.lfo1.depth != 0.f)
-                            || (params.lfo2.dest == LfoDest::Filter && params.lfo2.depth != 0.f)
-                            || (params.filterKeytrack != 0.f);
-    if ((hasFilterMod || smoothCutoff.isSmoothing()) && filterCoefCounter == 0)
+    const float envMod  = fltEnv.getNextSample();
+    if (filterCoefCounter == 0)
     {
         float cutoff = sCutoff * keytrackMultiplier * (1.f + params.filterEnvAmt * envMod);
         cutoff += (params.lfo1.dest == LfoDest::Filter ? l1 * 4000.f : 0.f);
@@ -168,6 +162,8 @@ std::pair<float, float> Voice::getNextSample()
         cutoff = juce::jlimit(20.f, 20000.f, cutoff);
         filter.setCutoff(cutoff);
         filterR.setCutoff(cutoff);
+        filter.setResonance(sRes);
+        filterR.setResonance(sRes);
     }
     filterCoefCounter = (filterCoefCounter + 1) & (FilterCoefUpdateRate - 1);
 

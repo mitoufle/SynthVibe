@@ -19,6 +19,7 @@ public:
 
 private:
     void updateCoefficients();
+    float effectiveStageResonance() const noexcept;
 
     juce::dsp::StateVariableTPTFilter<float> svf1;
     juce::dsp::StateVariableTPTFilter<float> svf2;  // cascaded second stage for LP24

@@ -42,7 +42,10 @@ struct FilterCoefficientsTests : public juce::UnitTest
             auto lp12 = FilterCoefficients::compute(Type::LowPass, fc, 0.707f, 48000.0);
             auto lp24 = FilterCoefficients::compute(Type::LP24,    fc, 0.707f, 48000.0);
             const float mag12 = lp12.magnitudeAt(fc * 2.f, 48000.0);
-            const float mag24 = lp24.magnitudeAt(fc * 2.f, 48000.0);
+            // compute(LP24) returns per-stage coefficients at √Q; the full
+            // cascade magnitude is |H_stage|² (see FilterCoefficients.h).
+            const float stage24 = lp24.magnitudeAt(fc * 2.f, 48000.0);
+            const float mag24   = stage24 * stage24;
             expect(mag24 < mag12 * 0.6f,
                    "LP24 should attenuate more at fc+1oct than LP12 ("
                    + juce::String(mag12) + " vs " + juce::String(mag24) + ")");
