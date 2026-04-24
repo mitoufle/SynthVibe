@@ -16,6 +16,8 @@ namespace SynthVibe
             : parameter(apvts.getParameter(paramID))
         {
             jassert(parameter != nullptr);
+            jassert(parameter->getNormalisableRange().start <= -1.0f
+                 && parameter->getNormalisableRange().end   >=  1.0f);
             attach = std::make_unique<juce::ParameterAttachment>(
                 *parameter,
                 [this](float v) {
@@ -53,24 +55,34 @@ namespace SynthVibe
             g.fillRoundedRectangle(fill, Tokens::radiusSm * 0.5f);
         }
 
-        void mouseDown(const juce::MouseEvent& e) override { updateFromMouse(e); }
+        void mouseDown(const juce::MouseEvent& e) override
+        {
+            if (attach != nullptr) attach->beginGesture();
+            updateFromMouse(e);
+        }
         void mouseDrag(const juce::MouseEvent& e) override { updateFromMouse(e); }
+        void mouseUp(const juce::MouseEvent&) override
+        {
+            if (attach != nullptr) attach->endGesture();
+        }
 
         void mouseDoubleClick(const juce::MouseEvent&) override
         {
-            if (parameter != nullptr)
-                parameter->setValueNotifyingHost(parameter->convertTo0to1(0.f));
+            if (attach == nullptr) return;
+            attach->beginGesture();
+            attach->setValueAsPartOfGesture(0.f);
+            attach->endGesture();
         }
 
     private:
         void updateFromMouse(const juce::MouseEvent& e)
         {
-            if (parameter == nullptr) return;
+            if (attach == nullptr) return;
             const float w = (float) getWidth();
             if (w <= 0.f) return;
             const float norm = juce::jlimit(0.f, 1.f, e.position.x / w);
             const float v    = norm * 2.f - 1.f;  // [0,1] → [-1,+1]
-            parameter->setValueNotifyingHost(parameter->convertTo0to1(v));
+            attach->setValueAsPartOfGesture(v);
         }
 
         juce::RangedAudioParameter* parameter = nullptr;
