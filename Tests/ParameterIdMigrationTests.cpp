@@ -16,6 +16,14 @@ struct ParameterIdMigrationTests : public juce::UnitTest
         expectEquals(juce::String(ParamIDs::masterVolume),  juce::String("master.vol"));
         expectEquals(juce::String(ParamIDs::delayTime),     juce::String("fx.delay.time"));
 
+        beginTest("Mod matrix IDs follow mod.N.suffix scheme");
+        expectEquals(juce::String(ParamIDs::mod1Src),    juce::String("mod.1.src"));
+        expectEquals(juce::String(ParamIDs::mod1Dst),    juce::String("mod.1.dst"));
+        expectEquals(juce::String(ParamIDs::mod1Amount), juce::String("mod.1.amount"));
+        expectEquals(juce::String(ParamIDs::mod1Curve),  juce::String("mod.1.curve"));
+        expectEquals(juce::String(ParamIDs::mod8Src),    juce::String("mod.8.src"));
+        expectEquals(juce::String(ParamIDs::mod16Curve), juce::String("mod.16.curve"));
+
         beginTest("Phase 2b new parameters are registered with correct defaults");
         {
             juce::AudioProcessorGraph dummyGraph;
