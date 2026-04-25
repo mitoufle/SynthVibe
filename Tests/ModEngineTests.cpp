@@ -69,6 +69,59 @@ struct ModEngineTests : public juce::UnitTest
             expectEquals(snap[1].src,    0);
             expectEquals(snap[7].src,    0);
         }
+
+        beginTest("applyToBus per-destination scaling");
+        {
+            using namespace SynthVibe;
+            ModBus bus;
+
+            // dst=1 cutoff: ±5 octaves at amount=1 → modVal=1 means +60 semitones
+            ModEngine::applyToBus(bus, 1, 1.0f);
+            expectWithinAbsoluteError(bus.cutoffSemitones, 60.f, 1e-3f);
+
+            // dst=2 resonance: ±0.5 at amount=1
+            bus = {};
+            ModEngine::applyToBus(bus, 2, 1.0f);
+            expectWithinAbsoluteError(bus.resonanceDelta, 0.5f, 1e-3f);
+
+            // dst=4 osc1.fine: ±100 cents at amount=1
+            bus = {};
+            ModEngine::applyToBus(bus, 4, 1.0f);
+            expectWithinAbsoluteError(bus.osc1FineCents, 100.f, 1e-3f);
+
+            // dst=6 osc1.level: multiplier (1 + modVal)
+            bus = {};
+            ModEngine::applyToBus(bus, 6, -0.5f);
+            expectWithinAbsoluteError(bus.osc1LevelMul, 0.5f, 1e-4f);
+
+            // dst=8 osc1.pwm: ±0.4 at amount=1
+            bus = {};
+            ModEngine::applyToBus(bus, 8, 0.5f);
+            expectWithinAbsoluteError(bus.osc1PwmDelta, 0.2f, 1e-4f);
+
+            // dst=10 master.vol: multiplier (1 + modVal)
+            bus = {};
+            ModEngine::applyToBus(bus, 10, 0.5f);
+            expectWithinAbsoluteError(bus.masterVolMul, 1.5f, 1e-4f);
+
+            // dst=11 amp.attack and dst=12 amp.release: NO-OPS in V1
+            bus = {};
+            ModEngine::applyToBus(bus, 11, 1.0f);
+            ModEngine::applyToBus(bus, 12, 1.0f);
+            expectWithinAbsoluteError(bus.cutoffSemitones, 0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.masterVolMul,    1.f, 1e-6f);
+
+            // dst=0 (None): no-op
+            bus = {};
+            ModEngine::applyToBus(bus, 0, 1.0f);
+            expectWithinAbsoluteError(bus.cutoffSemitones, 0.f, 1e-6f);
+
+            // Two slots hitting same destination → additive accumulation
+            bus = {};
+            ModEngine::applyToBus(bus, 1, 0.3f);
+            ModEngine::applyToBus(bus, 1, 0.2f);
+            expectWithinAbsoluteError(bus.cutoffSemitones, 30.f, 1e-3f);  // 0.5 × 60
+        }
     }
 };
 

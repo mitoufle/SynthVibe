@@ -31,8 +31,28 @@ namespace SynthVibe::ModEngine
         }
     }
 
-    // Stubs — implemented in later tasks.
-    void applyToBus(ModBus&, int, float) {}
+    void applyToBus(ModBus& bus, int dst, float modVal)
+    {
+        switch (dst)
+        {
+            case 1:  bus.cutoffSemitones += modVal * 60.f;   break;  // ±5 octaves at modVal=1
+            case 2:  bus.resonanceDelta  += modVal * 0.5f;   break;
+            case 3:  bus.driveDelta      += modVal * 0.5f;   break;
+            case 4:  bus.osc1FineCents   += modVal * 100.f;  break;  // ±1 semitone at modVal=1
+            case 5:  bus.osc2FineCents   += modVal * 100.f;  break;
+            case 6:  bus.osc1LevelMul    *= (1.f + modVal);  break;
+            case 7:  bus.osc2LevelMul    *= (1.f + modVal);  break;
+            case 8:  bus.osc1PwmDelta    += modVal * 0.4f;   break;
+            case 9:  bus.osc2PwmDelta    += modVal * 0.4f;   break;
+            case 10: bus.masterVolMul    *= (1.f + modVal);  break;
+            // 11 = env.amp.attack, 12 = env.amp.release: deferred (envelope timing
+            // mid-cycle modulation needs careful state handling; freeze for V1).
+            case 11: case 12: break;
+            default: break;  // 0 = None, anything else = unknown → no-op
+        }
+    }
+
+    // Stub — implemented in later tasks.
     void applyMatrix(const Snapshot&, const SourceValues&, ModBus&) {}
 
     void readSnapshot(juce::AudioProcessorValueTreeState& apvts, Snapshot& out)
