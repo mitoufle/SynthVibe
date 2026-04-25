@@ -15,7 +15,7 @@ struct ParameterIdMigrationTests : public juce::UnitTest
         expectEquals(juce::String(ParamIDs::filterCutoff),  juce::String("filt.cutoff"));
         expectEquals(juce::String(ParamIDs::ampAttack),     juce::String("env.amp.attack"));
         expectEquals(juce::String(ParamIDs::masterVolume),  juce::String("master.vol"));
-        expectEquals(juce::String(ParamIDs::delayTime),     juce::String("fx.delay.time"));
+        expectEquals(juce::String(ParamIDs::fx1Mix),        juce::String("fx.1.mix"));
 
         beginTest("Mod matrix IDs follow mod.N.suffix scheme");
         expectEquals(juce::String(ParamIDs::mod1Src),    juce::String("mod.1.src"));
@@ -82,6 +82,34 @@ struct ParameterIdMigrationTests : public juce::UnitTest
             expectWithinAbsoluteError(readFloat(ParamIDs::osc2UnisonSpread),0.5f, 0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::filterDrive),     0.f,  0.001f);
             expectWithinAbsoluteError(readFloat(ParamIDs::filterKeytrack),  0.f,  0.001f);
+        }
+
+        beginTest("FX slot IDs follow fx.N.suffix scheme");
+        expectEquals(juce::String(ParamIDs::fx1Type),   juce::String("fx.1.type"));
+        expectEquals(juce::String(ParamIDs::fx1Bypass), juce::String("fx.1.bypass"));
+        expectEquals(juce::String(ParamIDs::fx1Mix),    juce::String("fx.1.mix"));
+        expectEquals(juce::String(ParamIDs::fx1P1),     juce::String("fx.1.p1"));
+        expectEquals(juce::String(ParamIDs::fx1P4),     juce::String("fx.1.p4"));
+        expectEquals(juce::String(ParamIDs::fx10Type),  juce::String("fx.10.type"));
+        expectEquals(juce::String(ParamIDs::fx10P4),    juce::String("fx.10.p4"));
+
+        beginTest("Legacy hardcoded fx.* IDs are removed (preset break is intentional)");
+        {
+            juce::AudioProcessorGraph dummyGraph;
+            juce::AudioProcessorValueTreeState apvts(
+                dummyGraph, nullptr, "AISynthState", ParameterLayout::create());
+
+            // Each of these used to exist in Phase 1; Phase 4 deletes them
+            // as part of the slot migration. APVTS should report nullptr.
+            for (auto* legacyId : {
+                "fx.delay.time", "fx.delay.feedback", "fx.delay.mix",
+                "fx.chorus.rate", "fx.chorus.depth", "fx.chorus.mix",
+                "fx.reverb.room", "fx.reverb.damp", "fx.reverb.mix",
+                "fx.drive.type", "fx.drive.amount", "fx.drive.mix" })
+            {
+                expect(apvts.getParameter(legacyId) == nullptr,
+                       juce::String("legacy id should be gone: ") + legacyId);
+            }
         }
     }
 };

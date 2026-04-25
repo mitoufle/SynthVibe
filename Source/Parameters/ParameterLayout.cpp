@@ -157,60 +157,6 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.8f));
 
     // -----------------------------------------------------------------------
-    // Delay
-    // -----------------------------------------------------------------------
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::delayTime, "Delay Time",
-        NormalisableRange<float>(1.f, 2000.f, 0.1f, 0.4f), 250.f));
-
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::delayFeedback, "Delay Feedback",
-        NormalisableRange<float>(0.f, 0.95f, 0.001f), 0.35f));
-
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::delayMix, "Delay Mix",
-        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.0f));
-
-    // -----------------------------------------------------------------------
-    // Chorus
-    // -----------------------------------------------------------------------
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::chorusRate, "Chorus Rate",
-        NormalisableRange<float>(0.1f, 5.f, 0.01f), 0.5f));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::chorusDepth, "Chorus Depth",
-        NormalisableRange<float>(0.001f, 0.015f, 0.0001f), 0.003f));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::chorusMix, "Chorus Mix",
-        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
-
-    // -----------------------------------------------------------------------
-    // Reverb
-    // -----------------------------------------------------------------------
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::reverbRoom, "Reverb Room",
-        NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::reverbDamp, "Reverb Damp",
-        NormalisableRange<float>(0.f, 1.f, 0.01f), 0.5f));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::reverbMix, "Reverb Mix",
-        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
-
-    // -----------------------------------------------------------------------
-    // Drive
-    // -----------------------------------------------------------------------
-    params.push_back(std::make_unique<AudioParameterChoice>(
-        ParamIDs::driveType, "Drive Type",
-        StringArray { "Soft", "Hard", "Fold" }, 0));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::driveAmount, "Drive Amount",
-        NormalisableRange<float>(0.f, 24.f, 0.1f), 0.f));
-    params.push_back(std::make_unique<AudioParameterFloat>(
-        ParamIDs::driveMix, "Drive Mix",
-        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));
-
-    // -----------------------------------------------------------------------
     // Osc1 Unison
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterInt>(
