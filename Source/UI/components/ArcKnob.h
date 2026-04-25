@@ -37,6 +37,8 @@ namespace SynthVibe
         juce::Slider&       getSlider()       { return slider; }
         const juce::Slider& getSlider() const { return slider; }
 
+        void setLabelText(const juce::String& s) { label.setText(s, juce::dontSendNotification); }
+
         void resized() override
         {
             auto b = getLocalBounds();

@@ -16,6 +16,7 @@
 #include "UI/components/ModRow.h"
 #include "UI/components/ModMatrixTable.h"
 #include "UI/components/FxSlotTypePicker.h"
+#include "UI/components/FxSlotCard.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 
@@ -184,6 +185,17 @@ struct UIConstructionTests : public juce::UnitTest
             p->setValueNotifyingHost(p->convertTo0to1(3.f));   // index 3 = "Delay"
             expectEquals(picker.getCombo().getSelectedId(), 4);
             p->setValueNotifyingHost(p->convertTo0to1(0.f));   // restore
+        }
+
+        beginTest("FxSlotCard constructs and binds slot 1");
+        {
+            SynthVibe::FxSlotCard card(apvts,
+                ParamIDs::fx1Type, ParamIDs::fx1Bypass, ParamIDs::fx1Mix,
+                ParamIDs::fx1P1,   ParamIDs::fx1P2,    ParamIDs::fx1P3, ParamIDs::fx1P4,
+                /*slotIndex=*/1);
+            card.setBounds(0, 0, 220, 180);
+            expect(card.getWidth() == 220);
+            expectEquals(card.getSlotIndex(), 1);
         }
     }
 };
