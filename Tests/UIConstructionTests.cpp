@@ -20,6 +20,7 @@
 #include "UI/components/FxChainStrip.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
+#include "UI/FXTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -204,6 +205,15 @@ struct UIConstructionTests : public juce::UnitTest
             SynthVibe::FxChainStrip strip(apvts);
             strip.setBounds(0, 0, 1200, 380);
             expectEquals(strip.getNumSlots(), 10);
+        }
+
+        beginTest("FxTab constructs with chain strip attached");
+        {
+            FxTab tab(apvts);
+            tab.setBounds(0, 0, 1280, 560);
+            expectEquals(tab.getWidth(), 1280);
+            expect(tab.getStrip() != nullptr, "FxTab should own a FxChainStrip");
+            expectEquals(tab.getStrip()->getNumSlots(), 10);
         }
     }
 };

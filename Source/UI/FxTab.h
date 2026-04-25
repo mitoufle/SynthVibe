@@ -1,110 +1,39 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "KnobWithLabel.h"
-#include "LookAndFeel.h"
-#include "../Parameters/ParameterIDs.h"
+#include "DesignTokens.h"
+#include "components/FxChainStrip.h"
+#include "components/PanelHeader.h"
 
 class FxTab : public juce::Component
 {
 public:
     explicit FxTab(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts)
     {
-        addAndMakeVisible(knobDelayTime);
-        addAndMakeVisible(knobDelayFeedback);
-        addAndMakeVisible(knobDelayMix);
-        addAndMakeVisible(knobChorusRate);
-        addAndMakeVisible(knobChorusDepth);
-        addAndMakeVisible(knobChorusMix);
-
-        driveTypeBox.addItemList({ "Soft", "Hard", "Fold" }, 1);
-        driveTypeAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            apvts, ParamIDs::driveType, driveTypeBox);
-        addAndMakeVisible(driveTypeBox);
-        addAndMakeVisible(knobDriveAmount);
-        addAndMakeVisible(knobDriveMix);
-
-        addAndMakeVisible(knobReverbRoom);
-        addAndMakeVisible(knobReverbDamp);
-        addAndMakeVisible(knobReverbMix);
+        strip = std::make_unique<SynthVibe::FxChainStrip>(apvts);
+        addAndMakeVisible(*strip);
     }
+
+    SynthVibe::FxChainStrip* getStrip() noexcept { return strip.get(); }
 
     void paint(juce::Graphics& g) override
     {
-        drawPanel(g, delayBounds,  "DELAY",  SynthLookAndFeel::colFxAccent);
-        drawPanel(g, chorusBounds, "CHORUS", SynthLookAndFeel::colFxAccent);
-        drawPanel(g, driveBounds,  "DRIVE",  SynthLookAndFeel::colFxAccent);
-        drawPanel(g, reverbBounds, "REVERB", SynthLookAndFeel::colFxAccent);
+        using namespace SynthVibe::Tokens;
+        auto b = getLocalBounds().toFloat().reduced(2.f);
+        g.setColour(panel);
+        g.fillRoundedRectangle(b, radiusLg);
+        g.setColour(edge);
+        g.drawRoundedRectangle(b.reduced(0.5f), radiusLg, 1.f);
     }
 
     void resized() override
     {
-        const int pad    = 8;
-        const int titleH = 20;
-        const int comboH = 28;
-        auto area = getLocalBounds().reduced(pad);
-        const int colW = area.getWidth() / 4;
-
-        delayBounds  = area.removeFromLeft(colW).reduced(pad, 0);
-        chorusBounds = area.removeFromLeft(colW).reduced(pad, 0);
-        driveBounds  = area.removeFromLeft(colW).reduced(pad, 0);
-        reverbBounds = area.reduced(pad, 0);
-
-        auto layoutFx = [&](juce::Rectangle<int> bounds,
-                            KnobWithLabel& k1, KnobWithLabel& k2, KnobWithLabel& k3)
-        {
-            auto b = bounds.withTrimmedTop(titleH);
-            const int w = b.getWidth() / 3;
-            k1.setBounds(b.removeFromLeft(w));
-            k2.setBounds(b.removeFromLeft(w));
-            k3.setBounds(b);
-        };
-
-        layoutFx(delayBounds,  knobDelayTime,   knobDelayFeedback, knobDelayMix);
-        layoutFx(chorusBounds, knobChorusRate,  knobChorusDepth,   knobChorusMix);
-        layoutFx(reverbBounds, knobReverbRoom,  knobReverbDamp,    knobReverbMix);
-
-        // Drive panel: ComboBox (type) | Drive knob | Mix knob
-        {
-            auto b = driveBounds.withTrimmedTop(titleH);
-            const int w = b.getWidth() / 3;
-            auto typeCol = b.removeFromLeft(w);
-            driveTypeBox.setBounds(typeCol.withSizeKeepingCentre(typeCol.getWidth() - 8, comboH));
-            knobDriveAmount.setBounds(b.removeFromLeft(w));
-            knobDriveMix.setBounds(b);
-        }
+        using namespace SynthVibe::Tokens;
+        auto area = getLocalBounds().reduced(spaceMd);
+        if (strip != nullptr)
+            strip->setBounds(area);
     }
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
-    juce::Rectangle<int> delayBounds, chorusBounds, driveBounds, reverbBounds;
-
-    KnobWithLabel knobDelayTime     { "Time",     apvts, ParamIDs::delayTime,     " ms", 0 };
-    KnobWithLabel knobDelayFeedback { "Feedback", apvts, ParamIDs::delayFeedback, "",    2 };
-    KnobWithLabel knobDelayMix      { "Mix",      apvts, ParamIDs::delayMix,      "",    2 };
-    KnobWithLabel knobChorusRate    { "Rate",     apvts, ParamIDs::chorusRate,    " Hz", 2 };
-    KnobWithLabel knobChorusDepth   { "Depth",    apvts, ParamIDs::chorusDepth,   "",    3 };
-    KnobWithLabel knobChorusMix     { "Mix",      apvts, ParamIDs::chorusMix,     "",    2 };
-
-    juce::ComboBox driveTypeBox;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> driveTypeAttach;
-    KnobWithLabel knobDriveAmount   { "Drive",    apvts, ParamIDs::driveAmount,   " dB", 1 };
-    KnobWithLabel knobDriveMix      { "Mix",      apvts, ParamIDs::driveMix,      "",    2 };
-
-    KnobWithLabel knobReverbRoom    { "Room",     apvts, ParamIDs::reverbRoom,    "",    2 };
-    KnobWithLabel knobReverbDamp    { "Damp",     apvts, ParamIDs::reverbDamp,    "",    2 };
-    KnobWithLabel knobReverbMix     { "Mix",      apvts, ParamIDs::reverbMix,     "",    2 };
-
-    static void drawPanel(juce::Graphics& g, juce::Rectangle<int> bounds,
-                          const juce::String& title, juce::uint32 accentColour)
-    {
-        auto f = bounds.toFloat().reduced(2.f);
-        g.setColour(juce::Colour(SynthLookAndFeel::colPanel));
-        g.fillRoundedRectangle(f, 6.f);
-        g.setColour(juce::Colour(accentColour));
-        g.drawRoundedRectangle(f, 6.f, 1.f);
-        g.setColour(juce::Colour(SynthLookAndFeel::colHighlight));
-        g.setFont(juce::Font(11.f, juce::Font::bold));
-        g.drawText(title, bounds.getX() + 10, bounds.getY() + 4,
-                   bounds.getWidth() - 20, 16, juce::Justification::centredLeft);
-    }
+    std::unique_ptr<SynthVibe::FxChainStrip> strip;
 };
