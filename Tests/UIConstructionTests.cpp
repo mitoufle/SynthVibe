@@ -17,6 +17,7 @@
 #include "UI/components/ModMatrixTable.h"
 #include "UI/components/FxSlotTypePicker.h"
 #include "UI/components/FxSlotCard.h"
+#include "UI/components/FxChainStrip.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 
@@ -196,6 +197,13 @@ struct UIConstructionTests : public juce::UnitTest
             card.setBounds(0, 0, 220, 180);
             expect(card.getWidth() == 220);
             expectEquals(card.getSlotIndex(), 1);
+        }
+
+        beginTest("FxChainStrip renders 10 slots");
+        {
+            SynthVibe::FxChainStrip strip(apvts);
+            strip.setBounds(0, 0, 1200, 380);
+            expectEquals(strip.getNumSlots(), 10);
         }
     }
 };
