@@ -58,7 +58,7 @@ target_sources(AISynth PRIVATE
     Source/FX/Eq3.cpp
     Source/FX/FxTypeMap.cpp
     Source/FX/FxSlot.cpp
-    Source/FX/FXChain.cpp
+    Source/FX/FxRunner.cpp
     # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
 )
 
@@ -103,6 +103,7 @@ target_sources(AISynthTests PRIVATE
     Tests/FilterCoefficientsTests.cpp
     Tests/OscillatorTests.cpp
     Tests/Eq3Tests.cpp
+    Tests/FxRunnerTests.cpp
     Source/Engine/ArpEngine.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
@@ -116,6 +117,7 @@ target_sources(AISynthTests PRIVATE
     Source/FX/Eq3.cpp
     Source/FX/FxTypeMap.cpp
     Source/FX/FxSlot.cpp
+    Source/FX/FxRunner.cpp
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
     Source/Parameters/ParameterLayout.cpp
