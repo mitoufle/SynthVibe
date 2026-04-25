@@ -12,17 +12,19 @@ struct ModEngineTests : public juce::UnitTest
     void runTest() override
     {
         beginTest("ModBus default-constructs to identity");
-        SynthVibe::ModBus bus;
-        expectWithinAbsoluteError(bus.cutoffSemitones, 0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.resonanceDelta,  0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.driveDelta,      0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc1FineCents,   0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc2FineCents,   0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc1LevelMul,    1.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc2LevelMul,    1.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc1PwmDelta,    0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.osc2PwmDelta,    0.f, 1e-6f);
-        expectWithinAbsoluteError(bus.masterVolMul,    1.f, 1e-6f);
+        {
+            SynthVibe::ModBus bus;
+            expectWithinAbsoluteError(bus.cutoffSemitones, 0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.resonanceDelta,  0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.driveDelta,      0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc1FineCents,   0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc2FineCents,   0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc1LevelMul,    1.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc2LevelMul,    1.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc1PwmDelta,    0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.osc2PwmDelta,    0.f, 1e-6f);
+            expectWithinAbsoluteError(bus.masterVolMul,    1.f, 1e-6f);
+        }
 
         beginTest("applyCurve preserves identity for lin");
         expectWithinAbsoluteError(SynthVibe::ModEngine::applyCurve( 0.5f, 0), 0.5f, 1e-5f);
