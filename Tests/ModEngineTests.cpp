@@ -124,6 +124,45 @@ struct ModEngineTests : public juce::UnitTest
             ModEngine::applyToBus(bus, 1, 0.2f);
             expectWithinAbsoluteError(bus.cutoffSemitones, 30.f, 1e-3f);  // 0.5 × 60
         }
+
+        beginTest("applyMatrix combines slots, sources, curves");
+        {
+            using namespace SynthVibe;
+
+            ModEngine::Snapshot snap{};
+            // Slot 1: lfo1 → cutoff, amount=1, curve=lin
+            snap[0] = { 1, 1, 1.0f, 0 };
+            // Slot 2: velocity → osc1.level, amount=1, curve=lin
+            snap[1] = { 5, 6, 1.0f, 0 };
+            // Slot 3: src=None → skipped
+            snap[2] = { 0, 1, 1.0f, 0 };
+            // Slot 4: amount=0 → skipped
+            snap[3] = { 1, 1, 0.0f, 0 };
+
+            ModEngine::SourceValues srcs;
+            srcs.lfo1     = 0.5f;   // would push cutoff +30 st (0.5 × 60)
+            srcs.velocity = 0.4f;   // would push osc1Level × 1.4
+
+            ModBus bus;
+            ModEngine::applyMatrix(snap, srcs, bus);
+
+            expectWithinAbsoluteError(bus.cutoffSemitones, 30.f, 1e-3f);
+            expectWithinAbsoluteError(bus.osc1LevelMul,    1.4f, 1e-4f);
+        }
+
+        beginTest("applyMatrix exp curve squashes mid-range source");
+        {
+            using namespace SynthVibe;
+            ModEngine::Snapshot snap{};
+            snap[0] = { 1, 1, 1.0f, 1 };  // exp curve
+
+            ModEngine::SourceValues srcs;
+            srcs.lfo1 = 0.5f;             // exp(0.5) = 0.25, so contribution is 0.25 × 60 = 15
+
+            ModBus bus;
+            ModEngine::applyMatrix(snap, srcs, bus);
+            expectWithinAbsoluteError(bus.cutoffSemitones, 15.f, 1e-3f);
+        }
     }
 };
 

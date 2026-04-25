@@ -52,8 +52,30 @@ namespace SynthVibe::ModEngine
         }
     }
 
-    // Stub — implemented in later tasks.
-    void applyMatrix(const Snapshot&, const SourceValues&, ModBus&) {}
+    void applyMatrix(const Snapshot& snap, const SourceValues& srcs, ModBus& bus)
+    {
+        for (const auto& slot : snap)
+        {
+            if (slot.src == 0 || slot.amount == 0.f) continue;
+
+            float srcValue = 0.f;
+            switch (slot.src)
+            {
+                case 1: srcValue = srcs.lfo1;     break;
+                case 2: srcValue = srcs.lfo2;     break;
+                case 3: srcValue = srcs.envAmp;   break;
+                case 4: srcValue = srcs.envFilt;  break;
+                case 5: srcValue = srcs.velocity; break;
+                // 6 = Modwheel, 7 = Aftertouch: deferred V2
+                case 8: srcValue = srcs.keytrack; break;
+                // 9 = Random: deferred V2
+                default: continue;
+            }
+
+            const float shaped = applyCurve(srcValue, slot.curve);
+            applyToBus(bus, slot.dst, shaped * slot.amount);
+        }
+    }
 
     void readSnapshot(juce::AudioProcessorValueTreeState& apvts, Snapshot& out)
     {
