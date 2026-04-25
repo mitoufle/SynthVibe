@@ -15,6 +15,7 @@
 #include "UI/components/BipolarAmountBar.h"
 #include "UI/components/ModRow.h"
 #include "UI/components/ModMatrixTable.h"
+#include "UI/components/FxSlotTypePicker.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 
@@ -168,6 +169,21 @@ struct UIConstructionTests : public juce::UnitTest
             expectEquals(tab.getWidth(), 1280);
             expect(tab.getMatrix() != nullptr, "ModTab should own a ModMatrixTable");
             expectEquals(tab.getMatrix()->getNumRows(), 8);
+        }
+
+        beginTest("FxSlotTypePicker binds and lists 11 types");
+        {
+            SynthVibe::FxSlotTypePicker picker(apvts, ParamIDs::fx1Type);
+            picker.setBounds(0, 0, 110, 24);
+            // Default fx.1.type index = 0 ("None"); ComboBox IDs are 1-based → 1.
+            expectEquals(picker.getCombo().getSelectedId(), 1);
+            expectEquals(picker.getCombo().getNumItems(), 11);
+
+            // Round-trip
+            auto* p = apvts.getParameter(ParamIDs::fx1Type);
+            p->setValueNotifyingHost(p->convertTo0to1(3.f));   // index 3 = "Delay"
+            expectEquals(picker.getCombo().getSelectedId(), 4);
+            p->setValueNotifyingHost(p->convertTo0to1(0.f));   // restore
         }
     }
 };
