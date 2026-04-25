@@ -17,6 +17,12 @@ namespace SynthVibe
     // [type][param 0..3]
     extern const std::array<std::array<const char*, 4>, kFxTypeCount> kFxParamLabels;
 
+    // Per-type musical defaults for {mix, p1..p4}. Applied by FxSlotCard's
+    // combo onChange when the user picks a new type — preset loads do NOT
+    // trigger this (ComboBoxAttachment uses dontSendNotification on inbound
+    // updates). The `type` and `bypass` fields of these entries are not used.
+    extern const std::array<FxSlotParams, kFxTypeCount> kFxTypeDefaults;
+
     // p1..p4 are all in [0..1]. These functions remap them onto the existing
     // effect-class Params struct.  Slot.mix is consumed separately (it's the
     // wet/dry blend already built into each effect class).

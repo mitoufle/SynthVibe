@@ -22,6 +22,25 @@ namespace SynthVibe
         /* Filter   */ { "Cutoff","Reso", "Type", "" }         // stub
     }};
 
+    // Musical defaults per type. Index aligns with FxType enum.
+    // mix/p1..p4 are normalized [0..1] APVTS values; conversion to engineering
+    // units happens through the to{Drive,Chorus,...}Params functions below.
+    // Stubs (Comp/Phaser/Flanger/Bitcrush/Filter) get neutral 0.5 placeholders
+    // since they don't process; mix=1 is fine because the slot passes through.
+    const std::array<FxSlotParams, kFxTypeCount> kFxTypeDefaults = {{
+        /* None     */ { FxType::None,     false, 1.f,    0.5f,    0.5f,     0.5f, 0.5f     },
+        /* Drive    */ { FxType::Drive,    false, 1.f,    0.f,     0.5f,     0.5f, 0.5f     }, // Soft, +12 dB
+        /* Chorus   */ { FxType::Chorus,   false, 0.4f,   0.1837f, 0.2857f,  0.5f, 0.5f     }, // 1 Hz, 5 ms
+        /* Delay    */ { FxType::Delay,    false, 0.3f,   0.1246f, 0.3684f,  0.5f, 0.5f     }, // 250 ms, fb 0.35
+        /* Reverb   */ { FxType::Reverb,   false, 0.3f,   0.5f,    0.5f,     0.5f, 0.5f     }, // mid room/damp
+        /* Eq3      */ { FxType::Eq3,      false, 1.f,    0.5f,    0.5f,     0.5f, 0.1667f  }, // flat, mid 1 kHz
+        /* Comp     */ { FxType::Comp,     false, 1.f,    0.5f,    0.5f,     0.5f, 0.5f     }, // stub
+        /* Phaser   */ { FxType::Phaser,   false, 0.5f,   0.5f,    0.5f,     0.5f, 0.5f     }, // stub
+        /* Flanger  */ { FxType::Flanger,  false, 0.5f,   0.5f,    0.5f,     0.5f, 0.5f     }, // stub
+        /* Bitcrush */ { FxType::Bitcrush, false, 1.f,    0.5f,    0.5f,     0.5f, 0.5f     }, // stub
+        /* Filter   */ { FxType::Filter,   false, 1.f,    0.5f,    0.5f,     0.5f, 0.5f     }  // stub
+    }};
+
     Drive::Params toDriveParams(const FxSlotParams& s) noexcept
     {
         Drive::Params p;

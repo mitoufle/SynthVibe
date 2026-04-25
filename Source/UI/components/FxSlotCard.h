@@ -55,9 +55,31 @@ namespace SynthVibe
                     applyTypeLabels(idx);
                 });
             typeAttach->sendInitialUpdate();
+
+            // User-driven type change applies that type's musical defaults to
+            // mix/p1..p4. Preset loads bypass this path (ComboBoxAttachment uses
+            // dontSendNotification on inbound updates → onChange does not fire),
+            // so loaded preset values are preserved.
+            typePicker.getCombo().onChange = [this, &apvts, mixId, p1Id, p2Id, p3Id, p4Id]
+            {
+                const int typeIdx = typePicker.getCombo().getSelectedId() - 1;
+                if (typeIdx <= 0 || typeIdx >= kFxTypeCount) return; // None / invalid: skip
+                const auto& def = kFxTypeDefaults[(size_t) typeIdx];
+                auto setNorm = [&apvts](const juce::String& id, float value01)
+                {
+                    if (auto* p = apvts.getParameter(id))
+                        p->setValueNotifyingHost(value01);
+                };
+                setNorm(mixId, def.mix);
+                setNorm(p1Id,  def.p1);
+                setNorm(p2Id,  def.p2);
+                setNorm(p3Id,  def.p3);
+                setNorm(p4Id,  def.p4);
+            };
         }
 
         int  getSlotIndex() const noexcept { return slotIdx; }
+        FxSlotTypePicker& getTypePicker() noexcept { return typePicker; }
 
         void paint(juce::Graphics& g) override
         {

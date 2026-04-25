@@ -215,6 +215,41 @@ struct UIConstructionTests : public juce::UnitTest
             expect(tab.getStrip() != nullptr, "FxTab should own a FxChainStrip");
             expectEquals(tab.getStrip()->getNumSlots(), 10);
         }
+
+        beginTest("FxSlotCard applies per-type defaults on user pick of new type");
+        {
+            SynthVibe::FxSlotCard card(apvts,
+                ParamIDs::fx1Type, ParamIDs::fx1Bypass, ParamIDs::fx1Mix,
+                ParamIDs::fx1P1,   ParamIDs::fx1P2,    ParamIDs::fx1P3, ParamIDs::fx1P4,
+                /*slotIndex=*/1);
+            card.setBounds(0, 0, 220, 180);
+
+            // Reset slot 1 to known initial state (global APVTS defaults).
+            auto* tp = apvts.getParameter(ParamIDs::fx1Type);
+            tp->setValueNotifyingHost(tp->convertTo0to1(0.f));        // None
+            apvts.getParameter(ParamIDs::fx1Mix)->setValueNotifyingHost(1.0f);
+            apvts.getParameter(ParamIDs::fx1P1) ->setValueNotifyingHost(0.5f);
+            apvts.getParameter(ParamIDs::fx1P2) ->setValueNotifyingHost(0.5f);
+
+            // Simulate user picking "Delay" from the dropdown (item ID 4 = enum 3).
+            // Combo onChange fires synchronously and writes Delay's musical defaults
+            // to mix/p1..p4 via setValueNotifyingHost.
+            auto& combo = card.getTypePicker().getCombo();
+            combo.setSelectedId(4, juce::sendNotificationSync);
+
+            // Type updated by the ComboBoxAttachment.
+            expectEquals(apvts.getRawParameterValue(ParamIDs::fx1Type)->load(), 3.f);
+            // mix/p1/p2 reset to Delay's musical defaults from kFxTypeDefaults.
+            expectWithinAbsoluteError(apvts.getRawParameterValue(ParamIDs::fx1Mix)->load(),
+                                      0.3f, 0.001f);
+            expectWithinAbsoluteError(apvts.getRawParameterValue(ParamIDs::fx1P1)->load(),
+                                      0.1246f, 0.005f);
+            expectWithinAbsoluteError(apvts.getRawParameterValue(ParamIDs::fx1P2)->load(),
+                                      0.3684f, 0.005f);
+
+            // Restore for downstream tests.
+            tp->setValueNotifyingHost(tp->convertTo0to1(0.f));
+        }
     }
 };
 
