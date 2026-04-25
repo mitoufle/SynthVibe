@@ -47,6 +47,7 @@ target_sources(AISynth PRIVATE
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
     Source/Engine/Voice.cpp
+    Source/Engine/ModEngine.cpp
     Source/Engine/SynthEngine.cpp
     Source/Engine/ArpEngine.cpp
     Source/Presets/PresetManager.cpp
@@ -102,6 +103,7 @@ target_sources(AISynthTests PRIVATE
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
     Source/Engine/Voice.cpp
+    Source/Engine/ModEngine.cpp
     Source/Engine/SynthEngine.cpp
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
