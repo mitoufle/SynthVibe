@@ -186,3 +186,20 @@ double Voice::midiNoteToHz(int note, int octaveOffset, int semitoneOffset) noexc
 {
     return 440.0 * std::pow(2.0, ((note + octaveOffset * 12 + semitoneOffset) - 69) / 12.0);
 }
+
+float Voice::getEnvAmpValue() const noexcept
+{
+    return ampEnv.peek();
+}
+
+float Voice::getEnvFiltValue() const noexcept
+{
+    return fltEnv.peek();
+}
+
+float Voice::getKeytrackOctaves() const noexcept
+{
+    if (currentNote < 0) return 0.f;
+    // Map note 60 (C4) → 0, note 120 → +1.0, note 0 → -1.0 (clamped at ±1)
+    return juce::jlimit(-1.f, 1.f, (float)(currentNote - 60) / 60.f);
+}

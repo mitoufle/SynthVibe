@@ -35,6 +35,7 @@ public:
     // Release tails — used by the polyphonic gain compensation so dying
     // tails don't keep the per-voice gain depressed.
     bool  isSustaining() const { return stage != Stage::Idle && stage != Stage::Release; }
+    float peek()         const { return currentLevel; }
 
 private:
     enum class Stage { Idle, Attack, Decay, Sustain, Release };

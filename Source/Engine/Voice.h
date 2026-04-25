@@ -69,6 +69,12 @@ public:
     uint64_t getNoteOnOrder() const noexcept { return noteOnOrder; }
     void     setNoteOnOrder(uint64_t order)  noexcept { noteOnOrder = order; }
 
+    // Per-voice modulation source accessors. Cheap reads — no side effects.
+    float getVelocity()         const noexcept { return velocity; }
+    float getEnvAmpValue()      const noexcept;
+    float getEnvFiltValue()     const noexcept;
+    float getKeytrackOctaves()  const noexcept;
+
 private:
     static constexpr int FilterCoefUpdateRate = 16;   // power of 2 → cheap bitmask; ~3 kHz control rate at 48 kHz
     int filterCoefCounter = 0;

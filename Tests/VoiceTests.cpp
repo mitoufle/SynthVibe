@@ -116,6 +116,26 @@ struct VoiceTests : public juce::UnitTest
                    "keytrack=1 should preserve more energy at higher pitch than keytrack=0 ("
                    + juce::String(ratio_kt0, 3) + " vs " + juce::String(ratio_kt1, 3) + ")");
         }
+
+        beginTest("Voice exposes per-voice mod sources");
+        {
+            Voice v;
+            juce::dsp::ProcessSpec spec { 48000.0, 256, 1 };
+            v.prepare(spec);
+            VoiceParams p;
+            p.lfo1.depth = 0.5f;
+            p.lfo1.rate  = 5.f;
+            v.setParams(p);
+            v.noteOn(72, 0.8f);   // C5, velocity 0.8
+
+            // Velocity captured directly from noteOn
+            expectWithinAbsoluteError(v.getVelocity(), 0.8f, 1e-4f);
+            // Keytrack: note 72 (C5) is +12 semitones above C4 (60) → +12/60 = +0.2
+            expectWithinAbsoluteError(v.getKeytrackOctaves(), 0.2f, 1e-3f);
+            // Env values pre-getNextSample: ampEnv has been triggered → in attack range
+            expect(v.getEnvAmpValue() >= 0.f && v.getEnvAmpValue() <= 1.f);
+            expect(v.getEnvFiltValue() >= 0.f && v.getEnvFiltValue() <= 1.f);
+        }
     }
 };
 
