@@ -94,6 +94,7 @@ target_sources(AISynthTests PRIVATE
     Tests/ParameterIdMigrationTests.cpp
     Tests/DesignTokensTests.cpp
     Tests/UIConstructionTests.cpp
+    Tests/ModEngineTests.cpp
     Tests/ExponentialEnvelopeTests.cpp
     Tests/FilterCoefficientsTests.cpp
     Tests/OscillatorTests.cpp
