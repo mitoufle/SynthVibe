@@ -55,6 +55,7 @@ target_sources(AISynth PRIVATE
     Source/FX/Chorus.cpp
     Source/FX/Drive.cpp
     Source/FX/Reverb.cpp
+    Source/FX/Eq3.cpp
     Source/FX/FXChain.cpp
     # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
 )
@@ -99,12 +100,14 @@ target_sources(AISynthTests PRIVATE
     Tests/ExponentialEnvelopeTests.cpp
     Tests/FilterCoefficientsTests.cpp
     Tests/OscillatorTests.cpp
+    Tests/Eq3Tests.cpp
     Source/Engine/ArpEngine.cpp
     Source/Engine/Envelope.cpp
     Source/Engine/Filter.cpp
     Source/Engine/Voice.cpp
     Source/Engine/ModEngine.cpp
     Source/Engine/SynthEngine.cpp
+    Source/FX/Eq3.cpp
     Source/Engine/Oscillator.cpp
     Source/Engine/UnisonOscillator.cpp
     Source/Parameters/ParameterLayout.cpp
