@@ -136,6 +136,40 @@ struct VoiceTests : public juce::UnitTest
             expect(v.getEnvAmpValue() >= 0.f && v.getEnvAmpValue() <= 1.f);
             expect(v.getEnvFiltValue() >= 0.f && v.getEnvFiltValue() <= 1.f);
         }
+
+        beginTest("LFO1 -> Cutoff via mod matrix oscillates audible cutoff");
+        {
+            Voice v;
+            juce::dsp::ProcessSpec spec { 48000.0, 256, 1 };
+            v.prepare(spec);
+            VoiceParams p;
+            p.filterCutoff = 1000.f;       // base 1 kHz
+            p.lfo1.depth   = 1.f;
+            p.lfo1.rate    = 10.f;          // 10 Hz LFO
+            v.setParams(p);
+
+            // Configure matrix: LFO1 -> Cutoff at amount=1.0 (+/-5 octaves max)
+            SynthVibe::ModEngine::Snapshot snap{};
+            snap[0] = { 1, 1, 1.0f, 0 };    // src=lfo1, dst=cutoff, amount=1, curve=lin
+            v.setMatrixSnapshot(&snap);
+
+            v.noteOn(60, 1.f);
+
+            // Capture effective cutoff over ~0.1 s (5000 samples) — spans more
+            // than half an LFO cycle so we see both extremes.
+            float minCutoff =  1e9f;
+            float maxCutoff = -1e9f;
+            for (int i = 0; i < 5000; ++i)
+            {
+                v.getNextSample();
+                const float c = v.getCurrentEffectiveCutoff();
+                minCutoff = std::min(minCutoff, c);
+                maxCutoff = std::max(maxCutoff, c);
+            }
+
+            expect(minCutoff < 500.f,  "min cutoff should drop below 500 Hz");
+            expect(maxCutoff > 4000.f, "max cutoff should exceed 4000 Hz");
+        }
     }
 };
 

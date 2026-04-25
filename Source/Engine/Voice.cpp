@@ -110,9 +110,11 @@ std::pair<float, float> Voice::getNextSample()
     if (!ampEnv.isActive())
         return { 0.f, 0.f };
 
-    // LFO outputs: always advance phase, scaled by depth
-    const float l1 = lfo1Osc.getNextSample() * params.lfo1.depth;
-    const float l2 = lfo2Osc.getNextSample() * params.lfo2.depth;
+    // LFO outputs: raw -1..+1 each sample (cached for matrix sources); scaled by depth for legacy paths
+    lfo1Raw = lfo1Osc.getNextSample();
+    lfo2Raw = lfo2Osc.getNextSample();
+    const float l1 = lfo1Raw * params.lfo1.depth;
+    const float l2 = lfo2Raw * params.lfo2.depth;
 
     // Pitch modulation
     const bool hasPitchLfo = (params.lfo1.dest == LfoDest::Pitch && params.lfo1.depth != 0.f)
@@ -156,14 +158,34 @@ std::pair<float, float> Voice::getNextSample()
     const float envMod  = fltEnv.getNextSample();
     if (filterCoefCounter == 0)
     {
+        // Recompute the mod bus at control rate.
+        modBus = {};
+        if (matrixSnapshot != nullptr)
+        {
+            SynthVibe::ModEngine::SourceValues srcs;
+            srcs.lfo1     = lfo1Raw;
+            srcs.lfo2     = lfo2Raw;
+            srcs.envAmp   = ampEnv.peek();
+            srcs.envFilt  = envMod;          // freshly sampled above
+            srcs.velocity = velocity;
+            srcs.keytrack = getKeytrackOctaves();
+            SynthVibe::ModEngine::applyMatrix(*matrixSnapshot, srcs, modBus);
+        }
+
         float cutoff = sCutoff * keytrackMultiplier * (1.f + params.filterEnvAmt * envMod);
         cutoff += (params.lfo1.dest == LfoDest::Filter ? l1 * 4000.f : 0.f);
         cutoff += (params.lfo2.dest == LfoDest::Filter ? l2 * 4000.f : 0.f);
+        cutoff *= std::pow(2.f, modBus.cutoffSemitones / 12.f);   // matrix mod
         cutoff = juce::jlimit(20.f, 20000.f, cutoff);
+        lastEffectiveCutoff = cutoff;
         filter.setCutoff(cutoff);
         filterR.setCutoff(cutoff);
-        filter.setResonance(sRes);
-        filterR.setResonance(sRes);
+        const float resonance = juce::jlimit(0.f, 1.f, sRes + modBus.resonanceDelta);
+        filter.setResonance(resonance);
+        filterR.setResonance(resonance);
+        const float drive = juce::jlimit(0.f, 1.f, params.filterDrive + modBus.driveDelta);
+        filter.setDrive(drive);
+        filterR.setDrive(drive);
     }
     filterCoefCounter = (filterCoefCounter + 1) & (FilterCoefUpdateRate - 1);
 

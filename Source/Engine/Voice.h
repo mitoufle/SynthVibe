@@ -2,6 +2,7 @@
 #include "UnisonOscillator.h"
 #include "Envelope.h"
 #include "Filter.h"
+#include "ModEngine.h"
 #include <juce_dsp/juce_dsp.h>
 #include <utility>
 
@@ -75,6 +76,11 @@ public:
     float getEnvFiltValue()     const noexcept;
     float getKeytrackOctaves()  const noexcept;
 
+    // Modulation matrix integration. Snapshot pointer is non-owning; SynthEngine
+    // populates it once per block. Voice consumes it at control rate.
+    void setMatrixSnapshot(const SynthVibe::ModEngine::Snapshot* snap) noexcept { matrixSnapshot = snap; }
+    float getCurrentEffectiveCutoff() const noexcept { return lastEffectiveCutoff; }
+
 private:
     static constexpr int FilterCoefUpdateRate = 16;   // power of 2 → cheap bitmask; ~3 kHz control rate at 48 kHz
     int filterCoefCounter = 0;
@@ -99,6 +105,12 @@ private:
     double   sampleRate   = 44100.0;
     uint64_t noteOnOrder  = 0;
     float    keytrackMultiplier = 1.f;
+
+    const SynthVibe::ModEngine::Snapshot* matrixSnapshot = nullptr;
+    SynthVibe::ModBus                     modBus;
+    float                                 lastEffectiveCutoff = 1000.f;
+    float                                 lfo1Raw = 0.f;
+    float                                 lfo2Raw = 0.f;
 
     static double midiNoteToHz(int note, int octaveOffset, int semitoneOffset = 0) noexcept;
 };
