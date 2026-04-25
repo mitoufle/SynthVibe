@@ -1,7 +1,8 @@
 #pragma once
+#include <array>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Engine/SynthEngine.h"
-#include "FX/FXChain.h"
+#include "FX/FxRunner.h"
 #include "Engine/ArpEngine.h"
 #include "Parameters/ParameterLayout.h"
 #include "Presets/PresetManager.h"
@@ -48,17 +49,15 @@ public:
     juce::MidiKeyboardState keyboardState;
 
 private:
-    SynthEngine synth;
-    FXChain     fxChain;
-    ArpEngine   arp;
+    SynthEngine          synth;
+    SynthVibe::FxRunner  fxRunner;
+    ArpEngine            arp;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothMasterVol;
 
     VoiceParams       buildVoiceParams()  const;
-    Delay::Params     buildDelayParams()  const;
-    Chorus::Params    buildChorusParams() const;
-    Drive::Params     buildDriveParams()  const;
-    Reverb::Params    buildReverbParams() const;
     ArpEngine::Params buildArpParams()    const;
+    std::array<SynthVibe::FxSlotParams, SynthVibe::FxRunner::kNumSlots>
+        buildFxSnapshot() const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AISynthProcessor)
 };

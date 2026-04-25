@@ -16,7 +16,7 @@ void AISynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
                                   static_cast<juce::uint32>(samplesPerBlock),
                                   2 };
     synth.prepare(spec);
-    fxChain.prepare(sampleRate, samplesPerBlock);
+    fxRunner.prepare(sampleRate, samplesPerBlock);
     arp.prepare();
     smoothMasterVol.reset(sampleRate, 0.005);
     smoothMasterVol.setCurrentAndTargetValue(
@@ -69,9 +69,9 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         synth.processBlock(buffer, currentSample, remaining);
     }
 
-    // FX chain en premier, PUIS master volume (post-fader correct)
-    fxChain.setParams(buildDelayParams(), buildChorusParams(), buildDriveParams(), buildReverbParams());
-    fxChain.process(buffer);
+    // FX runner first, THEN master volume (post-fader)
+    fxRunner.setSnapshot(buildFxSnapshot());
+    fxRunner.process(buffer);
 
     smoothMasterVol.setTargetValue(*apvts.getRawParameterValue(ParamIDs::masterVolume));
     const float gainStart = smoothMasterVol.getCurrentValue();
@@ -148,40 +148,51 @@ ArpEngine::Params AISynthProcessor::buildArpParams() const
     return p;
 }
 
-Chorus::Params AISynthProcessor::buildChorusParams() const
+std::array<SynthVibe::FxSlotParams, SynthVibe::FxRunner::kNumSlots>
+AISynthProcessor::buildFxSnapshot() const
 {
-    Chorus::Params p;
-    p.rate  = *apvts.getRawParameterValue(ParamIDs::chorusRate);
-    p.depth = *apvts.getRawParameterValue(ParamIDs::chorusDepth);
-    p.mix   = *apvts.getRawParameterValue(ParamIDs::chorusMix);
-    return p;
-}
+    using SynthVibe::FxSlotParams;
+    using SynthVibe::FxType;
 
-Drive::Params AISynthProcessor::buildDriveParams() const
-{
-    Drive::Params p;
-    p.type    = static_cast<Drive::Type>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::driveType)));
-    p.driveDb = *apvts.getRawParameterValue(ParamIDs::driveAmount);
-    p.mix     = *apvts.getRawParameterValue(ParamIDs::driveMix);
-    return p;
-}
+    struct SlotIds { const char* type; const char* bypass; const char* mix;
+                     const char* p1; const char* p2; const char* p3; const char* p4; };
+    static constexpr SlotIds slots[10] = {
+        { ParamIDs::fx1Type,  ParamIDs::fx1Bypass,  ParamIDs::fx1Mix,
+          ParamIDs::fx1P1,    ParamIDs::fx1P2,      ParamIDs::fx1P3,    ParamIDs::fx1P4  },
+        { ParamIDs::fx2Type,  ParamIDs::fx2Bypass,  ParamIDs::fx2Mix,
+          ParamIDs::fx2P1,    ParamIDs::fx2P2,      ParamIDs::fx2P3,    ParamIDs::fx2P4  },
+        { ParamIDs::fx3Type,  ParamIDs::fx3Bypass,  ParamIDs::fx3Mix,
+          ParamIDs::fx3P1,    ParamIDs::fx3P2,      ParamIDs::fx3P3,    ParamIDs::fx3P4  },
+        { ParamIDs::fx4Type,  ParamIDs::fx4Bypass,  ParamIDs::fx4Mix,
+          ParamIDs::fx4P1,    ParamIDs::fx4P2,      ParamIDs::fx4P3,    ParamIDs::fx4P4  },
+        { ParamIDs::fx5Type,  ParamIDs::fx5Bypass,  ParamIDs::fx5Mix,
+          ParamIDs::fx5P1,    ParamIDs::fx5P2,      ParamIDs::fx5P3,    ParamIDs::fx5P4  },
+        { ParamIDs::fx6Type,  ParamIDs::fx6Bypass,  ParamIDs::fx6Mix,
+          ParamIDs::fx6P1,    ParamIDs::fx6P2,      ParamIDs::fx6P3,    ParamIDs::fx6P4  },
+        { ParamIDs::fx7Type,  ParamIDs::fx7Bypass,  ParamIDs::fx7Mix,
+          ParamIDs::fx7P1,    ParamIDs::fx7P2,      ParamIDs::fx7P3,    ParamIDs::fx7P4  },
+        { ParamIDs::fx8Type,  ParamIDs::fx8Bypass,  ParamIDs::fx8Mix,
+          ParamIDs::fx8P1,    ParamIDs::fx8P2,      ParamIDs::fx8P3,    ParamIDs::fx8P4  },
+        { ParamIDs::fx9Type,  ParamIDs::fx9Bypass,  ParamIDs::fx9Mix,
+          ParamIDs::fx9P1,    ParamIDs::fx9P2,      ParamIDs::fx9P3,    ParamIDs::fx9P4  },
+        { ParamIDs::fx10Type, ParamIDs::fx10Bypass, ParamIDs::fx10Mix,
+          ParamIDs::fx10P1,   ParamIDs::fx10P2,     ParamIDs::fx10P3,   ParamIDs::fx10P4 },
+    };
 
-Reverb::Params AISynthProcessor::buildReverbParams() const
-{
-    Reverb::Params p;
-    p.room = *apvts.getRawParameterValue(ParamIDs::reverbRoom);
-    p.damp = *apvts.getRawParameterValue(ParamIDs::reverbDamp);
-    p.mix  = *apvts.getRawParameterValue(ParamIDs::reverbMix);
-    return p;
-}
-
-Delay::Params AISynthProcessor::buildDelayParams() const
-{
-    Delay::Params p;
-    p.timeMs   = *apvts.getRawParameterValue(ParamIDs::delayTime);
-    p.feedback = *apvts.getRawParameterValue(ParamIDs::delayFeedback);
-    p.mix      = *apvts.getRawParameterValue(ParamIDs::delayMix);
-    return p;
+    std::array<FxSlotParams, SynthVibe::FxRunner::kNumSlots> out;
+    for (int i = 0; i < SynthVibe::FxRunner::kNumSlots; ++i)
+    {
+        const auto& s = slots[i];
+        FxSlotParams& p = out[i];
+        p.type   = static_cast<FxType>(static_cast<int>(*apvts.getRawParameterValue(s.type)));
+        p.bypass = *apvts.getRawParameterValue(s.bypass) > 0.5f;
+        p.mix    = *apvts.getRawParameterValue(s.mix);
+        p.p1     = *apvts.getRawParameterValue(s.p1);
+        p.p2     = *apvts.getRawParameterValue(s.p2);
+        p.p3     = *apvts.getRawParameterValue(s.p3);
+        p.p4     = *apvts.getRawParameterValue(s.p4);
+    }
+    return out;
 }
 
 void AISynthProcessor::getStateInformation(juce::MemoryBlock& dest)
