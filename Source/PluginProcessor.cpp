@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Parameters/ParameterIDs.h"
+#include "Engine/ModEngine.h"
 
 AISynthProcessor::AISynthProcessor()
     : AudioProcessor(BusesProperties()
@@ -35,6 +36,10 @@ void AISynthProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     // Snapshot APVTS une seule fois par bloc (évite 26 getRawParameterValue × N events)
     const VoiceParams vp = buildVoiceParams();
+
+    SynthVibe::ModEngine::Snapshot snap;
+    SynthVibe::ModEngine::readSnapshot(apvts, snap);
+    synth.setMatrixSnapshot(snap);
 
     // Arpeggiator
     double bpm = 120.0;

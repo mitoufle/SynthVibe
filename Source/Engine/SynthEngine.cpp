@@ -15,6 +15,13 @@ void SynthEngine::setParams(const VoiceParams& p)
         v.setParams(p);
 }
 
+void SynthEngine::setMatrixSnapshot(const SynthVibe::ModEngine::Snapshot& snapshot) noexcept
+{
+    currentMatrix = snapshot;
+    for (auto& v : voices)
+        v.setMatrixSnapshot(&currentMatrix);
+}
+
 bool SynthEngine::hasActiveNote(int midiNote) const noexcept
 {
     for (const auto& v : voices)

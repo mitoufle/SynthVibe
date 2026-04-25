@@ -1,5 +1,6 @@
 #pragma once
 #include "Voice.h"
+#include "ModEngine.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <array>
 #include <atomic>
@@ -22,11 +23,14 @@ public:
     // Audio thread only — reads voice state without synchronization.
     bool hasActiveNote(int midiNote) const noexcept;
 
+    void setMatrixSnapshot(const SynthVibe::ModEngine::Snapshot& snapshot) noexcept;
+
 private:
     std::array<Voice, NumVoices> voices;
     std::atomic<int> activeVoiceCount { 0 };
     VoiceParams currentParams;
     uint64_t voiceOrderCounter = 0;
+    SynthVibe::ModEngine::Snapshot currentMatrix {};
 
     // Smooths the polyphonic 1/√N gain so that a held note doesn't audibly
     // swell as previous notes' release tails finish.

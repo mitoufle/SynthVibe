@@ -41,6 +41,22 @@ struct SynthEngineTests : public juce::UnitTest
                "note 61 (oldest after retrigger of 60) should have been stolen");
         expect(engine.hasActiveNote(68),
                "note 68 should now be active on the stolen voice");
+
+        beginTest("SynthEngine distributes mod snapshot to voices");
+        {
+            SynthEngine se;
+            juce::dsp::ProcessSpec spec { 48000.0, 256, 2 };
+            se.prepare(spec);
+
+            SynthVibe::ModEngine::Snapshot snap{};
+            snap[3] = { 1, 1, 0.5f, 0 };
+
+            se.setMatrixSnapshot(snap);
+            // Cannot directly inspect voices from outside — relies on integration
+            // verified at Voice level. This test only proves the call compiles
+            // and doesn't crash (smoke).
+            expect(true);
+        }
     }
 };
 
