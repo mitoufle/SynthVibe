@@ -18,29 +18,30 @@ struct SynthEngineTests : public juce::UnitTest
     void runTest() override
     {
         beginTest("voice steal takes the oldest active voice, not always voices[0]");
+        {
+            SynthEngine engine;
+            juce::dsp::ProcessSpec spec { 44100.0, 512, 2 };
+            engine.prepare(spec);
+            engine.setParams(defaultVoiceParams());
 
-        SynthEngine engine;
-        juce::dsp::ProcessSpec spec { 44100.0, 512, 2 };
-        engine.prepare(spec);
-        engine.setParams(defaultVoiceParams());
+            // Fill all 8 voices: notes 60..67 in order.
+            // voices[0] receives note 60 (first = oldest).
+            for (int n = 60; n <= 67; ++n)
+                engine.handleMidiMessage(juce::MidiMessage::noteOn(1, n, 0.8f));
 
-        // Fill all 8 voices: notes 60..67 in order.
-        // voices[0] receives note 60 (first = oldest).
-        for (int n = 60; n <= 67; ++n)
-            engine.handleMidiMessage(juce::MidiMessage::noteOn(1, n, 0.8f));
+            // Retrigger note 60 — this makes voices[0] the NEWEST voice.
+            engine.handleMidiMessage(juce::MidiMessage::noteOn(1, 60, 0.8f));
 
-        // Retrigger note 60 — this makes voices[0] the NEWEST voice.
-        engine.handleMidiMessage(juce::MidiMessage::noteOn(1, 60, 0.8f));
+            // All 8 voices still busy. Steal should now pick note 61 (oldest remaining).
+            engine.handleMidiMessage(juce::MidiMessage::noteOn(1, 68, 0.8f));
 
-        // All 8 voices still busy. Steal should now pick note 61 (oldest remaining).
-        engine.handleMidiMessage(juce::MidiMessage::noteOn(1, 68, 0.8f));
-
-        // After steal: note 61 voice was taken for note 68.
-        // hasActiveNote(61) must be false; hasActiveNote(68) must be true.
-        expect(!engine.hasActiveNote(61),
-               "note 61 (oldest after retrigger of 60) should have been stolen");
-        expect(engine.hasActiveNote(68),
-               "note 68 should now be active on the stolen voice");
+            // After steal: note 61 voice was taken for note 68.
+            // hasActiveNote(61) must be false; hasActiveNote(68) must be true.
+            expect(!engine.hasActiveNote(61),
+                   "note 61 (oldest after retrigger of 60) should have been stolen");
+            expect(engine.hasActiveNote(68),
+                   "note 68 should now be active on the stolen voice");
+        }
 
         beginTest("SynthEngine distributes mod snapshot to voices");
         {
