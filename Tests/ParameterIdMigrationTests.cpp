@@ -111,6 +111,40 @@ struct ParameterIdMigrationTests : public juce::UnitTest
                        juce::String("legacy id should be gone: ") + legacyId);
             }
         }
+
+        beginTest("FX slots register with correct defaults");
+        {
+            juce::AudioProcessorGraph dummyGraph;
+            juce::AudioProcessorValueTreeState apvts(
+                dummyGraph, nullptr, "AISynthState", ParameterLayout::create());
+
+            auto readFloat = [&](const char* id) {
+                auto* p = apvts.getRawParameterValue(id);
+                expect(p != nullptr, juce::String("missing param: ") + id);
+                return p ? p->load() : 0.f;
+            };
+
+            // Type default = 0 ("None")
+            expectEquals(readFloat(ParamIDs::fx1Type), 0.f);
+            // Bypass default = false (0)
+            expectEquals(readFloat(ParamIDs::fx1Bypass), 0.f);
+            // Mix default = 1.0 (full wet — slot is bypassed via type=None or bypass flag)
+            expectWithinAbsoluteError(readFloat(ParamIDs::fx1Mix), 1.f, 0.001f);
+            // p1..p4 default = 0.5 (mid range)
+            expectWithinAbsoluteError(readFloat(ParamIDs::fx1P1), 0.5f, 0.001f);
+            expectWithinAbsoluteError(readFloat(ParamIDs::fx1P4), 0.5f, 0.001f);
+
+            // Slot 10 also present
+            expect(apvts.getRawParameterValue(ParamIDs::fx10P4) != nullptr,
+                   "slot 10 p4 must be registered");
+
+            // 11 type choices: None + 10 effect types
+            auto* typeParam = dynamic_cast<juce::AudioParameterChoice*>(
+                apvts.getParameter(ParamIDs::fx1Type));
+            expect(typeParam != nullptr, "fx.1.type must be a choice param");
+            if (typeParam != nullptr)
+                expectEquals(typeParam->choices.size(), 11);
+        }
     }
 };
 
