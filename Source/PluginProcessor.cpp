@@ -145,6 +145,10 @@ ArpEngine::Params AISynthProcessor::buildArpParams() const
     p.mode        = static_cast<ArpEngine::Mode>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpMode)));
     p.rateIndex   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpRate));
     p.octaveRange = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::arpOctaveRange));
+    p.gate        = *apvts.getRawParameterValue(ParamIDs::arpGate);
+    p.swing       = *apvts.getRawParameterValue(ParamIDs::arpSwing);
+    p.humanize    = *apvts.getRawParameterValue(ParamIDs::arpHumanize);
+    p.latch       = *apvts.getRawParameterValue(ParamIDs::arpLatch) > 0.5f;
     return p;
 }
 
