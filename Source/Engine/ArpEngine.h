@@ -26,6 +26,7 @@ public:
         float gate        = 1.0f; // 0.05..1.0  fraction of step the note holds before noteOff
         float swing       = 0.0f; // 0..1  fraction of step that odd steps shift later
         float humanize    = 0.0f; // 0..1  per-step velocity jitter (-50% max) + timing jitter (+/-stepLen/8 max)
+        bool  latch       = false; // true: noteOff doesn't remove; new noteOn after release replaces
     };
 
     void setParams(const Params& p);
@@ -54,6 +55,7 @@ private:
     int   lastNote       = -1;
     bool  noteIsOn       = false;
     bool  pendingNoteOff = false;   // set when arp disabled mid-note
+    bool  freshLatchGroup = true;  // armed when all keys released; first noteOn after a release clears the held set
     std::vector<HeldNote> pendingNoteOns; // saved held notes to re-emit on disable
 
     std::mt19937 rng { std::random_device{}() };

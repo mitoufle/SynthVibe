@@ -501,6 +501,84 @@ struct ArpEngineTests : public juce::UnitTest
                    "velocity must vary; min=" + juce::String(minVel)
                    + " max=" + juce::String(maxVel));
         }
+
+        beginTest("latch=true: noteOff does NOT remove from sequence");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            p.latch       = true;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOff(60);  // would normally remove, but latch holds it
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen * 4, bpm, sr);
+
+            int noteOnCount = 0;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn() && m.getMessage().getNoteNumber() == 60)
+                    ++noteOnCount;
+            expect(noteOnCount >= 4,
+                   "latched note 60 should still cycle, got "
+                   + juce::String(noteOnCount) + " noteOns");
+        }
+
+        beginTest("latch=true: new noteOn after release replaces latched chord");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            p.latch       = true;
+            arp.setParams(p);
+
+            // First chord: 60. Release.
+            arp.noteOn(60, 1.0f);
+            arp.noteOff(60);
+
+            // Run a bit so the engine is in steady-state cycling on 60.
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+            juce::MidiBuffer warmup;
+            arp.process(warmup, stepLen * 2, bpm, sr);
+
+            // New noteOn: 64. Should REPLACE the latched 60 (Roland convention).
+            arp.noteOn(64, 1.0f);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen * 4, bpm, sr);
+
+            int sixties = 0, sixty_fours = 0;
+            for (auto m : buf)
+            {
+                if (m.getMessage().isNoteOn())
+                {
+                    const int n = m.getMessage().getNoteNumber();
+                    if (n == 60) ++sixties;
+                    if (n == 64) ++sixty_fours;
+                }
+            }
+            expect(sixties == 0,
+                   "60 should be cleared by replace-on-new-chord, got "
+                   + juce::String(sixties));
+            expect(sixty_fours >= 3,
+                   "64 should be cycling now, got " + juce::String(sixty_fours));
+        }
     }
 };
 

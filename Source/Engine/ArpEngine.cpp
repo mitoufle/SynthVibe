@@ -21,7 +21,16 @@ void ArpEngine::setParams(const Params& p)
         pendingNoteOff = false;
     }
 
+    const bool latchWasOn = params.latch;
     params = p;
+
+    if (latchWasOn && !p.latch)
+    {
+        // Latch flipped off — release any held notes immediately.
+        heldNotes.clear();
+        sequence.clear();
+        freshLatchGroup = true;
+    }
 
     if (!p.enabled)
     {
@@ -37,6 +46,11 @@ void ArpEngine::setParams(const Params& p)
 
 void ArpEngine::noteOn(int midiNote, float velocity)
 {
+    if (params.latch && freshLatchGroup)
+    {
+        heldNotes.clear();           // replace-on-new-chord
+        freshLatchGroup = false;
+    }
     for (auto& h : heldNotes)
         if (h.note == midiNote) return;
     heldNotes.push_back({ midiNote, velocity });
@@ -45,6 +59,12 @@ void ArpEngine::noteOn(int midiNote, float velocity)
 
 void ArpEngine::noteOff(int midiNote)
 {
+    if (params.latch)
+    {
+        // Don't remove from heldNotes. Just arm the next noteOn to start a fresh chord.
+        freshLatchGroup = true;
+        return;
+    }
     heldNotes.erase(std::remove_if(heldNotes.begin(), heldNotes.end(),
         [midiNote](const HeldNote& h) { return h.note == midiNote; }),
         heldNotes.end());
@@ -61,6 +81,7 @@ void ArpEngine::reset()
     sampleCounter         = 0;
     samplesUntilNoteOff   = 0;
     swingShiftSamples     = 0;
+    freshLatchGroup       = true;
     pingDir               = 1;
     lastNote              = -1;
     noteIsOn              = false;
