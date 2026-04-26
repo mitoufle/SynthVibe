@@ -64,6 +64,7 @@ target_sources(AISynth PRIVATE
     Source/AI/ParamIdIndex.cpp
     Source/AI/SystemPrompt.cpp
     Source/AI/ApiKeyStore.cpp
+    Source/AI/JuceHttpTransport.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -130,6 +131,7 @@ target_sources(AISynthTests PRIVATE
     Source/AI/ParamIdIndex.cpp
     Source/AI/SystemPrompt.cpp
     Source/AI/ApiKeyStore.cpp
+    Source/AI/JuceHttpTransport.cpp
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
