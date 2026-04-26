@@ -63,6 +63,7 @@ target_sources(AISynth PRIVATE
     # AI layer
     Source/AI/ParamIdIndex.cpp
     Source/AI/SystemPrompt.cpp
+    Source/AI/ApiKeyStore.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -128,8 +129,10 @@ target_sources(AISynthTests PRIVATE
     # AI layer
     Source/AI/ParamIdIndex.cpp
     Source/AI/SystemPrompt.cpp
+    Source/AI/ApiKeyStore.cpp
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
+    Tests/ApiKeyStoreTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
