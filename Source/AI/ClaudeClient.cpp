@@ -8,6 +8,7 @@ namespace
     juce::String buildRequestBody(const juce::String& systemPrompt,
                                   const juce::String& userPrompt,
                                   const juce::String& model,
+                                  int                 numVariations,
                                   int                 maxTokens = 2048)
     {
         // Build the request as a juce::DynamicObject tree, then serialize.
@@ -24,7 +25,10 @@ namespace
 
         auto* userMsg = new juce::DynamicObject();
         userMsg->setProperty("role", "user");
-        userMsg->setProperty("content", userPrompt);
+        const juce::String content = "Return " + juce::String(numVariations)
+            + " distinct patches via parallel set_patch tool calls for the description: "
+            + userPrompt;
+        userMsg->setProperty("content", content);
         juce::Array<juce::var> messages;
         messages.add(juce::var(userMsg));
 
@@ -153,34 +157,57 @@ public:
                  uint64_t myGen,
                  std::function<void(ClaudeResponse)> callback)
     {
-        const juce::ScopedLock lock(stateLock);
-        pendingPrompt = std::move(prompt);
-        pendingN      = numVariations;
-        pendingGen    = myGen;
-        pendingCb     = std::move(callback);
-        startThread();
+        {
+            const juce::ScopedLock lock(stateLock);
+            pendingPrompt = std::move(prompt);
+            pendingN      = numVariations;
+            pendingGen    = myGen;
+            pendingCb     = std::move(callback);
+            hasPending    = true;
+        }
+        if (! isThreadRunning())
+            startThread();
+        else
+            notify();   // wake an already-running worker that's currently in wait()
     }
 
     void run() override
     {
-        juce::String prompt;
-        int n = 1;
-        uint64_t myGen = 0;
-        std::function<void(ClaudeResponse)> cb;
+        while (! threadShouldExit())
         {
-            const juce::ScopedLock lock(stateLock);
-            prompt = pendingPrompt;
-            n      = pendingN;
-            myGen  = pendingGen;
-            cb     = pendingCb;
-        }
+            juce::String prompt;
+            int n = 1;
+            uint64_t myGen = 0;
+            std::function<void(ClaudeResponse)> cb;
+            bool hadWork = false;
 
-        ClaudeResponse resp = doRequest(prompt, n);
-        deliver(myGen, std::move(cb), std::move(resp));
+            {
+                const juce::ScopedLock lock(stateLock);
+                if (hasPending)
+                {
+                    prompt     = std::move(pendingPrompt);
+                    n          = pendingN;
+                    myGen      = pendingGen;
+                    cb         = std::move(pendingCb);
+                    hasPending = false;
+                    hadWork    = true;
+                }
+            }
+
+            if (hadWork)
+            {
+                ClaudeResponse resp = doRequest(prompt, n);
+                deliver(myGen, std::move(cb), std::move(resp));
+            }
+            else
+            {
+                wait(-1);   // wait until notify() or threadShouldExit
+            }
+        }
     }
 
 private:
-    ClaudeResponse doRequest(const juce::String& prompt, int /*n*/)
+    ClaudeResponse doRequest(const juce::String& prompt, int n)
     {
         ClaudeResponse r;
 
@@ -192,7 +219,7 @@ private:
             return r;
         }
 
-        const auto body = buildRequestBody(SystemPrompt::build(), prompt, owner.model);
+        const auto body = buildRequestBody(SystemPrompt::build(), prompt, owner.model, n);
 
         juce::StringPairArray headers;
         headers.set("x-api-key", apiKey);
@@ -235,12 +262,14 @@ private:
                  std::function<void(ClaudeResponse)> cb,
                  ClaudeResponse resp)
     {
-        ClaudeClient* ownerPtr = &this->owner;
+        juce::WeakReference<ClaudeClient> weakOwner(&owner);
         juce::MessageManager::callAsync(
-            [ownerPtr, myGen, cb = std::move(cb), resp = std::move(resp)]() mutable
+            [weakOwner, myGen, cb = std::move(cb), resp = std::move(resp)]() mutable
             {
-                if (ownerPtr->shutdownFlag.load()) return;
-                if (myGen != ownerPtr->generation.load()) return;
+                auto* p = weakOwner.get();
+                if (p == nullptr) return;
+                if (p->shutdownFlag.load()) return;
+                if (myGen != p->generation.load()) return;
                 cb(std::move(resp));
             });
     }
@@ -251,6 +280,7 @@ private:
     int                      pendingN { 1 };
     uint64_t                 pendingGen { 0 };
     std::function<void(ClaudeResponse)> pendingCb;
+    bool                     hasPending { false };
 };
 
 ClaudeClient::ClaudeClient(ApiKeyStore& ks, Transport& tr)
@@ -262,6 +292,7 @@ ClaudeClient::~ClaudeClient()
     if (worker)
     {
         worker->signalThreadShouldExit();
+        worker->notify();   // wake the worker if it's waiting
         worker->stopThread(2000);
     }
 }

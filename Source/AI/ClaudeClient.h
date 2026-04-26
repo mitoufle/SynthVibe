@@ -51,4 +51,6 @@ private:
     std::atomic<uint64_t> generation { 0 };
     std::atomic<bool>     shutdownFlag { false };
     std::unique_ptr<Worker> worker;
+
+    JUCE_DECLARE_WEAK_REFERENCEABLE(ClaudeClient)
 };
