@@ -60,6 +60,8 @@ target_sources(AISynth PRIVATE
     Source/FX/FxSlot.cpp
     Source/FX/FxRunner.cpp
     # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
+    # AI layer
+    Source/AI/ParamIdIndex.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -122,6 +124,9 @@ target_sources(AISynthTests PRIVATE
     Source/Engine/UnisonOscillator.cpp
     Source/Parameters/ParameterLayout.cpp
     Source/Parameters/ModDestinations.cpp
+    # AI layer
+    Source/AI/ParamIdIndex.cpp
+    Tests/ParamIdIndexDriftTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
