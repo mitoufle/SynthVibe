@@ -71,7 +71,7 @@ PatchApplier(apvts).apply(variation) → ApplyReport
 | `Source/AI/SystemPrompt.h` | ~10 | `juce::String build()` |
 | `Source/AI/SystemPrompt.cpp` | ~60 | Template + index rendering |
 | `Source/AI/ParamIdIndex.h` | ~30 | `ParamEntry` struct + namespace API |
-| `Source/AI/ParamIdIndex.cpp` | ~250 | Manual list of all ~221 APVTS paramIds + metadata |
+| `Source/AI/ParamIdIndex.cpp` | ~250 | Manual list of all ~185 APVTS paramIds + metadata |
 | `Source/AI/ApiKeyStore.h` | ~20 | Public API |
 | `Source/AI/ApiKeyStore.cpp` | ~60 | `juce::PropertiesFile` r/w |
 | **Tests:** | | |

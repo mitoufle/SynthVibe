@@ -43,15 +43,20 @@ struct ParamIdIndexDriftTests : public juce::UnitTest
         beginTest("every APVTS paramId has a ParamIdIndex entry");
         {
             juce::StringArray missing;
+            juce::StringArray wrongLookup;
             for (auto* p : proc.getParameters())
             {
                 auto* rp = dynamic_cast<juce::RangedAudioParameter*>(p);
                 if (rp == nullptr) continue;
-                if (ParamIdIndex::find(rp->paramID) == nullptr)
-                    missing.add(rp->paramID);
+                auto* hit = ParamIdIndex::find(rp->paramID);
+                if (hit == nullptr) { missing.add(rp->paramID); continue; }
+                if (hit->id != rp->paramID) wrongLookup.add(rp->paramID);
             }
             expect(missing.isEmpty(),
                    "ParamIdIndex.cpp is missing entries for: " + missing.joinIntoString(", "));
+            expect(wrongLookup.isEmpty(),
+                   "ParamIdIndex::find() returned an entry whose id != requested id for: "
+                   + wrongLookup.joinIntoString(", "));
         }
 
         beginTest("every ParamIdIndex entry has an APVTS counterpart");
