@@ -140,6 +140,7 @@ target_sources(AISynthTests PRIVATE
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
     Tests/ClaudeClientTests.cpp
+    Tests/ClaudeClientLiveTests.cpp
     Tests/PatchApplierTests.cpp
 )
 
