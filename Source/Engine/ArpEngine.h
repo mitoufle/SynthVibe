@@ -7,7 +7,15 @@
 class ArpEngine
 {
 public:
-    enum class Mode { Up = 0, Down, UpDown, Random };
+    enum class Mode {
+        Up       = 0,
+        Down     = 1,
+        UpDown   = 2,
+        Dnup     = 3,    // NEW — descending then ascending
+        Random   = 4,    // moved from index 3 (preset break per Phase 5 design)
+        AsPlayed = 5,    // NEW — preserve insertion order
+        Chord    = 6     // NEW — emit all held notes simultaneously per step
+    };
 
     struct Params
     {

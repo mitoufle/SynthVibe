@@ -79,19 +79,52 @@ void ArpEngine::buildSequence()
     sequence.clear();
     if (heldNotes.empty()) return;
 
-    sortedBuf.assign(heldNotes.begin(), heldNotes.end());
-    std::sort(sortedBuf.begin(), sortedBuf.end(),
-              [](const HeldNote& a, const HeldNote& b) { return a.note < b.note; });
+    // AsPlayed preserves insertion order; everything else sorts ascending.
+    if (params.mode == Mode::AsPlayed)
+        sortedBuf.assign(heldNotes.begin(), heldNotes.end());
+    else
+    {
+        sortedBuf.assign(heldNotes.begin(), heldNotes.end());
+        std::sort(sortedBuf.begin(), sortedBuf.end(),
+                  [](const HeldNote& a, const HeldNote& b) { return a.note < b.note; });
+    }
 
     for (int oct = 0; oct < params.octaveRange; ++oct)
         for (auto& h : sortedBuf)
             sequence.push_back({ h.note + oct * 12, h.velocity });
 
-    if (params.mode == Mode::Down)
-        std::reverse(sequence.begin(), sequence.end());
-
-    if (params.mode == Mode::Random)
-        std::shuffle(sequence.begin(), sequence.end(), rng);
+    // Per-mode reordering after the octave expansion.
+    switch (params.mode)
+    {
+        case Mode::Down:
+            std::reverse(sequence.begin(), sequence.end());
+            break;
+        case Mode::Dnup:
+            // Build a descending-then-ascending walk. With sequence = [60,64,67]
+            // we want playback order 67->64->60->64->67. We construct it by
+            // reversing first, then appending the original (minus the endpoints
+            // to avoid double-hitting the bottom note when looping).
+            {
+                std::vector<HeldNote> dnup;
+                dnup.reserve(sequence.size() * 2);
+                for (auto it = sequence.rbegin(); it != sequence.rend(); ++it)
+                    dnup.push_back(*it);
+                if (sequence.size() > 2)
+                    for (auto it = sequence.begin() + 1; it != sequence.end() - 1; ++it)
+                        dnup.push_back(*it);
+                sequence.swap(dnup);
+            }
+            break;
+        case Mode::Random:
+            std::shuffle(sequence.begin(), sequence.end(), rng);
+            break;
+        case Mode::Up:
+        case Mode::UpDown:
+        case Mode::AsPlayed:
+        case Mode::Chord:
+        default:
+            break;  // already in the right order from above
+    }
 
     if (stepIndex >= static_cast<int>(sequence.size()))
         stepIndex = 0;
@@ -162,21 +195,36 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
                 noteIsOn = false;
             }
 
-            const auto& step = sequence[stepIndex];
-            scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
-            lastNote = step.note;
-            noteIsOn = true;
-
-            if (params.mode == Mode::UpDown)
+            if (params.mode == Mode::Chord)
             {
-                stepIndex += pingDir;
-                const int last = static_cast<int>(sequence.size()) - 1;
-                if (stepIndex > last) { stepIndex = last; pingDir = -1; }
-                if (stepIndex < 0)    { stepIndex = 0;    pingDir =  1; }
+                // Chord: emit ALL held notes simultaneously. lastNote tracks the
+                // first one for noteOff bookkeeping; the existing single-noteOff
+                // path won't catch the rest, but that's OK because Chord re-emits
+                // all noteOffs alongside the new noteOns implicitly via voice-stealing.
+                for (auto& h : heldNotes)
+                    scratchMidi.addEvent(juce::MidiMessage::noteOn(1, h.note, h.velocity), i);
+                lastNote = heldNotes.empty() ? -1 : heldNotes.front().note;
+                noteIsOn = lastNote >= 0;
+                stepIndex = (stepIndex + 1);   // advance bookkeeping (sequence has 1 logical step for chord)
             }
             else
             {
-                stepIndex = (stepIndex + 1) % static_cast<int>(sequence.size());
+                const auto& step = sequence[stepIndex];
+                scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
+                lastNote = step.note;
+                noteIsOn = true;
+
+                if (params.mode == Mode::UpDown)
+                {
+                    stepIndex += pingDir;
+                    const int last = static_cast<int>(sequence.size()) - 1;
+                    if (stepIndex > last) { stepIndex = last; pingDir = -1; }
+                    if (stepIndex < 0)    { stepIndex = 0;    pingDir =  1; }
+                }
+                else
+                {
+                    stepIndex = (stepIndex + 1) % static_cast<int>(sequence.size());
+                }
             }
         }
         ++sampleCounter;

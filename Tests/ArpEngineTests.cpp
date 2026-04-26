@@ -1,5 +1,7 @@
 #include <juce_core/juce_core.h>
 #include "Engine/ArpEngine.h"
+#include <vector>
+#include <algorithm>
 
 struct ArpEngineTests : public juce::UnitTest
 {
@@ -105,6 +107,115 @@ struct ArpEngineTests : public juce::UnitTest
                "note 60 velocity must be preserved");
         expectWithinAbsoluteError(vel64, 0.5f, 0.01f,
                "note 64 velocity must be preserved");
+
+        // ----------------------------------------------------------------
+        // Test 4: dnup pattern
+        // ----------------------------------------------------------------
+        beginTest("dnup pattern with [60, 64, 67] yields 67 -> 64 -> 60 -> 64 -> 67");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Dnup;
+            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.octaveRange = 1;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);  // 1/16 = 0.25 beat
+            const int total = stepLen * 5;
+
+            juce::MidiBuffer buf;
+            arp.process(buf, total, bpm, sr);
+
+            std::vector<int> emittedNotes;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn())
+                    emittedNotes.push_back(m.getMessage().getNoteNumber());
+
+            const std::vector<int> expected { 67, 64, 60, 64, 67 };
+            expect(emittedNotes == expected,
+                   "dnup expected 67->64->60->64->67, got "
+                   + juce::String(emittedNotes.size()) + " notes");
+        }
+
+        // ----------------------------------------------------------------
+        // Test 5: asplayed pattern
+        // ----------------------------------------------------------------
+        beginTest("asplayed pattern preserves insertion order [64, 60, 67]");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::AsPlayed;
+            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.octaveRange = 1;
+            arp.setParams(p);
+            arp.noteOn(64, 1.0f);   // played first
+            arp.noteOn(60, 1.0f);   // played second
+            arp.noteOn(67, 1.0f);   // played third
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+            const int total = stepLen * 4;
+
+            juce::MidiBuffer buf;
+            arp.process(buf, total, bpm, sr);
+
+            std::vector<int> emittedNotes;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn())
+                    emittedNotes.push_back(m.getMessage().getNoteNumber());
+
+            const std::vector<int> expected { 64, 60, 67, 64 };
+            expect(emittedNotes == expected,
+                   "asplayed expected 64->60->67->64, got "
+                   + juce::String(emittedNotes.size()) + " notes");
+        }
+
+        // ----------------------------------------------------------------
+        // Test 6: chord pattern
+        // ----------------------------------------------------------------
+        beginTest("chord pattern emits 3 simultaneous noteOns per step");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Chord;
+            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.octaveRange = 1;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            // First step should emit ALL 3 notes at sample 0 (or close to it)
+            std::vector<int> notesAtStep0;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn() && m.samplePosition == 0)
+                    notesAtStep0.push_back(m.getMessage().getNoteNumber());
+            std::sort(notesAtStep0.begin(), notesAtStep0.end());
+
+            const std::vector<int> expected { 60, 64, 67 };
+            expect(notesAtStep0 == expected,
+                   "chord expected {60,64,67} at sample 0, got "
+                   + juce::String(notesAtStep0.size()) + " notes");
+        }
     }
 };
 
