@@ -18,6 +18,7 @@
 #include "UI/components/FxSlotTypePicker.h"
 #include "UI/components/FxSlotCard.h"
 #include "UI/components/FxChainStrip.h"
+#include "UI/components/SegmentedButtonRow.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 #include "UI/FXTab.h"
@@ -249,6 +250,18 @@ struct UIConstructionTests : public juce::UnitTest
 
             // Restore for downstream tests.
             tp->setValueNotifyingHost(tp->convertTo0to1(0.f));
+        }
+
+        beginTest("SegmentedButtonRow constructs with N labels and binds to choice param");
+        {
+            SynthVibe::SegmentedButtonRow row(apvts, ParamIDs::arpMode,
+                juce::StringArray { "Up", "Dn", "UpDn", "DnUp", "Rnd", "Played", "Chord" },
+                SynthVibe::Tokens::arp);
+            row.setBounds(0, 0, 700, 28);
+            expectEquals(row.getNumSegments(), 7);
+            // arp.pattern default = index 2 (updn) → segment 2 active.
+            expect(row.getSegmentButton(2).getToggleState() == true,
+                   "segment 2 (updn) should be active by default");
         }
     }
 };
