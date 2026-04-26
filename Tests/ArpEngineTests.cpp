@@ -709,6 +709,54 @@ struct ArpEngineTests : public juce::UnitTest
                    "expected noteOff for all 3 chord voices on release, got "
                    + juce::String(noteOffs.size()) + " noteOffs");
         }
+
+        // ----------------------------------------------------------------
+        // Test 19 (regression): Chord -> non-Chord mid-play flushes all chord voices
+        // ----------------------------------------------------------------
+        beginTest("chord -> up mode-switch mid-play emits noteOff for all chord voices");
+        {
+            ArpEngine arp;
+            arp.prepare();
+
+            ArpEngine::Params chord;
+            chord.enabled     = true;
+            chord.mode        = ArpEngine::Mode::Chord;
+            chord.rateIndex   = 2;       // 1/16 in the 5-entry rate table
+            chord.octaveRange = 1;
+            chord.gate        = 1.0f;
+            arp.setParams(chord);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr     = 48000.0;
+            const double bpm    = 120.0;
+            const int stepLen   = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            // Trigger the chord step: noteIsOn=true, currentChordNotes={60,64,67}
+            juce::MidiBuffer warmup;
+            arp.process(warmup, stepLen / 4, bpm, sr);
+
+            // Switch mode Chord -> Up while still playing.
+            ArpEngine::Params toUp = chord;
+            toUp.mode = ArpEngine::Mode::Up;
+            arp.setParams(toUp);
+
+            // Next process() must flush all 3 chord voices, not just lastNote.
+            juce::MidiBuffer buf;
+            arp.process(buf, 1, bpm, sr);
+
+            std::vector<int> noteOffs;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOff())
+                    noteOffs.push_back(m.getMessage().getNoteNumber());
+            std::sort(noteOffs.begin(), noteOffs.end());
+
+            const std::vector<int> expected { 60, 64, 67 };
+            expect(noteOffs == expected,
+                   "Chord->Up switch must emit noteOff for {60,64,67}, got "
+                   + juce::String(noteOffs.size()) + " noteOffs");
+        }
     }
 };
 

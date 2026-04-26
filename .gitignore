@@ -9,3 +9,16 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 .worktrees/
+
+# Build / test scratch artifacts (left behind by build-with-vs.bat captures)
+build*.log
+test*.log
+build_*.txt
+test_*.txt
+test_results.log
+test_out.log
+AISynth.zip
+
+# Per-user Claude Code state
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

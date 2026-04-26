@@ -23,6 +23,13 @@ void ArpEngine::setParams(const Params& p)
         needsAllNotesOff = true;   // clear any synth voices held while arp was off
     }
 
+    // Transition: Chord → other while playing — arm a flush so the existing
+    // pendingNoteOff path emits noteOff for every entry in currentChordNotes,
+    // not just lastNote. Without this, voices 2..N of the previous chord step
+    // stay stuck on after the mode switch.
+    if (params.mode == Mode::Chord && p.mode != Mode::Chord && noteIsOn)
+        pendingNoteOff = true;
+
     const bool latchWasOn = params.latch;
     params = p;
 
