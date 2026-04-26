@@ -372,6 +372,54 @@ struct ArpEngineTests : public juce::UnitTest
                        "step 3 at 3*sps + half-step");
             }
         }
+
+        // ----------------------------------------------------------------
+        // Test 11: swingShiftSamples resets when held notes empty (regression)
+        // ----------------------------------------------------------------
+        beginTest("swingShiftSamples resets when held notes empty (regression)");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            p.swing       = 1.0f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            // Process enough to land us in an odd-step state (swingShiftSamples == stepLen/2).
+            // After 1 stepLen the sequence has wrapped once; stepIndex is now 1 (odd) and
+            // swingShiftSamples should hold the offset.
+            juce::MidiBuffer warmup;
+            arp.process(warmup, stepLen, bpm, sr);
+
+            // Release all keys.
+            arp.noteOff(60);
+            arp.noteOff(64);
+
+            // Press new keys. First noteOn must fire at sample 0 (not delayed).
+            arp.noteOn(72, 1.0f);
+            arp.noteOn(76, 1.0f);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            int firstNoteOnPos = -1;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn() && firstNoteOnPos < 0)
+                    firstNoteOnPos = m.samplePosition;
+            expect(firstNoteOnPos == 0,
+                   "first noteOn after re-trigger must be at sample 0, got "
+                   + juce::String(firstNoteOnPos));
+        }
     }
 };
 

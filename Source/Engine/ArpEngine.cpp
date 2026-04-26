@@ -27,9 +27,10 @@ void ArpEngine::setParams(const Params& p)
     {
         heldNotes.clear();
         sequence.clear();
-        stepIndex     = 0;
-        sampleCounter = 0;
-        pingDir       = 1;
+        stepIndex         = 0;
+        sampleCounter     = 0;
+        pingDir           = 1;
+        swingShiftSamples = 0;
         // Ne pas toucher noteIsOn/lastNote — process() les nettoie après le noteOff
     }
 }
@@ -48,7 +49,7 @@ void ArpEngine::noteOff(int midiNote)
         [midiNote](const HeldNote& h) { return h.note == midiNote; }),
         heldNotes.end());
     buildSequence();
-    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; }
+    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; swingShiftSamples = 0; }
 }
 
 void ArpEngine::reset()
