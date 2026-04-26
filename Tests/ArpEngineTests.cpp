@@ -216,6 +216,42 @@ struct ArpEngineTests : public juce::UnitTest
                    "chord expected {60,64,67} at sample 0, got "
                    + juce::String(notesAtStep0.size()) + " notes");
         }
+
+        // ----------------------------------------------------------------
+        // Test 7: chord pattern with octaveRange=2 emits both octaves simultaneously
+        // ----------------------------------------------------------------
+        beginTest("chord pattern with octaveRange=2 emits both octaves simultaneously");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Chord;
+            p.rateIndex   = 0;     // 1/16 under the current 4-entry rate table
+            p.octaveRange = 2;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            std::vector<int> notesAtStep0;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn() && m.samplePosition == 0)
+                    notesAtStep0.push_back(m.getMessage().getNoteNumber());
+            std::sort(notesAtStep0.begin(), notesAtStep0.end());
+
+            const std::vector<int> expected { 60, 64, 67, 72, 76, 79 };
+            expect(notesAtStep0 == expected,
+                   "chord+oct2 expected {60,64,67,72,76,79} at sample 0, got "
+                   + juce::String(notesAtStep0.size()) + " notes");
+        }
     }
 };
 

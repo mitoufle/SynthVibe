@@ -101,9 +101,11 @@ void ArpEngine::buildSequence()
             break;
         case Mode::Dnup:
             // Build a descending-then-ascending walk. With sequence = [60,64,67]
-            // we want playback order 67->64->60->64->67. We construct it by
-            // reversing first, then appending the original (minus the endpoints
-            // to avoid double-hitting the bottom note when looping).
+            // the constructed sequence is [67,64,60,64], which loops as
+            // 67->64->60->64->67->64->60->64->... by wrapping stepIndex.
+            // We construct it by reversing first, then appending the original
+            // interior (minus the endpoints) to avoid double-hitting the bottom
+            // note when looping.
             {
                 std::vector<HeldNote> dnup;
                 dnup.reserve(sequence.size() * 2);
@@ -123,7 +125,7 @@ void ArpEngine::buildSequence()
         case Mode::AsPlayed:
         case Mode::Chord:
         default:
-            break;  // already in the right order from above
+            break;  // Up/AsPlayed/Chord: no reorder; UpDown reorders at runtime in process()
     }
 
     if (stepIndex >= static_cast<int>(sequence.size()))
@@ -197,15 +199,14 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
 
             if (params.mode == Mode::Chord)
             {
-                // Chord: emit ALL held notes simultaneously. lastNote tracks the
-                // first one for noteOff bookkeeping; the existing single-noteOff
-                // path won't catch the rest, but that's OK because Chord re-emits
-                // all noteOffs alongside the new noteOns implicitly via voice-stealing.
-                for (auto& h : heldNotes)
-                    scratchMidi.addEvent(juce::MidiMessage::noteOn(1, h.note, h.velocity), i);
-                lastNote = heldNotes.empty() ? -1 : heldNotes.front().note;
+                // Chord: emit ALL notes in `sequence` simultaneously (sequence is the
+                // octave-expanded held set built by buildSequence()). Voice-stealing
+                // at the next step boundary handles the noteOffs for v1.
+                for (auto& step : sequence)
+                    scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
+                lastNote = sequence.empty() ? -1 : sequence.front().note;
                 noteIsOn = lastNote >= 0;
-                stepIndex = (stepIndex + 1);   // advance bookkeeping (sequence has 1 logical step for chord)
+                stepIndex = 0;   // chord has 1 logical step; keep stepIndex bounded
             }
             else
             {
