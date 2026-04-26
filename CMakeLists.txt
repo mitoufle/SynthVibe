@@ -65,6 +65,7 @@ target_sources(AISynth PRIVATE
     Source/AI/SystemPrompt.cpp
     Source/AI/ApiKeyStore.cpp
     Source/AI/JuceHttpTransport.cpp
+    Source/AI/ClaudeClient.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -132,9 +133,11 @@ target_sources(AISynthTests PRIVATE
     Source/AI/SystemPrompt.cpp
     Source/AI/ApiKeyStore.cpp
     Source/AI/JuceHttpTransport.cpp
+    Source/AI/ClaudeClient.cpp
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
+    Tests/ClaudeClientTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
@@ -142,6 +145,7 @@ target_include_directories(AISynthTests PRIVATE Source)
 target_compile_definitions(AISynthTests PRIVATE
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
+    JUCE_MODAL_LOOPS_PERMITTED=1
 )
 
 target_link_libraries(AISynthTests PRIVATE
