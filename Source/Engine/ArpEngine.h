@@ -55,6 +55,7 @@ private:
     int   lastNote       = -1;
     bool  noteIsOn       = false;
     bool  pendingNoteOff = false;   // set when arp disabled mid-note
+    bool  needsAllNotesOff = false; // set on disable->enable: emit allNotesOff so synth voices held pre-enable get cleared
     bool  freshLatchGroup = true;  // armed when all keys released; first noteOn after a release clears the held set
     std::vector<HeldNote> pendingNoteOns; // saved held notes to re-emit on disable
 

@@ -621,6 +621,94 @@ struct ArpEngineTests : public juce::UnitTest
                    "expected all 3 chord notes to noteOff at gate boundary, got "
                    + juce::String(notesAtGateOff.size()) + " notes");
         }
+
+        // ----------------------------------------------------------------
+        // Test 16: enabling arp while a synth voice is held emits allNotesOff
+        // (regression: stuck synth voice when user clicks ARP ON mid-note)
+        // ----------------------------------------------------------------
+        beginTest("enable arp emits allNotesOff so previously-held synth voices clear");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = false;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            arp.setParams(p);
+
+            // Now flip enabled true — simulates user clicking ARP ON.
+            p.enabled = true;
+            arp.setParams(p);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            // The first emitted MIDI event must be an allNotesOff CC at sample 0.
+            bool sawAllNotesOff = false;
+            for (auto m : buf)
+            {
+                const auto msg = m.getMessage();
+                if (msg.isAllNotesOff() && m.samplePosition == 0)
+                    sawAllNotesOff = true;
+            }
+            expect(sawAllNotesOff,
+                   "expected allNotesOff at sample 0 on first enabled block");
+        }
+
+        // ----------------------------------------------------------------
+        // Test 17: chord + release-all emits noteOff for every chord voice
+        // (regression: only lastNote was killed; remaining voices stuck)
+        // ----------------------------------------------------------------
+        beginTest("chord + release-all: cleanup emits noteOff for all chord voices");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Chord;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            // Trigger the chord once so currentChordNotes is populated and
+            // noteIsOn=true with lastNote set.
+            juce::MidiBuffer warmup;
+            arp.process(warmup, stepLen / 4, bpm, sr);
+
+            // Release all keys — the next process() block must emit noteOff for
+            // ALL three chord voices, not just lastNote.
+            arp.noteOff(60);
+            arp.noteOff(64);
+            arp.noteOff(67);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            std::vector<int> noteOffs;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOff())
+                    noteOffs.push_back(m.getMessage().getNoteNumber());
+            std::sort(noteOffs.begin(), noteOffs.end());
+
+            const std::vector<int> expected { 60, 64, 67 };
+            expect(noteOffs == expected,
+                   "expected noteOff for all 3 chord voices on release, got "
+                   + juce::String(noteOffs.size()) + " noteOffs");
+        }
     }
 };
 

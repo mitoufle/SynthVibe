@@ -20,6 +20,7 @@ void ArpEngine::setParams(const Params& p)
     {
         pendingNoteOns.clear();
         pendingNoteOff = false;
+        needsAllNotesOff = true;   // clear any synth voices held while arp was off
     }
 
     const bool latchWasOn = params.latch;
@@ -72,7 +73,10 @@ void ArpEngine::noteOff(int midiNote)
         [midiNote](const HeldNote& h) { return h.note == midiNote; }),
         heldNotes.end());
     buildSequence();
-    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; swingShiftSamples = 0; currentChordNotes.clear(); }
+    // Note: we do NOT clear currentChordNotes here. The sequence-empty cleanup in process()
+    // needs it to emit noteOff for every chord voice (not just lastNote). It will clear it
+    // after emitting.
+    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; swingShiftSamples = 0; }
 }
 
 void ArpEngine::reset()
@@ -90,6 +94,7 @@ void ArpEngine::reset()
     lastNote              = -1;
     noteIsOn              = false;
     pendingNoteOff        = false;
+    needsAllNotesOff      = false;
     pendingNoteOns.clear();
 }
 
@@ -184,7 +189,18 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
     if (pendingNoteOff || !pendingNoteOns.empty())
     {
         if (pendingNoteOff && lastNote >= 0)
-            midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+        {
+            if (!currentChordNotes.empty())
+            {
+                for (int cn : currentChordNotes)
+                    midi.addEvent(juce::MidiMessage::noteOff(1, cn), 0);
+                currentChordNotes.clear();
+            }
+            else
+            {
+                midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+            }
+        }
 
         int samplePos = 1; // after the noteOff
         for (const auto& h : pendingNoteOns)
@@ -201,6 +217,15 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         return;
 
     scratchMidi.clear();
+
+    // First enabled block after disable→enable: silence any synth voices that were
+    // playing while the arp was off. Otherwise the user's noteOff (consumed below)
+    // never reaches the synth and the voice stays stuck.
+    if (needsAllNotesOff)
+    {
+        scratchMidi.addEvent(juce::MidiMessage::allNotesOff(1), 0);
+        needsAllNotesOff = false;
+    }
     const int stepLen = samplesPerStep(bpm, sr);
 
     for (auto meta : midi)
@@ -218,7 +243,16 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
     {
         if (noteIsOn && lastNote >= 0)
         {
-            scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+            if (!currentChordNotes.empty())
+            {
+                for (int cn : currentChordNotes)
+                    scratchMidi.addEvent(juce::MidiMessage::noteOff(1, cn), 0);
+                currentChordNotes.clear();
+            }
+            else
+            {
+                scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
+            }
             noteIsOn = false;
             lastNote = -1;
         }
