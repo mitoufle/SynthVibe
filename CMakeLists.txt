@@ -66,6 +66,7 @@ target_sources(AISynth PRIVATE
     Source/AI/ApiKeyStore.cpp
     Source/AI/JuceHttpTransport.cpp
     Source/AI/ClaudeClient.cpp
+    Source/AI/PatchApplier.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -134,10 +135,12 @@ target_sources(AISynthTests PRIVATE
     Source/AI/ApiKeyStore.cpp
     Source/AI/JuceHttpTransport.cpp
     Source/AI/ClaudeClient.cpp
+    Source/AI/PatchApplier.cpp
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
     Tests/ClaudeClientTests.cpp
+    Tests/PatchApplierTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
