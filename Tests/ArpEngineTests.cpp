@@ -18,7 +18,7 @@ struct ArpEngineTests : public juce::UnitTest
         ArpEngine::Params on;
         on.enabled    = true;
         on.mode       = ArpEngine::Mode::Up;
-        on.rateIndex  = 2;   // 1/4 note — slow enough that step won't fire in 32 samples
+        on.rateIndex  = 2;   // 1/16 note — slow enough that step won't fire in 32 samples
         on.octaveRange = 1;
         arp.setParams(on);
 
@@ -118,7 +118,7 @@ struct ArpEngineTests : public juce::UnitTest
             ArpEngine::Params p;
             p.enabled     = true;
             p.mode        = ArpEngine::Mode::Dnup;
-            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.rateIndex   = 2;     // index 2 = 1/16 in new 5-entry table
             p.octaveRange = 1;
             arp.setParams(p);
             arp.noteOn(60, 1.0f);
@@ -154,7 +154,7 @@ struct ArpEngineTests : public juce::UnitTest
             ArpEngine::Params p;
             p.enabled     = true;
             p.mode        = ArpEngine::Mode::AsPlayed;
-            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.rateIndex   = 2;     // index 2 = 1/16 in new 5-entry table
             p.octaveRange = 1;
             arp.setParams(p);
             arp.noteOn(64, 1.0f);   // played first
@@ -190,7 +190,7 @@ struct ArpEngineTests : public juce::UnitTest
             ArpEngine::Params p;
             p.enabled     = true;
             p.mode        = ArpEngine::Mode::Chord;
-            p.rateIndex   = 0;     // index 0 = 0.25 beats = 1/16 note
+            p.rateIndex   = 2;     // index 2 = 1/16 in new 5-entry table
             p.octaveRange = 1;
             arp.setParams(p);
             arp.noteOn(60, 1.0f);
@@ -227,7 +227,7 @@ struct ArpEngineTests : public juce::UnitTest
             ArpEngine::Params p;
             p.enabled     = true;
             p.mode        = ArpEngine::Mode::Chord;
-            p.rateIndex   = 0;     // 1/16 under the current 4-entry rate table
+            p.rateIndex   = 2;     // index 2 = 1/16 in new 5-entry table
             p.octaveRange = 2;
             arp.setParams(p);
             arp.noteOn(60, 1.0f);
@@ -251,6 +251,79 @@ struct ArpEngineTests : public juce::UnitTest
             expect(notesAtStep0 == expected,
                    "chord+oct2 expected {60,64,67,72,76,79} at sample 0, got "
                    + juce::String(notesAtStep0.size()) + " notes");
+        }
+
+        // ----------------------------------------------------------------
+        // Test 8: gate=0.5 fires noteOff at half-step
+        // ----------------------------------------------------------------
+        beginTest("gate=0.5 fires noteOff at half-step");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;     // 1/16 (new table)
+            p.octaveRange = 1;
+            p.gate        = 0.5f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            int noteOnPos = -1, noteOffPos = -1;
+            for (auto m : buf)
+            {
+                const auto msg = m.getMessage();
+                if (msg.isNoteOn())  noteOnPos  = m.samplePosition;
+                if (msg.isNoteOff()) noteOffPos = m.samplePosition;
+            }
+            expect(noteOnPos == 0, "noteOn at sample 0");
+            const int expectedOff = stepLen / 2;
+            expect(std::abs(noteOffPos - expectedOff) <= 1,
+                   "noteOff at ~stepLen/2, got " + juce::String(noteOffPos)
+                   + " expected " + juce::String(expectedOff));
+        }
+
+        // ----------------------------------------------------------------
+        // Test 9: gate=1.0 fires noteOff at next step boundary (regression)
+        // ----------------------------------------------------------------
+        beginTest("gate=1.0 fires noteOff at next step boundary (regression)");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;     // 1/16 (new table)
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen * 2, bpm, sr);
+
+            // First step's noteOff (60) should fire at the boundary near stepLen
+            // (just before the next noteOn of 64).
+            int firstNoteOffPos = -1;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOff() && firstNoteOffPos < 0)
+                    firstNoteOffPos = m.samplePosition;
+            expect(std::abs(firstNoteOffPos - stepLen) <= 1,
+                   "gate=1.0 should noteOff at step boundary, got "
+                   + juce::String(firstNoteOffPos)
+                   + " expected " + juce::String(stepLen));
         }
     }
 };

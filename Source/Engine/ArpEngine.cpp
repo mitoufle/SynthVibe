@@ -56,12 +56,13 @@ void ArpEngine::reset()
     heldNotes.clear();
     sequence.clear();
     sortedBuf.clear();
-    stepIndex      = 0;
-    sampleCounter  = 0;
-    pingDir        = 1;
-    lastNote       = -1;
-    noteIsOn       = false;
-    pendingNoteOff = false;
+    stepIndex             = 0;
+    sampleCounter         = 0;
+    samplesUntilNoteOff   = 0;
+    pingDir               = 1;
+    lastNote              = -1;
+    noteIsOn              = false;
+    pendingNoteOff        = false;
     pendingNoteOns.clear();
 }
 
@@ -134,9 +135,17 @@ void ArpEngine::buildSequence()
 
 int ArpEngine::samplesPerStep(double bpm, double sr) const noexcept
 {
-    static constexpr double rateFractions[] = { 0.25, 0.5, 1.0, 2.0 };
+    // Aligned with ParameterLayout's StringArray { "1/4", "1/8", "1/16", "1/16T", "1/32" }.
+    // Values are the fraction-of-a-quarter-note duration of one step.
+    static constexpr double rateFractions[] = {
+        1.0,                  // 1/4   - quarter note
+        0.5,                  // 1/8   - eighth
+        0.25,                 // 1/16  - sixteenth
+        0.25 * (2.0 / 3.0),   // 1/16T - sixteenth-note triplet
+        0.125                 // 1/32  - thirty-second
+    };
     const double safeBpm = std::max(bpm, 20.0);
-    const double beats   = rateFractions[juce::jlimit(0, 3, params.rateIndex)];
+    const double beats   = rateFractions[juce::jlimit(0, 4, params.rateIndex)];
     return std::max(static_cast<int>((60.0 / safeBpm) * beats * sr), 1);
 }
 
@@ -147,7 +156,7 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         if (pendingNoteOff && lastNote >= 0)
             midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
 
-        int samplePos = 1; // after the noteOff
+        int samplePos = 1;
         for (const auto& h : pendingNoteOns)
             midi.addEvent(juce::MidiMessage::noteOn(1, h.note, h.velocity), samplePos++);
 
@@ -189,8 +198,21 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
 
     for (int i = 0; i < numSamples; ++i)
     {
+        // Gate-driven noteOff: when timer hits 0, kill the current note.
+        if (noteIsOn && samplesUntilNoteOff > 0)
+        {
+            --samplesUntilNoteOff;
+            if (samplesUntilNoteOff == 0 && lastNote >= 0)
+            {
+                scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                noteIsOn = false;
+            }
+        }
+
         if (sampleCounter == 0)
         {
+            // Defensive noteOff if the previous note is still on (e.g. gate=1.0
+            // means samplesUntilNoteOff hits 0 exactly at this iteration).
             if (noteIsOn && lastNote >= 0)
             {
                 scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
@@ -227,6 +249,11 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
                     stepIndex = (stepIndex + 1) % static_cast<int>(sequence.size());
                 }
             }
+
+            // Schedule the gate-driven noteOff: between 1 and stepLen-1 samples
+            // from now. gate=1.0 → fires exactly at next step boundary, where
+            // the defensive noteOff above will have already cleaned up if needed.
+            samplesUntilNoteOff = std::max(1, static_cast<int>(params.gate * stepLen));
         }
         ++sampleCounter;
         if (sampleCounter >= stepLen) sampleCounter = 0;

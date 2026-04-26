@@ -21,8 +21,9 @@ public:
     {
         bool  enabled     = false;
         Mode  mode        = Mode::Up;
-        int   rateIndex   = 0;    // 0=1/16, 1=1/8, 2=1/4, 3=1/2
+        int   rateIndex   = 2;    // index into samplesPerStep table {1/4, 1/8, 1/16, 1/16T, 1/32}
         int   octaveRange = 1;    // 1..4
+        float gate        = 1.0f; // 0.05..1.0  fraction of step the note holds before noteOff
     };
 
     void setParams(const Params& p);
@@ -43,9 +44,10 @@ private:
     std::vector<HeldNote> sortedBuf;  // buffer de travail pour buildSequence(), évite l'alloc per-call
     juce::MidiBuffer scratchMidi;  // pré-alloué pour éviter l'allocation dans process()
 
-    int   stepIndex      = 0;
-    int   sampleCounter  = 0;
-    int   pingDir        = 1;
+    int   stepIndex            = 0;
+    int   sampleCounter        = 0;
+    int   samplesUntilNoteOff  = 0;  // gate timing: counts down from gate*stepLen at each step trigger
+    int   pingDir              = 1;
     int   lastNote       = -1;
     bool  noteIsOn       = false;
     bool  pendingNoteOff = false;   // set when arp disabled mid-note
