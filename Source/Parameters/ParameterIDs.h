@@ -73,6 +73,10 @@ namespace ParamIDs
     inline constexpr const char* arpMode         = "arp.pattern";
     inline constexpr const char* arpRate         = "arp.rate";
     inline constexpr const char* arpOctaveRange  = "arp.octaves";
+    inline constexpr const char* arpGate         = "arp.gate";
+    inline constexpr const char* arpSwing        = "arp.swing";
+    inline constexpr const char* arpHumanize     = "arp.humanize";
+    inline constexpr const char* arpLatch        = "arp.latch";
 
     // Modulation Matrix — 16 slots declared (UI exposes 1..8; 9..16 reserved for future expansion
     // so presets saved today will not need migration when slot count grows).

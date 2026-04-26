@@ -187,12 +187,23 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         ParamIDs::arpEnabled, "Arp On", false));
     params.push_back(std::make_unique<AudioParameterChoice>(
         ParamIDs::arpMode, "Arp Mode",
-        StringArray { "Up", "Down", "UpDown", "Random" }, 0));
+        StringArray { "up", "down", "updn", "dnup", "rand", "asplayed", "chord" }, 2));
     params.push_back(std::make_unique<AudioParameterChoice>(
         ParamIDs::arpRate, "Arp Rate",
-        StringArray { "1/16", "1/8", "1/4", "1/2" }, 0));
+        StringArray { "1/4", "1/8", "1/16", "1/16T", "1/32" }, 2));
     params.push_back(std::make_unique<AudioParameterInt>(
-        ParamIDs::arpOctaveRange, "Arp Octaves", 1, 4, 1));
+        ParamIDs::arpOctaveRange, "Arp Octaves", 1, 4, 2));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::arpGate, "Arp Gate",
+        NormalisableRange<float>(0.05f, 1.f, 0.001f), 0.58f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::arpSwing, "Arp Swing",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.22f));
+    params.push_back(std::make_unique<AudioParameterFloat>(
+        ParamIDs::arpHumanize, "Arp Humanize",
+        NormalisableRange<float>(0.f, 1.f, 0.001f), 0.4f));
+    params.push_back(std::make_unique<AudioParameterBool>(
+        ParamIDs::arpLatch, "Arp Latch", false));
 
     // -----------------------------------------------------------------------
     // Modulation Matrix — 16 slots (UI shows 1..8; 9..16 reserved)

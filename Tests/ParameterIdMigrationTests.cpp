@@ -145,6 +145,48 @@ struct ParameterIdMigrationTests : public juce::UnitTest
             if (typeParam != nullptr)
                 expectEquals(typeParam->choices.size(), 11);
         }
+
+        beginTest("Arp params (existing + new) register with audit defaults");
+        {
+            juce::AudioProcessorGraph dummyGraph;
+            juce::AudioProcessorValueTreeState apvts(
+                dummyGraph, nullptr, "AISynthState", ParameterLayout::create());
+
+            auto readFloat = [&](const char* id) {
+                auto* p = apvts.getRawParameterValue(id);
+                expect(p != nullptr, juce::String("missing param: ") + id);
+                return p ? p->load() : 0.f;
+            };
+
+            // Existing arp params: defaults must match audit
+            expectEquals(readFloat(ParamIDs::arpEnabled),     0.f);   // false
+            expectEquals(readFloat(ParamIDs::arpMode),        2.f);   // index 2 = "updn"
+            expectEquals(readFloat(ParamIDs::arpRate),        2.f);   // index 2 = "1/16"
+            expectEquals(readFloat(ParamIDs::arpOctaveRange), 2.f);   // 2 octaves
+
+            // New arp params: defaults from audit
+            expectWithinAbsoluteError(readFloat(ParamIDs::arpGate),     0.58f, 0.001f);
+            expectWithinAbsoluteError(readFloat(ParamIDs::arpSwing),    0.22f, 0.001f);
+            expectWithinAbsoluteError(readFloat(ParamIDs::arpHumanize), 0.4f,  0.001f);
+            expectEquals(readFloat(ParamIDs::arpLatch),                 0.f);  // false
+
+            // Choice arity check (locks the new enum sizes — fails loudly if anyone
+            // adds/removes patterns or rates without updating the engine)
+            auto* pattern = dynamic_cast<juce::AudioParameterChoice*>(
+                apvts.getParameter(ParamIDs::arpMode));
+            expect(pattern != nullptr, "arp.pattern must be a choice param");
+            if (pattern != nullptr) expectEquals(pattern->choices.size(), 7);
+
+            auto* rate = dynamic_cast<juce::AudioParameterChoice*>(
+                apvts.getParameter(ParamIDs::arpRate));
+            expect(rate != nullptr, "arp.rate must be a choice param");
+            if (rate != nullptr) expectEquals(rate->choices.size(), 5);
+
+            // Negative test — documents the 1.A break: pattern index 3 is now "dnup",
+            // not the legacy "Random". This locks the choice ordering.
+            if (pattern != nullptr) expectEquals(pattern->choices[3], juce::String("dnup"));
+            if (rate    != nullptr) expectEquals(rate->choices[3],    juce::String("1/16T"));
+        }
     }
 };
 
