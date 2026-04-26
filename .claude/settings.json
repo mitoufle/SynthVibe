@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(CMAKE=*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git worktree add *)",
+      "Bash(powershell -Command \"Get-ChildItem *)",
+      "Bash(powershell -Command \"Get-Command *)"
+    ]
+  }
+}
