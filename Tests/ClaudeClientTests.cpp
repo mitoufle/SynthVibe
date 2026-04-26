@@ -239,6 +239,62 @@ struct ClaudeClientTests : public juce::UnitTest
             expectEquals(transport.callCount.load(), 0);
             keyPath.deleteFile();
         }
+
+        beginTest("superseded request: only 2nd callback fires");
+        {
+            auto keyPath = juce::File::createTempFile("AISynth-key.json");
+            keyPath.deleteFile();
+            ApiKeyStore keyStore(keyPath);
+            keyStore.save("sk-ant-test");
+
+            FakeTransport transport;
+            transport.responseToReturn = HttpResponse{ 200, makeFourVariationResponse(), false };
+            transport.onPost = [] { juce::Thread::sleep(150); };  // deliberate delay so 2nd request can start before 1st finishes
+
+            ClaudeClient client(keyStore, transport);
+
+            std::atomic<int> cb1Calls { 0 };
+            std::atomic<int> cb2Calls { 0 };
+
+            client.requestPatches("first", 1, [&](ClaudeResponse) { ++cb1Calls; });
+            juce::Thread::sleep(50);
+            client.requestPatches("second", 1, [&](ClaudeResponse) { ++cb2Calls; });
+
+            // Pump for up to 5s; expect cb2 to fire and cb1 to never fire.
+            const auto deadline = juce::Time::getMillisecondCounter() + 5000u;
+            while (cb2Calls.load() == 0 && juce::Time::getMillisecondCounter() < deadline)
+                juce::MessageManager::getInstance()->runDispatchLoopUntil(20);
+            // small grace period to confirm cb1 stays at 0
+            juce::MessageManager::getInstance()->runDispatchLoopUntil(200);
+
+            expectEquals(cb2Calls.load(), 1);
+            expectEquals(cb1Calls.load(), 0);
+            keyPath.deleteFile();
+        }
+
+        beginTest("destructor while in-flight: callback never invoked");
+        {
+            auto keyPath = juce::File::createTempFile("AISynth-key.json");
+            keyPath.deleteFile();
+            ApiKeyStore keyStore(keyPath);
+            keyStore.save("sk-ant-test");
+
+            FakeTransport transport;
+            transport.responseToReturn = HttpResponse{ 200, makeFourVariationResponse(), false };
+            transport.onPost = [] { juce::Thread::sleep(300); };
+
+            std::atomic<int> calls { 0 };
+            {
+                ClaudeClient client(keyStore, transport);
+                client.requestPatches("p", 1, [&](ClaudeResponse) { ++calls; });
+                juce::Thread::sleep(50);
+                // client falls out of scope here -> destructor runs while transport is still sleeping
+            }
+            // Pump grace period; callback must never fire.
+            juce::MessageManager::getInstance()->runDispatchLoopUntil(800);
+            expectEquals(calls.load(), 0);
+            keyPath.deleteFile();
+        }
     }
 };
 
