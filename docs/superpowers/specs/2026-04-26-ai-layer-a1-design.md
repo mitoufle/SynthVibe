@@ -48,7 +48,7 @@ ClaudeClient                       ← public façade, message-thread API
    ├── ParamIdIndex (manual std::vector<ParamEntry>)
    │     └── drift-test asserts parity with APVTS at runtime
    │
-   └── ApiKeyStore (juce::PropertiesFile in user app data dir)
+   └── ApiKeyStore (juce::JSON-backed file in user app data dir)
 
 PatchApplier(apvts).apply(variation) → ApplyReport
    │   - message-thread only (jassert)
@@ -73,7 +73,7 @@ PatchApplier(apvts).apply(variation) → ApplyReport
 | `Source/AI/ParamIdIndex.h` | ~30 | `ParamEntry` struct + namespace API |
 | `Source/AI/ParamIdIndex.cpp` | ~250 | Manual list of all ~185 APVTS paramIds + metadata |
 | `Source/AI/ApiKeyStore.h` | ~20 | Public API |
-| `Source/AI/ApiKeyStore.cpp` | ~60 | `juce::PropertiesFile` r/w |
+| `Source/AI/ApiKeyStore.cpp` | ~60 | `juce::JSON` r/w (small `{anthropic_api_key:...}` file) |
 | **Tests:** | | |
 | `Tests/ClaudeClientTests.cpp` | ~400 | 9 mocked test blocks |
 | `Tests/PatchApplierTests.cpp` | ~250 | 6 test blocks |
@@ -88,7 +88,7 @@ PatchApplier(apvts).apply(variation) → ApplyReport
 |---|---|
 | `CMakeLists.txt` | Add `Source/AI/*.cpp` to plugin target sources; add 5 new test files + `FakeTransport.h` IDE listing to test target |
 
-No CMake `find_package` additions — everything uses JUCE built-ins (`juce::URL`, `juce::WebInputStream`, `juce::JSON`, `juce::PropertiesFile`, `juce::Thread`, `juce::MessageManager`).
+No CMake `find_package` additions — everything uses JUCE built-ins (`juce::URL`, `juce::WebInputStream`, `juce::JSON`, `juce::Thread`, `juce::MessageManager`).
 
 ---
 
