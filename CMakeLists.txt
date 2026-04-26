@@ -62,6 +62,7 @@ target_sources(AISynth PRIVATE
     # Source/API/APIServer.cpp     <- uncomment when HTTP layer is added
     # AI layer
     Source/AI/ParamIdIndex.cpp
+    Source/AI/SystemPrompt.cpp
 )
 
 target_include_directories(AISynth PRIVATE Source)
@@ -126,7 +127,9 @@ target_sources(AISynthTests PRIVATE
     Source/Parameters/ModDestinations.cpp
     # AI layer
     Source/AI/ParamIdIndex.cpp
+    Source/AI/SystemPrompt.cpp
     Tests/ParamIdIndexDriftTests.cpp
+    Tests/SystemPromptTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
