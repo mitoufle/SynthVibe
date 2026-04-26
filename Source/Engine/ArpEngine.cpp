@@ -59,6 +59,7 @@ void ArpEngine::reset()
     stepIndex             = 0;
     sampleCounter         = 0;
     samplesUntilNoteOff   = 0;
+    swingShiftSamples     = 0;
     pingDir               = 1;
     lastNote              = -1;
     noteIsOn              = false;
@@ -209,7 +210,7 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             }
         }
 
-        if (sampleCounter == 0)
+        if (sampleCounter == swingShiftSamples)
         {
             // Defensive noteOff if the previous note is still on (e.g. gate=1.0
             // means samplesUntilNoteOff hits 0 exactly at this iteration).
@@ -256,7 +257,16 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             samplesUntilNoteOff = std::max(1, static_cast<int>(params.gate * stepLen));
         }
         ++sampleCounter;
-        if (sampleCounter >= stepLen) sampleCounter = 0;
+        if (sampleCounter >= stepLen)
+        {
+            sampleCounter = 0;
+            // Compute swing offset for the NEW step (about to trigger next iteration).
+            // Note: swing is keyed off stepIndex (sequence-array index), so odd/even
+            // refers to position within the sequence, not absolute song-step count.
+            const bool oddStep = (stepIndex & 1) != 0;
+            swingShiftSamples = oddStep ? static_cast<int>(params.swing * stepLen * 0.5f) : 0;
+            swingShiftSamples = juce::jlimit(0, stepLen - 1, swingShiftSamples);
+        }
     }
 
     midi.swapWith(scratchMidi);

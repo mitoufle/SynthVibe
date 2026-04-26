@@ -325,6 +325,53 @@ struct ArpEngineTests : public juce::UnitTest
                    + juce::String(firstNoteOffPos)
                    + " expected " + juce::String(stepLen));
         }
+
+        // ----------------------------------------------------------------
+        // Test 10: swing=1.0 shifts odd steps by half-step
+        // ----------------------------------------------------------------
+        beginTest("swing=1.0 shifts odd steps by half-step");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            p.swing       = 1.0f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+            arp.noteOn(72, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen * 4, bpm, sr);
+
+            std::vector<int> noteOnPos;
+            for (auto m : buf)
+                if (m.getMessage().isNoteOn())
+                    noteOnPos.push_back(m.samplePosition);
+
+            // Expected positions: 0, 1.5*sps, 2*sps, 3.5*sps (stepIndices 0,1,2,3)
+            expect(noteOnPos.size() >= 4, "expected 4 noteOns");
+            if (noteOnPos.size() >= 4)
+            {
+                const int half = stepLen / 2;
+                expect(std::abs(noteOnPos[0] - 0)              <= 2, "step 0 at 0");
+                expect(std::abs(noteOnPos[1] - (stepLen + half)) <= 2,
+                       "step 1 at sps + half-step");
+                expect(std::abs(noteOnPos[2] - (2 * stepLen))    <= 2,
+                       "step 2 at 2*sps");
+                expect(std::abs(noteOnPos[3] - (3 * stepLen + half)) <= 2,
+                       "step 3 at 3*sps + half-step");
+            }
+        }
     }
 };
 

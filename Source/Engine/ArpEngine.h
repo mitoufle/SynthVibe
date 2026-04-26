@@ -24,6 +24,7 @@ public:
         int   rateIndex   = 2;    // index into samplesPerStep table {1/4, 1/8, 1/16, 1/16T, 1/32}
         int   octaveRange = 1;    // 1..4
         float gate        = 1.0f; // 0.05..1.0  fraction of step the note holds before noteOff
+        float swing       = 0.0f; // 0..1  fraction of step that odd steps shift later
     };
 
     void setParams(const Params& p);
@@ -47,6 +48,7 @@ private:
     int   stepIndex            = 0;
     int   sampleCounter        = 0;
     int   samplesUntilNoteOff  = 0;  // gate timing: counts down from gate*stepLen at each step trigger
+    int   swingShiftSamples   = 0;  // computed once per step trigger; 0 for even steps, swing*stepLen/2 for odd
     int   pingDir              = 1;
     int   lastNote       = -1;
     bool  noteIsOn       = false;
