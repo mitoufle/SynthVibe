@@ -23,6 +23,7 @@
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 #include "UI/FXTab.h"
+#include "UI/ArpTab.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -279,6 +280,18 @@ struct UIConstructionTests : public juce::UnitTest
 
             // Restore for downstream tests.
             pill.getButton().setToggleState(false, juce::sendNotificationSync);
+        }
+
+        beginTest("ArpTab atomized: owns pill, two segmented rows, latch toggle");
+        {
+            ArpTab tab(apvts);
+            tab.setBounds(0, 0, 800, 240);
+            expect(tab.getOnPill()       != nullptr, "missing OnPill");
+            expect(tab.getPatternRow()   != nullptr, "missing PatternRow");
+            expect(tab.getRateRow()      != nullptr, "missing RateRow");
+            expect(tab.getLatchToggle()  != nullptr, "missing LatchToggle");
+            expectEquals(tab.getPatternRow()->getNumSegments(), 7);
+            expectEquals(tab.getRateRow()->getNumSegments(),    5);
         }
     }
 };
