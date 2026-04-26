@@ -19,6 +19,7 @@
 #include "UI/components/FxSlotCard.h"
 #include "UI/components/FxChainStrip.h"
 #include "UI/components/SegmentedButtonRow.h"
+#include "UI/components/ArpOnOffPill.h"
 #include "UI/SoundTab.h"
 #include "UI/ModTab.h"
 #include "UI/FXTab.h"
@@ -262,6 +263,22 @@ struct UIConstructionTests : public juce::UnitTest
             // arp.pattern default = index 2 (updn) → segment 2 active.
             expect(row.getSegmentButton(2).getToggleState() == true,
                    "segment 2 (updn) should be active by default");
+        }
+
+        beginTest("ArpOnOffPill toggles arp.on via attachment");
+        {
+            SynthVibe::ArpOnOffPill pill(apvts, ParamIDs::arpEnabled);
+            pill.setBounds(0, 0, 100, 28);
+            // Default arp.on = false → button off.
+            expect(pill.getButton().getToggleState() == false, "default off");
+
+            // Programmatically click → APVTS should reflect.
+            pill.getButton().setToggleState(true, juce::sendNotificationSync);
+            expectWithinAbsoluteError(
+                apvts.getRawParameterValue(ParamIDs::arpEnabled)->load(), 1.0f, 0.001f);
+
+            // Restore for downstream tests.
+            pill.getButton().setToggleState(false, juce::sendNotificationSync);
         }
     }
 };
