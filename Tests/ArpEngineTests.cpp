@@ -420,6 +420,87 @@ struct ArpEngineTests : public juce::UnitTest
                    "first noteOn after re-trigger must be at sample 0, got "
                    + juce::String(firstNoteOnPos));
         }
+
+        beginTest("humanize=0 produces deterministic output across two runs");
+        {
+            auto runOnce = []() {
+                ArpEngine arp;
+                arp.prepare();
+                ArpEngine::Params p;
+                p.enabled     = true;
+                p.mode        = ArpEngine::Mode::Up;
+                p.rateIndex   = 2;
+                p.octaveRange = 1;
+                p.gate        = 1.0f;
+                p.humanize    = 0.0f;
+                arp.setParams(p);
+                arp.noteOn(60, 0.8f);
+                arp.noteOn(64, 0.8f);
+                arp.noteOn(67, 0.8f);
+
+                const double sr  = 48000.0;
+                const double bpm = 120.0;
+                const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+                juce::MidiBuffer buf;
+                arp.process(buf, stepLen * 8, bpm, sr);
+
+                std::vector<std::tuple<int,int,float>> events;
+                for (auto m : buf)
+                {
+                    const auto msg = m.getMessage();
+                    if (msg.isNoteOn() || msg.isNoteOff())
+                        events.emplace_back(m.samplePosition,
+                                            msg.getNoteNumber(),
+                                            msg.isNoteOn() ? msg.getFloatVelocity() : 0.f);
+                }
+                return events;
+            };
+            const auto a = runOnce();
+            const auto b = runOnce();
+            expect(a == b, "two prepare()->process() runs must be byte-equal at humanize=0");
+        }
+
+        beginTest("humanize=1 produces velocity within [0.5*input, input] across 32 steps");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Up;
+            p.rateIndex   = 2;
+            p.octaveRange = 1;
+            p.gate        = 1.0f;
+            p.humanize    = 1.0f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen * 32, bpm, sr);
+
+            int count = 0;
+            float minVel = 1.f, maxVel = 0.f;
+            for (auto m : buf)
+            {
+                if (m.getMessage().isNoteOn())
+                {
+                    const float v = m.getMessage().getFloatVelocity();
+                    minVel = std::min(minVel, v);
+                    maxVel = std::max(maxVel, v);
+                    ++count;
+                }
+            }
+            expect(count >= 30, "expected ~32 noteOns, got " + juce::String(count));
+            expect(minVel >= 0.499f, "min velocity " + juce::String(minVel) + " < 0.5");
+            expect(maxVel <= 1.001f, "max velocity " + juce::String(maxVel) + " > 1.0");
+            expect(maxVel - minVel > 0.05f,
+                   "velocity must vary; min=" + juce::String(minVel)
+                   + " max=" + juce::String(maxVel));
+        }
     }
 };
 

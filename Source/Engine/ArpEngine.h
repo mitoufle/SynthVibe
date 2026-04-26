@@ -25,6 +25,7 @@ public:
         int   octaveRange = 1;    // 1..4
         float gate        = 1.0f; // 0.05..1.0  fraction of step the note holds before noteOff
         float swing       = 0.0f; // 0..1  fraction of step that odd steps shift later
+        float humanize    = 0.0f; // 0..1  per-step velocity jitter (-50% max) + timing jitter (+/-stepLen/8 max)
     };
 
     void setParams(const Params& p);
@@ -56,7 +57,9 @@ private:
     std::vector<HeldNote> pendingNoteOns; // saved held notes to re-emit on disable
 
     std::mt19937 rng { std::random_device{}() };
+    std::mt19937 humanizeRng { 0xC0FFEEu };  // fixed-seed RNG for reproducible humanization
 
     void buildSequence();
     int  samplesPerStep(double bpm, double sr) const noexcept;
+    float applyHumanizeVelocity(float inputVel) noexcept;
 };

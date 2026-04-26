@@ -75,6 +75,7 @@ void ArpEngine::prepare()
     sortedBuf.reserve(32);
     pendingNoteOns.reserve(32);
     scratchMidi.ensureSize(512);
+    humanizeRng.seed(0xC0FFEEu);
 }
 
 void ArpEngine::buildSequence()
@@ -227,7 +228,10 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
                 // octave-expanded held set built by buildSequence()). Voice-stealing
                 // at the next step boundary handles the noteOffs for v1.
                 for (auto& step : sequence)
-                    scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
+                {
+                    const float vel = applyHumanizeVelocity(step.velocity);
+                    scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, vel), i);
+                }
                 lastNote = sequence.empty() ? -1 : sequence.front().note;
                 noteIsOn = lastNote >= 0;
                 stepIndex = 0;   // chord has 1 logical step; keep stepIndex bounded
@@ -235,7 +239,8 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             else
             {
                 const auto& step = sequence[stepIndex];
-                scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, step.velocity), i);
+                const float vel = applyHumanizeVelocity(step.velocity);
+                scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, vel), i);
                 lastNote = step.note;
                 noteIsOn = true;
 
@@ -266,9 +271,23 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             // refers to position within the sequence, not absolute song-step count.
             const bool oddStep = (stepIndex & 1) != 0;
             swingShiftSamples = oddStep ? static_cast<int>(params.swing * stepLen * 0.5f) : 0;
+
+            if (params.humanize > 0.f)
+            {
+                std::uniform_real_distribution<float> jit(-1.f, 1.f);
+                swingShiftSamples += static_cast<int>(
+                    jit(humanizeRng) * params.humanize * (stepLen / 8.0f));
+            }
             swingShiftSamples = juce::jlimit(0, stepLen - 1, swingShiftSamples);
         }
     }
 
     midi.swapWith(scratchMidi);
+}
+
+float ArpEngine::applyHumanizeVelocity(float inputVel) noexcept
+{
+    if (params.humanize <= 0.f) return inputVel;
+    std::uniform_real_distribution<float> reduce(0.f, 0.5f);
+    return inputVel * (1.f - params.humanize * reduce(humanizeRng));
 }
