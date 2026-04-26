@@ -58,6 +58,8 @@ private:
     bool  freshLatchGroup = true;  // armed when all keys released; first noteOn after a release clears the held set
     std::vector<HeldNote> pendingNoteOns; // saved held notes to re-emit on disable
 
+    std::vector<int> currentChordNotes;  // chord mode: notes currently sustained, used for gate-driven multi-noteOff
+
     std::mt19937 rng { std::random_device{}() };
     std::mt19937 humanizeRng { 0xC0FFEEu };  // fixed-seed RNG for reproducible humanization
 

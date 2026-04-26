@@ -579,6 +579,48 @@ struct ArpEngineTests : public juce::UnitTest
             expect(sixty_fours >= 3,
                    "64 should be cycling now, got " + juce::String(sixty_fours));
         }
+
+        // ----------------------------------------------------------------
+        // Test 15: chord + gate<1.0: gate timer kills the entire chord
+        // ----------------------------------------------------------------
+        beginTest("chord + gate<1.0: gate timer kills the entire chord");
+        {
+            ArpEngine arp;
+            arp.prepare();
+            ArpEngine::Params p;
+            p.enabled     = true;
+            p.mode        = ArpEngine::Mode::Chord;
+            p.rateIndex   = 2;     // 1/16
+            p.octaveRange = 1;
+            p.gate        = 0.5f;
+            arp.setParams(p);
+            arp.noteOn(60, 1.0f);
+            arp.noteOn(64, 1.0f);
+            arp.noteOn(67, 1.0f);
+
+            const double sr  = 48000.0;
+            const double bpm = 120.0;
+            const int stepLen = (int) ((60.0 / bpm) * 0.25 * sr);
+
+            juce::MidiBuffer buf;
+            arp.process(buf, stepLen, bpm, sr);
+
+            // Collect noteOffs emitted at ~stepLen/2 (gate timeout).
+            std::vector<int> notesAtGateOff;
+            const int gateBoundary = stepLen / 2;
+            for (auto m : buf)
+            {
+                if (m.getMessage().isNoteOff()
+                    && std::abs(m.samplePosition - gateBoundary) <= 2)
+                    notesAtGateOff.push_back(m.getMessage().getNoteNumber());
+            }
+            std::sort(notesAtGateOff.begin(), notesAtGateOff.end());
+
+            const std::vector<int> expected { 60, 64, 67 };
+            expect(notesAtGateOff == expected,
+                   "expected all 3 chord notes to noteOff at gate boundary, got "
+                   + juce::String(notesAtGateOff.size()) + " notes");
+        }
     }
 };
 

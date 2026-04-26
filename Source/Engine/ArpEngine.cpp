@@ -1,5 +1,6 @@
 #include "ArpEngine.h"
 #include <algorithm>
+#include <iterator>
 #include <random>
 
 void ArpEngine::setParams(const Params& p)
@@ -29,6 +30,7 @@ void ArpEngine::setParams(const Params& p)
         // Latch flipped off — release any held notes immediately.
         heldNotes.clear();
         sequence.clear();
+        currentChordNotes.clear();
         freshLatchGroup = true;
     }
 
@@ -36,6 +38,7 @@ void ArpEngine::setParams(const Params& p)
     {
         heldNotes.clear();
         sequence.clear();
+        currentChordNotes.clear();
         stepIndex         = 0;
         sampleCounter     = 0;
         pingDir           = 1;
@@ -69,7 +72,7 @@ void ArpEngine::noteOff(int midiNote)
         [midiNote](const HeldNote& h) { return h.note == midiNote; }),
         heldNotes.end());
     buildSequence();
-    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; swingShiftSamples = 0; }
+    if (heldNotes.empty()) { stepIndex = 0; sampleCounter = 0; swingShiftSamples = 0; currentChordNotes.clear(); }
 }
 
 void ArpEngine::reset()
@@ -77,6 +80,7 @@ void ArpEngine::reset()
     heldNotes.clear();
     sequence.clear();
     sortedBuf.clear();
+    currentChordNotes.clear();
     stepIndex             = 0;
     sampleCounter         = 0;
     samplesUntilNoteOff   = 0;
@@ -95,6 +99,7 @@ void ArpEngine::prepare()
     sequence.reserve(128);
     sortedBuf.reserve(32);
     pendingNoteOns.reserve(32);
+    currentChordNotes.reserve(32);
     scratchMidi.ensureSize(512);
     humanizeRng.seed(0xC0FFEEu);
 }
@@ -169,7 +174,8 @@ int ArpEngine::samplesPerStep(double bpm, double sr) const noexcept
         0.125                 // 1/32  - thirty-second
     };
     const double safeBpm = std::max(bpm, 20.0);
-    const double beats   = rateFractions[juce::jlimit(0, 4, params.rateIndex)];
+    constexpr int kRateMax = static_cast<int>(std::size(rateFractions)) - 1;
+    const double beats   = rateFractions[juce::jlimit(0, kRateMax, params.rateIndex)];
     return std::max(static_cast<int>((60.0 / safeBpm) * beats * sr), 1);
 }
 
@@ -180,7 +186,7 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
         if (pendingNoteOff && lastNote >= 0)
             midi.addEvent(juce::MidiMessage::noteOff(1, lastNote), 0);
 
-        int samplePos = 1;
+        int samplePos = 1; // after the noteOff
         for (const auto& h : pendingNoteOns)
             midi.addEvent(juce::MidiMessage::noteOn(1, h.note, h.velocity), samplePos++);
 
@@ -228,7 +234,16 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             --samplesUntilNoteOff;
             if (samplesUntilNoteOff == 0 && lastNote >= 0)
             {
-                scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                if (params.mode == Mode::Chord && !currentChordNotes.empty())
+                {
+                    for (int cn : currentChordNotes)
+                        scratchMidi.addEvent(juce::MidiMessage::noteOff(1, cn), i);
+                    currentChordNotes.clear();
+                }
+                else
+                {
+                    scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                }
                 noteIsOn = false;
             }
         }
@@ -239,19 +254,32 @@ void ArpEngine::process(juce::MidiBuffer& midi, int numSamples, double bpm, doub
             // means samplesUntilNoteOff hits 0 exactly at this iteration).
             if (noteIsOn && lastNote >= 0)
             {
-                scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                if (params.mode == Mode::Chord && !currentChordNotes.empty())
+                {
+                    for (int cn : currentChordNotes)
+                        scratchMidi.addEvent(juce::MidiMessage::noteOff(1, cn), i);
+                    currentChordNotes.clear();
+                }
+                else
+                {
+                    scratchMidi.addEvent(juce::MidiMessage::noteOff(1, lastNote), i);
+                }
                 noteIsOn = false;
             }
 
             if (params.mode == Mode::Chord)
             {
                 // Chord: emit ALL notes in `sequence` simultaneously (sequence is the
-                // octave-expanded held set built by buildSequence()). Voice-stealing
-                // at the next step boundary handles the noteOffs for v1.
+                // octave-expanded held set built by buildSequence()). Populate
+                // currentChordNotes so gate-driven noteOffs kill the whole chord.
+                // Note: stale currentChordNotes from a Chord→other mode switch are
+                // handled by the mode==Chord guards above; v1 limitation.
+                currentChordNotes.clear();
                 for (auto& step : sequence)
                 {
                     const float vel = applyHumanizeVelocity(step.velocity);
                     scratchMidi.addEvent(juce::MidiMessage::noteOn(1, step.note, vel), i);
+                    currentChordNotes.push_back(step.note);
                 }
                 lastNote = sequence.empty() ? -1 : sequence.front().note;
                 noteIsOn = lastNote >= 0;
