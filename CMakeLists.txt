@@ -40,6 +40,7 @@ juce_add_plugin(AISynth
 target_sources(AISynth PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
+    Source/UI/AiPromptModal.cpp
     Source/Parameters/ParameterLayout.cpp
     Source/Parameters/ModDestinations.cpp
     Source/Engine/Oscillator.cpp
@@ -136,9 +137,12 @@ target_sources(AISynthTests PRIVATE
     Source/AI/JuceHttpTransport.cpp
     Source/AI/ClaudeClient.cpp
     Source/AI/PatchApplier.cpp
+    Source/UI/AiPromptModal.cpp
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
+    Tests/AiSettingsViewTests.cpp
+    Tests/AiPromptModalTests.cpp
     Tests/ClaudeClientTests.cpp
     Tests/ClaudeClientLiveTests.cpp
     Tests/PatchApplierTests.cpp

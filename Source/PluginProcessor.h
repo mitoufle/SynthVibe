@@ -1,6 +1,10 @@
 #pragma once
 #include <array>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "AI/ApiKeyStore.h"
+#include "AI/JuceHttpTransport.h"
+#include "AI/ClaudeClient.h"
+#include "AI/PatchApplier.h"
 #include "Engine/SynthEngine.h"
 #include "FX/FxRunner.h"
 #include "Engine/ArpEngine.h"
@@ -47,6 +51,16 @@ public:
     // Its events are merged into the MIDI buffer at the top of processBlock so
     // UI clicks and host-sent MIDI travel through the same path.
     juce::MidiKeyboardState keyboardState;
+
+    // -----------------------------------------------------------------------
+    // AI services (A.2). Public so the editor and future API layer can use them.
+    // Declaration order is load-bearing: ClaudeClient holds refs to apiKeyStore
+    // and httpTransport, and PatchApplier holds a ref to apvts.
+    // -----------------------------------------------------------------------
+    ApiKeyStore       apiKeyStore;
+    JuceHttpTransport httpTransport;
+    ClaudeClient      claudeClient { apiKeyStore, httpTransport };
+    PatchApplier      patchApplier { apvts };
 
 private:
     SynthEngine          synth;
