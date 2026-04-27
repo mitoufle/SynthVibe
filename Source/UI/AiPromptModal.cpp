@@ -46,8 +46,7 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     charCounterLabel.setColour(juce::Label::textColourId, ink3);
     charCounterLabel.setFont(SynthVibe::Fonts::mono(Font::tiny));
     charCounterLabel.setJustificationType(juce::Justification::centredRight);
-    charCounterLabel.setVisible(false);
-    addAndMakeVisible(charCounterLabel);
+    addChildComponent(charCounterLabel);   // visible only when prompt > 1500 chars
 
     // addChildComponent (NOT addAndMakeVisible) so the banner stays hidden
     // until errorBanner.show() is called from showErrorForResponse / requestGenerate.
@@ -55,8 +54,8 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     errorBanner.onActionClicked = [this](SynthVibe::AiErrorBanner::Action a) {
         switch (a) {
             case SynthVibe::AiErrorBanner::Action::SetApiKey:
+                // setMode(Settings) inside enterSettingsView already hides the banner.
                 enterSettingsView();
-                errorBanner.hide();
                 break;
             case SynthVibe::AiErrorBanner::Action::Retry:
                 requestGenerate(promptEditor.getText());
@@ -255,8 +254,11 @@ void AiPromptModal::enterGenerateView()
 void AiPromptModal::saveApiKey(const juce::String& key)
 {
     apiKeyStore.save(key.trim());
-    if (currentBannerError == ClaudeClientError::MissingApiKey
-        || currentBannerError == ClaudeClientError::HttpError)
+    // The user just supplied a key, so MissingApiKey is no longer the issue.
+    // Don't clear other HttpError sub-cases (429 rate-limit, 5xx) — those want
+    // the user to Retry, not just to set a key. Task 7's 401-specific clearing
+    // can layer on top by also tracking the AiErrorBanner::Action.
+    if (currentBannerError == ClaudeClientError::MissingApiKey)
     {
         errorBanner.hide();
         currentBannerError = ClaudeClientError::None;
