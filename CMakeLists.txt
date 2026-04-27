@@ -139,6 +139,7 @@ target_sources(AISynthTests PRIVATE
     Tests/ParamIdIndexDriftTests.cpp
     Tests/SystemPromptTests.cpp
     Tests/ApiKeyStoreTests.cpp
+    Tests/AiSettingsViewTests.cpp
     Tests/ClaudeClientTests.cpp
     Tests/ClaudeClientLiveTests.cpp
     Tests/PatchApplierTests.cpp
