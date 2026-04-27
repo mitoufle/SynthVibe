@@ -47,7 +47,7 @@ private:
     ApiKeyStore& keyStore;
     Transport&   transport;
     juce::String model { "claude-sonnet-4-6" };
-    int          timeoutSeconds { 20 };
+    int          timeoutSeconds { 40 };
     std::atomic<uint64_t> generation { 0 };
     std::atomic<bool>     shutdownFlag { false };
     std::unique_ptr<Worker> worker;

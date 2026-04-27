@@ -35,11 +35,11 @@ struct ClaudeClientLiveTests : public juce::UnitTest
             client.requestPatches("warm pad with slow attack", 1,
                                   [&](ClaudeResponse r) { received = std::move(r); called = true; });
 
-            const auto deadline = juce::Time::getMillisecondCounter() + 35000u;
+            const auto deadline = juce::Time::getMillisecondCounter() + 50000u;
             while (! called.load() && juce::Time::getMillisecondCounter() < deadline)
                 juce::MessageManager::getInstance()->runDispatchLoopUntil(50);
 
-            expect(called.load(), "live: callback never fired (timed out 35s)");
+            expect(called.load(), "live: callback never fired (timed out 50s)");
             expect(received.error == ClaudeClientError::None,
                    "live: expected error=None, got " + juce::String((int) received.error));
             expect(received.variations.size() >= 1, "live: expected >=1 variation");

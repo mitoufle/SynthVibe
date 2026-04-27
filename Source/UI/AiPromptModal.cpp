@@ -346,7 +346,7 @@ void AiPromptModal::showErrorForResponse(const ClaudeResponse& resp)
             break;
 
         case ClaudeClientError::Timeout:
-            msg    = "Request timed out (20s).";
+            msg    = "Request timed out (40s).";
             action = SynthVibe::AiErrorBanner::Action::Retry;
             break;
 
