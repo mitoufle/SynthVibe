@@ -2,6 +2,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Parameters/ParameterLayout.h"
 #include "Parameters/ParameterIDs.h"
+#include "UI/components/VariationCard.h"
+#include "AI/Variation.h"
 #include "UI/components/ArcKnob.h"
 #include "UI/components/PanelHeader.h"
 #include "UI/components/WaveTypeSelect.h"
@@ -292,6 +294,34 @@ struct UIConstructionTests : public juce::UnitTest
             expect(tab.getLatchToggle()  != nullptr, "missing LatchToggle");
             expectEquals(tab.getPatternRow()->getNumSegments(), 7);
             expectEquals(tab.getRateRow()->getNumSegments(),    5);
+        }
+
+        beginTest("VariationCard constructs and paints a populated Variation");
+        {
+            SynthVibe::VariationCard card;
+            card.setIndex(0);
+
+            Variation v;
+            v.name        = "Soft Pad";
+            v.description = "warm, slow attack";
+            v.tags        = juce::StringArray { "pad", "warm", "slow" };
+            v.params      = { { "osc1.level", 0.7 }, { "filt.cutoff", 1500.0 } };
+            card.setVariation(v);
+            card.setBounds(0, 0, 140, 90);
+
+            int callbackIdx = -1;
+            card.onClicked = [&](int i) { callbackIdx = i; };
+
+            // Test seam — exercises the same code path as mouseDown without
+            // forcing tests to construct a juce::MouseEvent.
+            card.triggerClick();
+            expectEquals(callbackIdx, 0);
+
+            // Empty state should not fire the callback.
+            card.setEmpty();
+            callbackIdx = -1;
+            card.triggerClick();
+            expectEquals(callbackIdx, -1);
         }
     }
 };
