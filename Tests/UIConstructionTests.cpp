@@ -27,6 +27,11 @@
 #include "UI/ModTab.h"
 #include "UI/FXTab.h"
 #include "UI/ArpTab.h"
+#include "UI/AiPromptModal.h"
+#include "AI/ClaudeClient.h"
+#include "AI/PatchApplier.h"
+#include "AI/ApiKeyStore.h"
+#include "FakeTransport.h"
 
 struct UIConstructionTests : public juce::UnitTest
 {
@@ -323,6 +328,25 @@ struct UIConstructionTests : public juce::UnitTest
             callbackIdx = -1;
             card.triggerClick();
             expectEquals(callbackIdx, -1);
+        }
+
+        beginTest("AiPromptModal constructs and lays out at 1280x720 host bounds");
+        {
+            auto keyPath = juce::File::createTempFile("AISynth-modal-ctor.json");
+            keyPath.deleteFile();
+            ApiKeyStore  keyStore(keyPath);
+            FakeTransport transport;
+            ClaudeClient  client(keyStore, transport);
+            PatchApplier  applier(apvts);
+
+            AiPromptModal modal(client, applier, keyStore);
+            modal.setBounds(0, 0, 1280, 720);
+            expectEquals(modal.getWidth(),  1280);
+            expectEquals(modal.getHeight(), 720);
+            expectEquals(modal.getVariationCount(), 0);
+            expect(! modal.isLoading(), "fresh modal should not be loading");
+            expectEquals(modal.getSelectedCardIndex(), -1);
+            keyPath.deleteFile();
         }
     }
 };
