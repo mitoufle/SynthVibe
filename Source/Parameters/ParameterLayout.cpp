@@ -20,7 +20,7 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         ParamIDs::osc1Semitone, "Osc1 Semitone", -12, 12, 0));
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc1Detune, "Osc1 Detune",
-        NormalisableRange<float>(-100.f, 100.f, 0.1f), 0.f));
+        NormalisableRange<float>(-10.f, 10.f, 0.1f), 0.f));   // cents; beyond +/-10 = unmusical
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc1Level, "Osc1 Level",
         NormalisableRange<float>(0.f, 1.f, 0.001f), 1.f));
@@ -43,7 +43,7 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
         ParamIDs::osc2Semitone, "Osc2 Semitone", -12, 12, 0));
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc2Detune, "Osc2 Detune",
-        NormalisableRange<float>(-100.f, 100.f, 0.1f), 0.f));
+        NormalisableRange<float>(-10.f, 10.f, 0.1f), 0.f));   // cents; beyond +/-10 = unmusical
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc2Level, "Osc2 Level",
         NormalisableRange<float>(0.f, 1.f, 0.001f), 0.f));  // 0 = silent by default

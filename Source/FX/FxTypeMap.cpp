@@ -56,7 +56,7 @@ namespace SynthVibe
     {
         Chorus::Params p;
         p.rate  = 0.1f + s.p1 * (5.0f  - 0.1f);          // [0.1..5] Hz
-        p.depth = 0.001f + s.p2 * (0.015f - 0.001f);     // [0.001..0.015] s
+        p.depth = 0.001f + s.p2 * (0.005f - 0.001f);     // [0.001..0.005] s; beyond 5 ms = wobble
         p.mix   = s.mix;
         return p;
     }
