@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Parameters/ParameterLayout.h"
 #include "Parameters/ParameterIDs.h"
+#include "UI/components/AiErrorBanner.h"
 #include "UI/components/VariationCard.h"
 #include "AI/Variation.h"
 #include "UI/components/ArcKnob.h"
