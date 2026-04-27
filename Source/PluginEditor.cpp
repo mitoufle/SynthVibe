@@ -9,7 +9,8 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
       modTab(p.apvts),
       fxTab(p.apvts),
       arpTab(p.apvts),
-      keyboard(p.keyboardState)
+      keyboard(p.keyboardState),
+      aiPromptModal(p.claudeClient, p.patchApplier, p.apiKeyStore)
 {
     setLookAndFeel(&laf);
     setSize(1280, 720);
@@ -29,6 +30,11 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
     addAndMakeVisible(fxTab);
     addAndMakeVisible(arpTab);
     addAndMakeVisible(keyboard);
+
+    // Modal sits on top of everything, hidden by default.
+    addChildComponent(aiPromptModal);
+
+    topBar.onPromptRequested = [this] { showAiModal(); };
 
     showTab(0);
 }
@@ -89,6 +95,8 @@ void AISynthEditor::resized()
     modTab.setBounds(area);
     fxTab.setBounds(area);
     arpTab.setBounds(area);
+
+    aiPromptModal.setBounds(getLocalBounds());
 }
 
 void AISynthEditor::showTab(int index)
@@ -103,4 +111,9 @@ void AISynthEditor::showTab(int index)
         tabButtons[i].setActive(i == index);
 
     repaint();
+}
+
+void AISynthEditor::showAiModal()
+{
+    aiPromptModal.show();
 }

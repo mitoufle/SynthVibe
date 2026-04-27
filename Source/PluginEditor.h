@@ -11,6 +11,7 @@
 #include "UI/ArpTab.h"
 #include "UI/components/MainTab.h"
 #include "UI/components/SynthKeyboard.h"
+#include "UI/AiPromptModal.h"
 
 class AISynthEditor : public juce::AudioProcessorEditor
 {
@@ -39,7 +40,10 @@ private:
 
     SynthVibe::SynthKeyboard keyboard;
 
+    AiPromptModal aiPromptModal;
+
     void showTab(int index);
+    void showAiModal();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AISynthEditor)
 };
