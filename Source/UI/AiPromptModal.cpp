@@ -273,8 +273,51 @@ void AiPromptModal::clearApiKey()
 
 // --- Stubs filled in Tasks 6-8 ---------------------------------------------
 
-void AiPromptModal::requestGenerate(const juce::String& /*prompt*/) { /* Task 6 */ }
-void AiPromptModal::onClaudeResponse(ClaudeResponse /*resp*/)       { /* Task 6 */ }
+void AiPromptModal::requestGenerate(const juce::String& prompt)
+{
+    if (state == State::Loading) return;       // debounce
+
+    const auto trimmed = prompt.trim();
+    if (trimmed.isEmpty()) return;
+
+    if (apiKeyStore.load().isEmpty())
+    {
+        errorBanner.show("No API key set.", SynthVibe::AiErrorBanner::Action::SetApiKey);
+        currentBannerError = ClaudeClientError::MissingApiKey;
+        resized();
+        return;
+    }
+
+    setState(State::Loading);
+    errorBanner.hide();
+    currentBannerError = ClaudeClientError::None;
+    resized();
+
+    juce::WeakReference<AiPromptModal> weakSelf(this);
+    claudeClient.requestPatches(trimmed, 4,
+        [weakSelf](ClaudeResponse resp)
+        {
+            if (auto* self = weakSelf.get())
+                self->onClaudeResponse(std::move(resp));
+        });
+}
+
+void AiPromptModal::onClaudeResponse(ClaudeResponse resp)
+{
+    setState(State::Idle);
+
+    if (resp.error != ClaudeClientError::None)
+    {
+        showErrorForResponse(resp);
+        return;
+    }
+
+    variations    = std::move(resp.variations);
+    selectedCard  = -1;
+    rebuildVariationStrip();
+    resized();
+}
+
 void AiPromptModal::showErrorForResponse(const ClaudeResponse&)     { /* Task 7 */ }
 void AiPromptModal::selectAndApply(int /*cardIndex*/)               { /* Task 8 */ }
 
