@@ -1,9 +1,11 @@
 #include "AiPromptModal.h"
 #include "DesignTokens.h"
 #include "Fonts.h"
+#include "../AI/ParamIdIndex.h"
 
-AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& aks)
-    : claudeClient(cc), patchApplier(pa), apiKeyStore(aks),
+AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& aks,
+                             juce::AudioProcessorValueTreeState& vts)
+    : claudeClient(cc), patchApplier(pa), apiKeyStore(aks), apvts(vts),
       settingsView(aks)
 {
     using namespace SynthVibe::Tokens;
@@ -12,25 +14,28 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     setInterceptsMouseClicks(true, true);
 
     // Header
-    titleLabel.setText("\xE2\x9C\xA6  Describe the sound", juce::dontSendNotification);
+    titleLabel.setText("Describe the sound", juce::dontSendNotification);
     titleLabel.setColour(juce::Label::textColourId, ink);
-    titleLabel.setFont(SynthVibe::Fonts::sans(Font::body, juce::Font::bold));
+    titleLabel.setFont(SynthVibe::Fonts::sans(18.f, juce::Font::bold));
     addAndMakeVisible(titleLabel);
 
-    gearButton.setButtonText("\xE2\x9A\x99");   // gear
+    // Three bullets U+2022 instead of the gear codepoint — Tahoma/Arial don't
+    // ship a glyph for U+2699 so it renders as the missing-glyph box.
+    gearButton.setButtonText(juce::String(juce::CharPointer_UTF8("\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2")));   // •••
     gearButton.onClick = [this] {
         if (mode == Mode::Generate) enterSettingsView();
         else                        enterGenerateView();
     };
     addAndMakeVisible(gearButton);
 
-    closeButton.setButtonText("\xC3\x97");      // x
+    closeButton.setButtonText(juce::String(juce::CharPointer_UTF8("\xC3\x97")));      // x
     closeButton.onClick = [this] { setVisible(false); };
     addAndMakeVisible(closeButton);
 
     // Prompt editor + char counter
     promptEditor.setMultiLine(true, true);
     promptEditor.setReturnKeyStartsNewLine(false);
+    promptEditor.setFont(SynthVibe::Fonts::sans(13.f));
     promptEditor.setColour(juce::TextEditor::backgroundColourId, panel2);
     promptEditor.setColour(juce::TextEditor::textColourId,       ink);
     promptEditor.setColour(juce::TextEditor::outlineColourId,    edge);
@@ -44,7 +49,7 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     addAndMakeVisible(promptEditor);
 
     charCounterLabel.setColour(juce::Label::textColourId, ink3);
-    charCounterLabel.setFont(SynthVibe::Fonts::mono(Font::tiny));
+    charCounterLabel.setFont(SynthVibe::Fonts::sans(11.f));
     charCounterLabel.setJustificationType(juce::Justification::centredRight);
     addChildComponent(charCounterLabel);   // visible only when prompt > 1500 chars
 
@@ -66,7 +71,7 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     };
 
     // Action row
-    generateButton.setButtonText("Generate \xE2\x86\x97");   // arrow
+    generateButton.setButtonText(juce::String(juce::CharPointer_UTF8("Generate \xE2\x86\x92")));   // ->
     generateButton.setEnabled(false);
     generateButton.onClick = [this] {
         requestGenerate(promptEditor.getText());
@@ -75,7 +80,7 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
 
     modelLabel.setText("Claude Sonnet 4.6", juce::dontSendNotification);
     modelLabel.setColour(juce::Label::textColourId, ink3);
-    modelLabel.setFont(SynthVibe::Fonts::mono(Font::tiny));
+    modelLabel.setFont(SynthVibe::Fonts::sans(11.f));
     addAndMakeVisible(modelLabel);
 
     // Variation strip — 4 cards, hidden until first response.
@@ -88,9 +93,10 @@ AiPromptModal::AiPromptModal(ClaudeClient& cc, PatchApplier& pa, ApiKeyStore& ak
     }
 
     // Footer
-    hintLabel.setText("Esc to dismiss \xC2\xB7 Enter to generate", juce::dontSendNotification);
+    hintLabel.setText(juce::String(juce::CharPointer_UTF8("Esc to dismiss \xC2\xB7 Enter to generate")),
+                      juce::dontSendNotification);
     hintLabel.setColour(juce::Label::textColourId, ink3);
-    hintLabel.setFont(SynthVibe::Fonts::mono(Font::tiny));
+    hintLabel.setFont(SynthVibe::Fonts::sans(11.f));
     addAndMakeVisible(hintLabel);
 
     regenerateButton.setButtonText("REGENERATE");
@@ -108,6 +114,9 @@ AiPromptModal::~AiPromptModal() = default;
 
 void AiPromptModal::show()
 {
+    // Reset the audition baseline: each new modal session captures fresh
+    // pre-audition state on the first card click.
+    preApplySnapshot.clear();
     setVisible(true);
     toFront(true);
     promptEditor.grabKeyboardFocus();
@@ -224,8 +233,7 @@ void AiPromptModal::setMode(Mode m)
     // Settings body
     settingsView.setVisible(! genVisible);
 
-    titleLabel.setText(genVisible ? juce::String("\xE2\x9C\xA6  Describe the sound")
-                                  : juce::String("\xE2\x9C\xA6  Settings"),
+    titleLabel.setText(genVisible ? juce::String("Describe the sound") : juce::String("Settings"),
                        juce::dontSendNotification);
     resized();
     repaint();
@@ -235,7 +243,9 @@ void AiPromptModal::setState(State s)
 {
     state = s;
     const bool busy = (s == State::Loading);
-    generateButton.setButtonText(busy ? "Generating\xE2\x80\xA6" : "Generate \xE2\x86\x97");
+    generateButton.setButtonText(busy
+        ? juce::String(juce::CharPointer_UTF8("Generating\xE2\x80\xA6"))
+        : juce::String(juce::CharPointer_UTF8("Generate \xE2\x86\x92")));
     generateButton.setEnabled(! busy && ! promptEditor.getText().trim().isEmpty());
     regenerateButton.setEnabled(! busy && ! variations.empty());
 }
@@ -380,12 +390,34 @@ void AiPromptModal::selectAndApply(int cardIndex)
 {
     if (cardIndex < 0 || cardIndex >= (int) variations.size()) return;
 
+    // Audition: capture pre-audition state on first click of this modal session,
+    // restore it on subsequent clicks so V1 -> V2 -> V1 returns to identical
+    // knob positions (otherwise V2's params that V1 doesn't touch persist).
+    if (preApplySnapshot.empty())
+    {
+        for (const auto& entry : ParamIdIndex::entries())
+        {
+            if (auto* raw = apvts.getRawParameterValue(entry.id))
+                preApplySnapshot[entry.id] = raw->load();
+        }
+    }
+    else
+    {
+        for (const auto& kv : preApplySnapshot)
+        {
+            if (auto* p = apvts.getParameter(kv.first))
+            {
+                p->beginChangeGesture();
+                p->setValueNotifyingHost(p->convertTo0to1(kv.second));
+                p->endChangeGesture();
+            }
+        }
+    }
+
+    selectedCard = cardIndex;         // highlight even when params is empty (per spec)
+    rebuildVariationStrip();
+
     const auto& v = variations[cardIndex];
-    if (v.params.empty()) return;     // empty-Variation = no-op, no selection
-
-    selectedCard = cardIndex;
-    rebuildVariationStrip();          // refresh selection highlight on cards
-
     auto report = patchApplier.apply(v);
     if (report.unknown > 0)
     {

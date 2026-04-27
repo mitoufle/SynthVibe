@@ -67,7 +67,7 @@ namespace
             : keyStore(keyPath),
               client(keyStore, transport),
               applier(proc.apvts),
-              modal(client, applier, keyStore)
+              modal(client, applier, keyStore, proc.apvts)
         {
             keyPath.deleteFile();   // start empty; tests opt-in by calling keyStore.save(...)
             modal.setBounds(0, 0, 1280, 720);
@@ -198,7 +198,7 @@ struct AiPromptModalTests : public juce::UnitTest
             expectEquals(fx.modal.getSelectedCardIndex(), 0);
         }
 
-        beginTest("selectAndApply on a card with empty params is no-op (no gestures fired)");
+        beginTest("selectAndApply on a card with empty params still highlights but fires no gestures");
         {
             ModalFixture fx;
             fx.keyStore.save("sk-ant-test");
@@ -219,7 +219,45 @@ struct AiPromptModalTests : public juce::UnitTest
 
             expectEquals(counter.begins.load(), 0);
             expectEquals(counter.ends  .load(), 0);
-            expectEquals(fx.modal.getSelectedCardIndex(), -1);   // selection NOT recorded for empty
+            // Per spec: empty-params variations still highlight (selection recorded)
+            // even though no gestures fire. The audition snapshot is still captured
+            // so a subsequent click on a non-empty card cleanly restores baseline.
+            expectEquals(fx.modal.getSelectedCardIndex(), 0);
+        }
+
+        beginTest("re-clicking the same card from baseline produces identical APVTS state");
+        {
+            // Audition invariant: V1 -> V2 -> V1 must produce the same state as
+            // a fresh V1 click, even when V2 mentions params V1 doesn't.
+            // PatchApplier expects 0..1 normalized values for non-index params,
+            // so we use 0.3 for filt.cutoff (lands somewhere mid-range, distinct
+            // from baseline).
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-test");
+            fx.transport.responseToReturn = HttpResponse{ 200,
+                "{\"content\":["
+                  "{\"type\":\"tool_use\",\"name\":\"set_patch\",\"input\":{\"name\":\"V1\","
+                    "\"params\":{\"osc1.level\":0.6}}},"
+                  "{\"type\":\"tool_use\",\"name\":\"set_patch\",\"input\":{\"name\":\"V2\","
+                    "\"params\":{\"filt.cutoff\":0.3}}}"
+                "]}", false };
+
+            fx.modal.requestGenerate("p");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading() && fx.modal.getVariationCount() == 2; }));
+
+            // Capture the param value that V2 touches but V1 doesn't.
+            const float baselineCutoff = fx.proc.apvts.getRawParameterValue("filt.cutoff")->load();
+
+            fx.modal.selectAndApply(0);   // V1: sets osc1.level only
+            const float cutoffAfterV1   = fx.proc.apvts.getRawParameterValue("filt.cutoff")->load();
+            fx.modal.selectAndApply(1);   // V2: sets filt.cutoff (osc1.level should restore to baseline first)
+            const float cutoffAfterV2   = fx.proc.apvts.getRawParameterValue("filt.cutoff")->load();
+            fx.modal.selectAndApply(0);   // V1 again: filt.cutoff should be back to baseline
+            const float cutoffAfterV1b  = fx.proc.apvts.getRawParameterValue("filt.cutoff")->load();
+
+            expectWithinAbsoluteError(cutoffAfterV1, baselineCutoff, 0.01f);   // V1 didn't touch cutoff
+            expect(cutoffAfterV2 != baselineCutoff, "V2 must change cutoff");
+            expectWithinAbsoluteError(cutoffAfterV1b, baselineCutoff, 0.01f);  // V1 revisit restores cutoff
         }
     }
 };

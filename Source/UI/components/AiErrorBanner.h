@@ -15,7 +15,7 @@ namespace SynthVibe
         AiErrorBanner()
         {
             messageLabel.setColour(juce::Label::textColourId, Tokens::ink);
-            messageLabel.setFont(Fonts::sans(Tokens::Font::body));
+            messageLabel.setFont(Fonts::sans(13.f));
             messageLabel.setJustificationType(juce::Justification::centredLeft);
             addAndMakeVisible(messageLabel);
 
@@ -38,7 +38,7 @@ namespace SynthVibe
             switch (action)
             {
                 case Action::SetApiKey:
-                    actionButton.setButtonText("Set API key \xE2\x86\x92");   // " → "
+                    actionButton.setButtonText(juce::String(juce::CharPointer_UTF8("Set API key \xE2\x86\x92")));   // " -> "
                     actionButton.setVisible(true);
                     break;
                 case Action::Retry:

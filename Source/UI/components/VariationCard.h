@@ -55,7 +55,8 @@ namespace SynthVibe
             {
                 g.setColour(ink3);
                 g.setFont(Fonts::mono(Font::body));
-                g.drawText("\xE2\x80\x94", getLocalBounds(), juce::Justification::centred);
+                g.drawText(juce::String(juce::CharPointer_UTF8("\xE2\x80\x94")),
+                           getLocalBounds(), juce::Justification::centred);
                 return;
             }
 

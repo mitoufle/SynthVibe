@@ -18,7 +18,7 @@ namespace SynthVibe
             apiKeyEditor.setColour(juce::TextEditor::outlineColourId,    Tokens::edge);
             addAndMakeVisible(apiKeyEditor);
 
-            revealToggle.setButtonText("\xF0\x9F\x91\x81");   // 👁
+            revealToggle.setButtonText(juce::String(juce::CharPointer_UTF8("\xF0\x9F\x91\x81")));   // eye glyph
             revealToggle.setClickingTogglesState(true);
             revealToggle.onClick = [this] {
                 apiKeyEditor.setPasswordCharacter(

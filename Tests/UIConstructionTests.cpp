@@ -339,7 +339,7 @@ struct UIConstructionTests : public juce::UnitTest
             ClaudeClient  client(keyStore, transport);
             PatchApplier  applier(apvts);
 
-            AiPromptModal modal(client, applier, keyStore);
+            AiPromptModal modal(client, applier, keyStore, apvts);
             modal.setBounds(0, 0, 1280, 720);
             expectEquals(modal.getWidth(),  1280);
             expectEquals(modal.getHeight(), 720);

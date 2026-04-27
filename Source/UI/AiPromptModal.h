@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <vector>
+#include <map>
 #include "../AI/ClaudeClient.h"
 #include "../AI/PatchApplier.h"
 #include "../AI/ApiKeyStore.h"
@@ -12,7 +13,8 @@
 class AiPromptModal : public juce::Component
 {
 public:
-    AiPromptModal(ClaudeClient&, PatchApplier&, ApiKeyStore&);
+    AiPromptModal(ClaudeClient&, PatchApplier&, ApiKeyStore&,
+                  juce::AudioProcessorValueTreeState& apvts);
     ~AiPromptModal() override;
 
     void show();
@@ -50,6 +52,7 @@ private:
     ClaudeClient& claudeClient;
     PatchApplier& patchApplier;
     ApiKeyStore&  apiKeyStore;
+    juce::AudioProcessorValueTreeState& apvts;
 
     Mode  mode  = Mode::Generate;
     State state = State::Idle;
@@ -57,6 +60,16 @@ private:
     std::vector<Variation> variations;
     int selectedCard = -1;
     ClaudeClientError currentBannerError = ClaudeClientError::None;
+
+    // Audition snapshot: per-paramId raw values captured on the FIRST card
+    // click of each modal session. Subsequent clicks restore these values
+    // before applying the new variation, so V1 -> V2 -> V1 returns to
+    // identical knob positions. Cleared in show() so each modal opening
+    // starts a fresh audition session. Empty == "not yet snapshotted".
+    // (apvts.copyState/replaceState was tried first but didn't reliably push
+    // restored values back into the parameter atomics in JUCE 7.0.9 — using
+    // setValueNotifyingHost per parameter is more deterministic.)
+    std::map<juce::String, float> preApplySnapshot;
 
     // Header
     juce::Label      titleLabel;

@@ -10,7 +10,7 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
       fxTab(p.apvts),
       arpTab(p.apvts),
       keyboard(p.keyboardState),
-      aiPromptModal(p.claudeClient, p.patchApplier, p.apiKeyStore)
+      aiPromptModal(p.claudeClient, p.patchApplier, p.apiKeyStore, p.apvts)
 {
     setLookAndFeel(&laf);
     setSize(1280, 720);
