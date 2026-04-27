@@ -318,7 +318,64 @@ void AiPromptModal::onClaudeResponse(ClaudeResponse resp)
     resized();
 }
 
-void AiPromptModal::showErrorForResponse(const ClaudeResponse&)     { /* Task 7 */ }
+void AiPromptModal::showErrorForResponse(const ClaudeResponse& resp)
+{
+    juce::String msg;
+    auto action = SynthVibe::AiErrorBanner::Action::Retry;
+
+    switch (resp.error)
+    {
+        case ClaudeClientError::MissingApiKey:
+            msg    = "No API key set.";
+            action = SynthVibe::AiErrorBanner::Action::SetApiKey;
+            break;
+
+        case ClaudeClientError::NetworkFailure:
+            msg    = "Could not reach Anthropic API.";
+            action = SynthVibe::AiErrorBanner::Action::Retry;
+            break;
+
+        case ClaudeClientError::Timeout:
+            msg    = "Request timed out (20s).";
+            action = SynthVibe::AiErrorBanner::Action::Retry;
+            break;
+
+        case ClaudeClientError::HttpError:
+            if (resp.httpStatus == 401)
+            {
+                msg    = "API key rejected by Anthropic.";
+                action = SynthVibe::AiErrorBanner::Action::SetApiKey;
+            }
+            else if (resp.httpStatus == 429)
+            {
+                msg    = "Rate limit reached. Wait a moment.";
+                action = SynthVibe::AiErrorBanner::Action::Retry;
+            }
+            else
+            {
+                msg    = "Anthropic API error (status " + juce::String(resp.httpStatus) + ").";
+                action = SynthVibe::AiErrorBanner::Action::Retry;
+            }
+            break;
+
+        case ClaudeClientError::ParseError:
+            msg    = "Could not parse Claude's response.";
+            action = SynthVibe::AiErrorBanner::Action::Retry;
+            break;
+
+        case ClaudeClientError::SchemaError:
+            msg    = "Claude returned no patches. Try a different prompt.";
+            action = SynthVibe::AiErrorBanner::Action::None;
+            break;
+
+        case ClaudeClientError::None:
+            return;
+    }
+
+    currentBannerError = resp.error;
+    errorBanner.show(msg, action);
+    resized();
+}
 void AiPromptModal::selectAndApply(int /*cardIndex*/)               { /* Task 8 */ }
 
 // --- Inspection ------------------------------------------------------------

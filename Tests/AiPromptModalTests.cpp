@@ -124,6 +124,46 @@ struct AiPromptModalTests : public juce::UnitTest
             // Only one transport call total.
             expectEquals(fx.transport.callCount.load(), 1);
         }
+
+        beginTest("requestGenerate with HttpError 401 sets ErrorBanner to API key rejected");
+        {
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-bad");
+            fx.transport.responseToReturn = HttpResponse{ 401, "{\"error\":\"unauthorized\"}", false };
+
+            fx.modal.requestGenerate("warm pad");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading()
+                                          && ! fx.modal.getErrorBannerText().isEmpty(); }));
+            expectEquals(fx.modal.getErrorBannerText(),
+                         juce::String("API key rejected by Anthropic."));
+        }
+
+        beginTest("requestGenerate with NetworkFailure sets ErrorBanner to Could not reach");
+        {
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-test");
+            fx.transport.responseToReturn = HttpResponse{ 0, {}, false };
+
+            fx.modal.requestGenerate("warm pad");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading()
+                                          && ! fx.modal.getErrorBannerText().isEmpty(); }));
+            expectEquals(fx.modal.getErrorBannerText(),
+                         juce::String("Could not reach Anthropic API."));
+        }
+
+        beginTest("requestGenerate with SchemaError sets ErrorBanner to Claude returned no patches");
+        {
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-test");
+            fx.transport.responseToReturn = HttpResponse{ 200,
+                "{\"content\":[{\"type\":\"text\",\"text\":\"sorry\"}]}", false };
+
+            fx.modal.requestGenerate("warm pad");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading()
+                                          && ! fx.modal.getErrorBannerText().isEmpty(); }));
+            expectEquals(fx.modal.getErrorBannerText(),
+                         juce::String("Claude returned no patches. Try a different prompt."));
+        }
     }
 };
 
