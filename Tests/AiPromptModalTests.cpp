@@ -42,6 +42,17 @@ namespace
         return s;
     }
 
+    struct GestureCounter : public juce::AudioProcessorParameter::Listener
+    {
+        std::atomic<int> begins { 0 };
+        std::atomic<int> ends   { 0 };
+        void parameterValueChanged(int, float) override {}
+        void parameterGestureChanged(int, bool starting) override
+        {
+            if (starting) ++begins; else ++ends;
+        }
+    };
+
     struct ModalFixture
     {
         DummyProcessor proc;
@@ -163,6 +174,52 @@ struct AiPromptModalTests : public juce::UnitTest
                                           && ! fx.modal.getErrorBannerText().isEmpty(); }));
             expectEquals(fx.modal.getErrorBannerText(),
                          juce::String("Claude returned no patches. Try a different prompt."));
+        }
+
+        beginTest("selectAndApply(i) writes APVTS via gestures (1 begin + 1 end per applied param)");
+        {
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-test");
+            // Variation has 2 known params: osc1.level (float) + filt.cutoff (float).
+            fx.transport.responseToReturn = HttpResponse{ 200, makeOneVariationResponse(), false };
+
+            fx.modal.requestGenerate("warm");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading() && fx.modal.getVariationCount() > 0; }));
+
+            GestureCounter counter;
+            for (auto* p : fx.proc.getParameters()) p->addListener(&counter);
+
+            fx.modal.selectAndApply(0);
+
+            for (auto* p : fx.proc.getParameters()) p->removeListener(&counter);
+
+            expectEquals(counter.begins.load(), 2);
+            expectEquals(counter.ends  .load(), 2);
+            expectEquals(fx.modal.getSelectedCardIndex(), 0);
+        }
+
+        beginTest("selectAndApply on a card with empty params is no-op (no gestures fired)");
+        {
+            ModalFixture fx;
+            fx.keyStore.save("sk-ant-test");
+            // Single Variation with NO params.
+            fx.transport.responseToReturn = HttpResponse{ 200,
+                "{\"content\":[{\"type\":\"tool_use\",\"name\":\"set_patch\","
+                "\"input\":{\"name\":\"E\",\"params\":{}}}]}", false };
+
+            fx.modal.requestGenerate("x");
+            expect(pumpUntil([&] { return ! fx.modal.isLoading() && fx.modal.getVariationCount() > 0; }));
+
+            GestureCounter counter;
+            for (auto* p : fx.proc.getParameters()) p->addListener(&counter);
+
+            fx.modal.selectAndApply(0);
+
+            for (auto* p : fx.proc.getParameters()) p->removeListener(&counter);
+
+            expectEquals(counter.begins.load(), 0);
+            expectEquals(counter.ends  .load(), 0);
+            expectEquals(fx.modal.getSelectedCardIndex(), -1);   // selection NOT recorded for empty
         }
     }
 };

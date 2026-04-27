@@ -376,7 +376,23 @@ void AiPromptModal::showErrorForResponse(const ClaudeResponse& resp)
     errorBanner.show(msg, action);
     resized();
 }
-void AiPromptModal::selectAndApply(int /*cardIndex*/)               { /* Task 8 */ }
+void AiPromptModal::selectAndApply(int cardIndex)
+{
+    if (cardIndex < 0 || cardIndex >= (int) variations.size()) return;
+
+    const auto& v = variations[cardIndex];
+    if (v.params.empty()) return;     // empty-Variation = no-op, no selection
+
+    selectedCard = cardIndex;
+    rebuildVariationStrip();          // refresh selection highlight on cards
+
+    auto report = patchApplier.apply(v);
+    if (report.unknown > 0)
+    {
+        juce::Logger::writeToLog("AiPromptModal: " + juce::String(report.unknown)
+                                 + " unknown paramIds in variation '" + v.name + "'");
+    }
+}
 
 // --- Inspection ------------------------------------------------------------
 
