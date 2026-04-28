@@ -17,6 +17,7 @@ struct OscParams
     float    level          = 1.f;
     float    startingPhase  = 0.f;  // degrees, 0–360
     float    pulseWidth     = 0.5f; // 0.01–0.99, only used by Square
+    int      tableIdx       = 0;    // valid only when waveform == Waveform::Wavetable
 };
 
 struct LfoParams
@@ -54,11 +55,14 @@ struct VoiceParams
     float osc2UnisonStereoSpread = 0.5f;
 };
 
+class WavetableBank;
+
 class Voice
 {
 public:
     void prepare(const juce::dsp::ProcessSpec& spec);
     void setParams(const VoiceParams& p);
+    void setBankPointer(const WavetableBank* bank) noexcept;
 
     void noteOn(int midiNote, float velocity, bool stolen = false);
     void noteOff();

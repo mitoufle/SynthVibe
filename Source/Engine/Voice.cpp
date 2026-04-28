@@ -1,4 +1,5 @@
 #include "Voice.h"
+#include "WavetableBank.h"
 #include <cmath>
 
 void Voice::prepare(const juce::dsp::ProcessSpec& spec)
@@ -32,6 +33,8 @@ void Voice::setParams(const VoiceParams& p)
     osc1.setDetuneCents(p.osc1.detune);
     osc2.setWaveform(p.osc2.waveform);
     osc2.setDetuneCents(p.osc2.detune);
+    osc1.setTable(p.osc1.tableIdx);
+    osc2.setTable(p.osc2.tableIdx);
     // setUnison MUST precede the setFrequency tail block below so that
     // newly-activated unison slots receive the correct base frequency.
     osc1.setUnison(p.unisonVoices, p.unisonDetuneCents);
@@ -224,4 +227,10 @@ float Voice::getKeytrackOctaves() const noexcept
     if (currentNote < 0) return 0.f;
     // Map note 60 (C4) → 0, note 120 → +1.0, note 0 → -1.0 (clamped at ±1)
     return juce::jlimit(-1.f, 1.f, (float)(currentNote - 60) / 60.f);
+}
+
+void Voice::setBankPointer(const WavetableBank* bank) noexcept
+{
+    osc1.setBank(bank);
+    osc2.setBank(bank);
 }

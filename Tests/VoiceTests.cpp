@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include "Engine/Voice.h"
+#include "Engine/WavetableBank.h"
 
 struct VoiceTests : public juce::UnitTest
 {
@@ -169,6 +170,36 @@ struct VoiceTests : public juce::UnitTest
 
             expect(minCutoff < 500.f,  "min cutoff should drop below 500 Hz");
             expect(maxCutoff > 4000.f, "max cutoff should exceed 4000 Hz");
+        }
+
+        beginTest("Voice with Wavetable wave produces audible output when bank is wired");
+        {
+            WavetableBank bank;
+            Voice v;
+            juce::dsp::ProcessSpec spec { 48000.0, 256u, 2u };
+            v.prepare(spec);
+            v.setBankPointer(&bank);
+
+            VoiceParams p;
+            p.osc1.waveform   = Waveform::Wavetable;
+            p.osc1.tableIdx   = 0;     // Organ
+            p.osc1.level      = 1.f;
+            p.ampEnv.attack   = 0.001f;
+            p.ampEnv.decay    = 0.05f;
+            p.ampEnv.sustain  = 0.8f;
+            p.ampEnv.release  = 0.05f;
+            v.setParams(p);
+            v.noteOn(60, 1.f);
+
+            float maxAbs = 0.f;
+            for (int i = 0; i < 4096; ++i)
+            {
+                auto [l, r] = v.getNextSample();
+                maxAbs = std::max(maxAbs, std::max(std::abs(l), std::abs(r)));
+            }
+            expect(maxAbs > 0.01f,
+                   "Voice should render Wavetable audibly; max |sample| = "
+                   + juce::String(maxAbs));
         }
     }
 };
