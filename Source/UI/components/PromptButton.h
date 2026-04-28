@@ -21,7 +21,7 @@ namespace SynthVibe
 
             g.setColour(juce::Colour(0xFF1A1A1A));
             g.setFont(Fonts::mono(Tokens::Font::label).withStyle(juce::Font::bold));
-            const juce::String text = juce::String(juce::CharPointer_UTF8("\xE2\x9C\xA6")) + "  PROMPT";
+            const juce::String text = "PROMPT";
             g.drawText(text, getLocalBounds(), juce::Justification::centred);
         }
     };

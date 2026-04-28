@@ -14,8 +14,8 @@ namespace SynthVibe
         explicit NavArrowButton(Direction dir)
         {
             const char* glyph = (dir == Direction::Prev)
-                ? "\xE2\x97\x80"   // ◀
-                : "\xE2\x96\xB6";  // ▶
+                ? "\xE2\x80\xB9"   // ‹ (single left guillemet — renders reliably in Windows default fonts)
+                : "\xE2\x80\xBA";  // ›
             button.setButtonText(juce::String(juce::CharPointer_UTF8(glyph)));
             button.setColour(juce::TextButton::buttonColourId, Tokens::panel2);
             button.setColour(juce::TextButton::textColourOffId, Tokens::ink2);
