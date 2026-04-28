@@ -19,6 +19,14 @@ namespace SystemPrompt
           << "- Do not nest objects.\n"
           << "- Each set_patch call MUST include `name` (<=32 chars) and `params`.\n"
           << "- For multiple variations, emit set_patch as parallel tool_use blocks.\n\n"
+          << "Wavetable timbre rules:\n"
+          << "- To use sampled instrument timbres, set oscN.wave to 4 (Wavetable) AND\n"
+          << "  oscN.table to the desired index. The table param is ignored when wave is\n"
+          << "  Sine/Saw/Square/Triangle.\n"
+          << "- V1 timbre limitations: 'Bell' is a tonal harmonic snapshot — works as a\n"
+          << "  bright pluck through filter+envelope, not as a full evolving bell decay.\n"
+          << "  'Vocal' is a single 'Aa' vowel — does not synthesize 'Ooh', 'Eh', or other\n"
+          << "  phonemes. Choose accordingly when matching prompts.\n\n"
           << "Available parameters:\n\n"
           << ParamIdIndex::renderForPrompt();
         return s;
