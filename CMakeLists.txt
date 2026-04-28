@@ -51,6 +51,7 @@ target_sources(AISynth PRIVATE
     Source/Engine/ModEngine.cpp
     Source/Engine/SynthEngine.cpp
     Source/Engine/WavetableData.cpp
+    Source/Engine/WavetableBank.cpp
     Source/Engine/ArpEngine.cpp
     Source/Presets/PresetManager.cpp
     Source/FX/Delay.cpp
@@ -120,6 +121,7 @@ target_sources(AISynthTests PRIVATE
     Source/Engine/ModEngine.cpp
     Source/Engine/SynthEngine.cpp
     Source/Engine/WavetableData.cpp
+    Source/Engine/WavetableBank.cpp
     Source/FX/Delay.cpp
     Source/FX/Chorus.cpp
     Source/FX/Drive.cpp
@@ -148,6 +150,7 @@ target_sources(AISynthTests PRIVATE
     Tests/ClaudeClientTests.cpp
     Tests/ClaudeClientLiveTests.cpp
     Tests/PatchApplierTests.cpp
+    Tests/WavetableBankTests.cpp
 )
 
 target_include_directories(AISynthTests PRIVATE Source)
