@@ -1,5 +1,6 @@
 #include <juce_core/juce_core.h>
 #include "Engine/Oscillator.h"
+#include "Engine/WavetableBank.h"
 #include <cmath>
 #include <numeric>
 #include <vector>
@@ -57,7 +58,25 @@ struct OscillatorTests : public juce::UnitTest
         expect(std::abs(d90 - 0.90f) < 0.05f,
                juce::String("duty 0.90 measured as ") + juce::String(d90));
 
-        beginTest("Wavetable enum value exists and oscillator returns silence pre-bank");
+        beginTest("Oscillator with bank renders Wavetable case non-silently");
+        {
+            WavetableBank bank;
+            Oscillator o;
+            o.setSampleRate(48000.0);
+            o.setFrequency(440.0);
+            o.setBank(&bank);
+            o.setTable(0);
+            o.setWaveform(Waveform::Wavetable);
+            o.reset();
+            float maxAbs = 0.f;
+            for (int i = 0; i < 1024; ++i)
+                maxAbs = std::max(maxAbs, std::abs(o.getNextSample()));
+            expect(maxAbs > 0.01f,
+                   "Wavetable case should produce audible output; max |sample| = "
+                   + juce::String(maxAbs));
+        }
+
+        beginTest("Oscillator with no bank pointer returns silence on Wavetable case");
         {
             Oscillator o;
             o.setSampleRate(48000.0);
@@ -68,7 +87,7 @@ struct OscillatorTests : public juce::UnitTest
             for (int i = 0; i < 1024; ++i)
                 maxAbs = std::max(maxAbs, std::abs(o.getNextSample()));
             expect(maxAbs == 0.f,
-                   "Waveform::Wavetable should return 0.f when no bank is wired; got max |sample| = "
+                   "Without bank pointer, Wavetable should fall through silently; got "
                    + juce::String(maxAbs));
         }
     }

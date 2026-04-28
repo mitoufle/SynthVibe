@@ -1,4 +1,5 @@
 #include "Oscillator.h"
+#include "WavetableBank.h"
 #include <juce_core/juce_core.h>
 
 double Oscillator::getDetuneRatio() const noexcept
@@ -54,9 +55,10 @@ float Oscillator::getNextSample()
                                  : static_cast<float>(3.0 - 4.0 * phase);
             break;
 
-        default:
-            // Wavetable case — handled in Task 7 once WavetableBank is wired.
-            // Silent fallthrough until then.
+        case Waveform::Wavetable:
+            if (bank != nullptr)
+                sample = bank->fetchSample(tableIdx, phase, dt);
+            // else: silent fallthrough (sample remains 0.f)
             break;
     }
 
