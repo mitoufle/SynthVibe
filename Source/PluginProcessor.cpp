@@ -91,6 +91,7 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.osc1.level    = *apvts.getRawParameterValue(ParamIDs::osc1Level);
     p.osc1.startingPhase = *apvts.getRawParameterValue(ParamIDs::osc1Phase);
     p.osc1.pulseWidth    = *apvts.getRawParameterValue(ParamIDs::osc1Pwm);
+    p.osc1.tableIdx      = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc1Table));
 
     p.osc2.waveform = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Waveform)));
     p.osc2.octave   = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Octave));
@@ -99,6 +100,7 @@ VoiceParams AISynthProcessor::buildVoiceParams() const
     p.osc2.level    = *apvts.getRawParameterValue(ParamIDs::osc2Level);
     p.osc2.startingPhase = *apvts.getRawParameterValue(ParamIDs::osc2Phase);
     p.osc2.pulseWidth    = *apvts.getRawParameterValue(ParamIDs::osc2Pwm);
+    p.osc2.tableIdx      = static_cast<int>(*apvts.getRawParameterValue(ParamIDs::osc2Table));
 
     p.lfo1.shape = static_cast<Waveform>(static_cast<int>(*apvts.getRawParameterValue(ParamIDs::lfo1Shape)));
     p.lfo1.rate  = *apvts.getRawParameterValue(ParamIDs::lfo1Rate);
