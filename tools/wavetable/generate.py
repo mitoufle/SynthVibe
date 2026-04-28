@@ -19,6 +19,12 @@ If the AKWF wavs are missing, the script falls back to a sine placeholder
 for that entry and prints a warning. This is the default state until Task 16
 selects real source files.
 """
+# REPRODUCIBILITY NOTE: The committed Source/Engine/WavetableData.cpp was
+# generated with numpy's FFT. Re-running this script without numpy uses the
+# stdlib DFT fallback, which is DSP-equivalent but accumulates floating-point
+# differently — producing the same waveforms but distinct 7th-decimal values.
+# That creates a 2700-line spurious git diff. Install numpy before regenerating:
+#   pip install numpy
 from __future__ import annotations
 import math
 import random
