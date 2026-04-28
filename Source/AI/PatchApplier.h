@@ -17,6 +17,10 @@ public:
     // Must run on the message thread.
     ApplyReport apply(const Variation& variation);
 
+    // Resets every APVTS parameter to its default value, firing change
+    // gestures so host automation tracks the reset.
+    void resetToDefaults();
+
 private:
     juce::AudioProcessorValueTreeState& apvts;
 };

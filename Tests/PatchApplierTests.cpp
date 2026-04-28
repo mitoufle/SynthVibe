@@ -151,6 +151,30 @@ struct PatchApplierTests : public juce::UnitTest
             expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc2.wave")),  4);
             expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc2.table")), 1);
         }
+
+        beginTest("resetToDefaults restores every APVTS param to its default value");
+        {
+            DummyProcessor proc;
+            PatchApplier applier(proc.apvts);
+
+            // Drift several params away from their defaults.
+            Variation drift;
+            drift.params["osc1.wave"]   = 4.0;   // Wavetable (not default 1=Saw)
+            drift.params["osc1.table"]  = 3.0;   // Vocal (not default 0=Organ)
+            drift.params["filt.cutoff"] = 200.0; // not default 8000
+            applier.apply(drift);
+
+            // Sanity: drift was applied
+            expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc1.wave")), 4);
+
+            // Reset
+            applier.resetToDefaults();
+
+            // After reset, the params are back to their declared defaults
+            expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc1.wave")),  1);
+            expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc1.table")), 0);
+            expectWithinAbsoluteError(proc.apvts.getRawParameterValue("filt.cutoff")->load(), 8000.f, 1.f);
+        }
     }
 };
 

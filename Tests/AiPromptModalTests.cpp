@@ -176,7 +176,7 @@ struct AiPromptModalTests : public juce::UnitTest
                          juce::String("Claude returned no patches. Try a different prompt."));
         }
 
-        beginTest("selectAndApply(i) writes APVTS via gestures (1 begin + 1 end per applied param)");
+        beginTest("selectAndApply(i) resets to defaults then writes variation params via gestures");
         {
             ModalFixture fx;
             fx.keyStore.save("sk-ant-test");
@@ -193,12 +193,16 @@ struct AiPromptModalTests : public juce::UnitTest
 
             for (auto* p : fx.proc.getParameters()) p->removeListener(&counter);
 
-            expectEquals(counter.begins.load(), 2);
-            expectEquals(counter.ends  .load(), 2);
+            // selectAndApply now calls resetToDefaults() (fires 1 gesture per APVTS param)
+            // followed by apply() (fires 1 gesture per variation param).
+            // Compute expected count dynamically so the test stays correct as params are added.
+            const int allParams = (int) fx.proc.getParameters().size();
+            expectEquals(counter.begins.load(), allParams + 2);  // reset all + 2 variation overlay
+            expectEquals(counter.ends  .load(), allParams + 2);
             expectEquals(fx.modal.getSelectedCardIndex(), 0);
         }
 
-        beginTest("selectAndApply on a card with empty params still highlights but fires no gestures");
+        beginTest("selectAndApply on empty-params card still resets to defaults and highlights");
         {
             ModalFixture fx;
             fx.keyStore.save("sk-ant-test");
@@ -217,11 +221,12 @@ struct AiPromptModalTests : public juce::UnitTest
 
             for (auto* p : fx.proc.getParameters()) p->removeListener(&counter);
 
-            expectEquals(counter.begins.load(), 0);
-            expectEquals(counter.ends  .load(), 0);
-            // Per spec: empty-params variations still highlight (selection recorded)
-            // even though no gestures fire. The audition snapshot is still captured
-            // so a subsequent click on a non-empty card cleanly restores baseline.
+            // resetToDefaults() fires for every APVTS param; variation overlay adds nothing (empty).
+            // Per spec: empty-params variations still highlight (selection recorded). The audition
+            // snapshot is still captured so a subsequent click on a non-empty card cleanly restores baseline.
+            const int allParams = (int) fx.proc.getParameters().size();
+            expectEquals(counter.begins.load(), allParams);  // reset only, no variation overlay
+            expectEquals(counter.ends  .load(), allParams);
             expectEquals(fx.modal.getSelectedCardIndex(), 0);
         }
 

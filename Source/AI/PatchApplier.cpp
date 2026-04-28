@@ -25,6 +25,20 @@ namespace
     }
 }
 
+void PatchApplier::resetToDefaults()
+{
+    jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    for (auto* p : apvts.processor.getParameters())
+    {
+        if (auto* rp = dynamic_cast<juce::RangedAudioParameter*>(p))
+        {
+            rp->beginChangeGesture();
+            rp->setValueNotifyingHost(rp->getDefaultValue());
+            rp->endChangeGesture();
+        }
+    }
+}
+
 ApplyReport PatchApplier::apply(const Variation& variation)
 {
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());

@@ -417,6 +417,12 @@ void AiPromptModal::selectAndApply(int cardIndex)
     selectedCard = cardIndex;         // highlight even when params is empty (per spec)
     rebuildVariationStrip();
 
+    // Reset to defaults first so each variation lands on a pristine patch
+    // (FX and any other params not touched by the variation are wiped).
+    // The pre-audition snapshot already captured the user's pre-modal state
+    // above, so restoring on modal close still recovers the user's baseline.
+    patchApplier.resetToDefaults();
+
     const auto& v = variations[cardIndex];
     auto report = patchApplier.apply(v);
     if (report.unknown > 0)
