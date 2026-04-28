@@ -13,6 +13,7 @@ namespace ParamIDs
     inline constexpr const char* osc1Level     = "osc1.level";
     inline constexpr const char* osc1Phase     = "osc1.phase";
     inline constexpr const char* osc1Pwm       = "osc1.pwm";
+    inline constexpr const char* osc1Table     = "osc1.table";
 
     // Oscillator 2
     inline constexpr const char* osc2Waveform  = "osc2.wave";
@@ -22,6 +23,7 @@ namespace ParamIDs
     inline constexpr const char* osc2Level     = "osc2.level";
     inline constexpr const char* osc2Phase     = "osc2.phase";
     inline constexpr const char* osc2Pwm       = "osc2.pwm";
+    inline constexpr const char* osc2Table     = "osc2.table";
 
     // LFO 1
     inline constexpr const char* lfo1Shape     = "lfo1.wave";
