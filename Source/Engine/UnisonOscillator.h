@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+class WavetableBank;
+
 class UnisonOscillator
 {
 public:
@@ -11,6 +13,8 @@ public:
     void setSampleRate(double sr);
     void setFrequency(double hz);
     void setWaveform(Waveform wf);
+    void setBank(const WavetableBank* b);
+    void setTable(int tableIdx);
     void setDetuneCents(float baseCents);
     void setUnison(int voices, float spreadCents);
     void setStereoSpread(float spread);   // 0 = centre, 1 = full width

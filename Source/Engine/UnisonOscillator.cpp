@@ -120,3 +120,15 @@ void UnisonOscillator::resetAllPhasesToStart()
             oscs[i].setPhase(std::fmod(base + stagger, 1.0));
         }
 }
+
+void UnisonOscillator::setBank(const WavetableBank* b)
+{
+    for (int i = 0; i < MaxUnison; ++i)
+        oscs[i].setBank(b);
+}
+
+void UnisonOscillator::setTable(int tableIdx)
+{
+    for (int i = 0; i < MaxUnison; ++i)
+        oscs[i].setTable(tableIdx);
+}
