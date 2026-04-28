@@ -41,6 +41,14 @@ Append-only. Future tables (brass, pluck, sub, etc.) are added to the end of thi
 
 AKWF = Adventure Kid Waveforms by Kristoffer Ekstrand, CC0 / public domain. ~50 KB of source `.wav` committed under `tools/wavetable/akwf-sources/` for reproducibility. Attribution will be added to a new `THIRDPARTY.md` (courtesy, not required by license).
 
+**AKWF cherry-pick criteria (EP and Bell):**
+1. Pitch-detectable: a clear fundamental, no warble or detuning suggesting frequency drift in the source.
+2. Tonal & musically usable: harmonic spectrum sparse enough to remain recognizable through a low-pass filter; reject entries dominated by inharmonic noise or distortion.
+3. Symmetric or zero-crossing-aligned at the cycle boundary: avoids a click on phase wrap. Visible in waveform inspection — start and end samples should be near zero.
+4. Distinct from existing tables: the EP candidate should sound like an electric piano in isolation (against a sustained note through a clean filter setting), the Bell should sound bell-like as a bright tonal pluck.
+
+The chosen `.wav` filenames are recorded in a header comment of `WavetableData.cpp` so the choice is auditable and reversible.
+
 ### Storage format
 
 - 5 tables × 10 mipmap levels per table.
@@ -57,8 +65,9 @@ case Waveform::Wavetable:
 ```
 
 `WavetableBank::fetchSample(tableIdx, phase, dt)`:
-1. `mipIdx = std::clamp(int(std::ceil(std::log2(dt * 2048.0))), 0, 9)` — selects the smallest mip whose band-limit sits at or above the playback Nyquist. Derivation: mip[N] holds harmonics 1..(1024/2^N); aliasing-free playback requires (1024/2^N) × f ≤ SR/2, equivalently `dt × 2048 ≤ 2^N`, so we want the smallest N with `2^N ≥ dt × 2048`. The implementer should verify this formula behaves as expected at boundaries (dt × 2048 = 1, 2, 4, …) before locking it in.
-2. 2-tap linear interp inside that mip: `mip[i] + frac * (mip[i+1] - mip[i])`.
+1. **Precondition:** `dt > 0`. Callers (only `Oscillator::getNextSample`) already guarantee this since `frequency > 0` post-`noteOn`. The bank does not validate; passing `dt == 0` would feed `log2(0) = -∞` into the formula. Documented as a precondition rather than guarded with a runtime check, to keep the inner loop branch-free.
+2. `mipIdx = std::clamp(int(std::ceil(std::log2(dt * 2048.0))), 0, 9)` — selects the smallest mip whose band-limit sits at or above the playback Nyquist. Derivation: mip[N] holds harmonics 1..(1024/2^N); aliasing-free playback requires (1024/2^N) × f ≤ SR/2, equivalently `dt × 2048 ≤ 2^N`, so we want the smallest N with `2^N ≥ dt × 2048`. The implementer should verify this formula behaves as expected at boundaries (dt × 2048 = 1, 2, 4, …) before locking it in.
+3. 2-tap linear interp inside that mip: `mip[i] + frac * (mip[i+1] - mip[i])`.
 
 Linear interp is sufficient because each mip is already band-limited to ~Nyquist/2. The 10-mip density makes residual aliasing inaudible across the MIDI range. Cubic interp would be over-engineering.
 
@@ -99,8 +108,8 @@ Modified params:
 - `osc1.wave` and `osc2.wave` choice arrays grow to 5 entries.
 - `osc1.table` and `osc2.table` are added as Choice entries with `[Organ, EP, Bell, Vocal, Noise]`.
 
-`SystemPrompt` gains one explanatory sentence:
-> *"To use sampled instrument timbres, set oscN.wave to 4 (Wavetable) AND oscN.table to the desired index. The table param is ignored when wave is Sine/Saw/Square/Triangle."*
+`SystemPrompt` gains an explanatory paragraph (manages Claude's expectations to prevent the same overpromise that drove Phase B):
+> *"To use sampled instrument timbres, set oscN.wave to 4 (Wavetable) AND oscN.table to the desired index. The table param is ignored when wave is Sine/Saw/Square/Triangle. V1 timbre limitations: 'Bell' is a tonal harmonic snapshot — works as a bright pluck through filter+envelope, not as a full evolving bell decay. 'Vocal' is a single 'Aa' vowel — does not synthesize 'Ooh', 'Eh', or other phonemes. Choose accordingly when matching prompts."*
 
 This conditional-pertinence pattern is already in use for PWM (only meaningful when wave==Square). Claude reads param names well; risk of mis-coupling is low. The drift test (`Tests/ParamIdIndexDriftTests.cpp`) catches any divergence between APVTS and `ParamIdIndex`.
 
