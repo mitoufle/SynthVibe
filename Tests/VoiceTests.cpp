@@ -188,6 +188,7 @@ struct VoiceTests : public juce::UnitTest
             p.ampEnv.decay    = 0.05f;
             p.ampEnv.sustain  = 0.8f;
             p.ampEnv.release  = 0.05f;
+            p.osc2.level = 0.f;   // isolate osc1 — osc2 default Saw at level=1.f would mask wiring bugs
             v.setParams(p);
             v.noteOn(60, 1.f);
 
