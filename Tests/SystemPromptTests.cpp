@@ -38,12 +38,14 @@ struct SystemPromptTests : public juce::UnitTest
         beginTest("system prompt warns Claude about Bell single-cycle limitation");
         {
             const auto p = SystemPrompt::build();
-            expect(p.contains("Bell"),       "system prompt must mention Bell");
-            expect(p.contains("not")
-                && (p.contains("evolving") || p.contains("decay")),
-                   "system prompt must caveat Bell as not a full evolving bell decay");
-            expect(p.contains("Vocal"),      "system prompt must mention Vocal");
-            expect(p.contains("Aa"),         "system prompt must specify the single Aa vowel");
+            expect(p.contains("Wavetable timbre rules:"),
+                   "system prompt must have the Wavetable timbre rules section header");
+            expect(p.contains("oscN.table to the desired index"),
+                   "system prompt must contain the coupling rule for oscN.wave + oscN.table");
+            expect(p.contains("V1 timbre limitations"),
+                   "system prompt must contain the V1 caveat sub-block");
+            expect(p.contains("Aa"),
+                   "system prompt must specify the single 'Aa' vowel");
         }
     }
 };
