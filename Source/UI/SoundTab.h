@@ -3,6 +3,7 @@
 #include "Breakpoint.h"
 #include "DesignTokens.h"
 #include "../Parameters/ParameterIDs.h"
+#include "../Engine/WavetableBank.h"
 #include "components/ArcKnob.h"
 #include "components/EnvelopeEditor.h"
 #include "components/FilterResponseView.h"
@@ -15,7 +16,7 @@
 class SoundTab : public juce::Component
 {
 public:
-    explicit SoundTab(juce::AudioProcessorValueTreeState& apvts)
+    explicit SoundTab(juce::AudioProcessorValueTreeState& apvts, const WavetableBank& bankRef)
         : apvts(apvts),
           osc1Header("OSC 1", SynthVibe::Tokens::osc),
           osc2Header("OSC 2", SynthVibe::Tokens::osc),
@@ -27,8 +28,8 @@ public:
           osc1Table(apvts, ParamIDs::osc1Table),
           osc2Table(apvts, ParamIDs::osc2Table),
           filterType(apvts, ParamIDs::filterType),
-          osc1Scope(apvts, ParamIDs::osc1Waveform),
-          osc2Scope(apvts, ParamIDs::osc2Waveform),
+          osc1Scope(apvts, ParamIDs::osc1Waveform, ParamIDs::osc1Table, bankRef),
+          osc2Scope(apvts, ParamIDs::osc2Waveform, ParamIDs::osc2Table, bankRef),
           filterResponse(apvts,
                          ParamIDs::filterType,
                          ParamIDs::filterCutoff,

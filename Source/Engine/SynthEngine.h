@@ -24,6 +24,8 @@ public:
     // Audio thread only — reads voice state without synchronization.
     bool hasActiveNote(int midiNote) const noexcept;
 
+    const WavetableBank& getWavetableBank() const noexcept { return wavetableBank; }
+
     void setMatrixSnapshot(const SynthVibe::ModEngine::Snapshot& snapshot) noexcept;
 
 private:

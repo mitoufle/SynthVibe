@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "../../Engine/WavetableBank.h"
 #include "../DesignTokens.h"
 #include "PlotFrame.h"
 
@@ -10,16 +11,28 @@ namespace SynthVibe
     public:
         OscilloscopeView(juce::AudioProcessorValueTreeState& apvts,
                          const juce::String& waveformParamID,
+                         const juce::String& tableParamID,
+                         const WavetableBank& bankRef,
                          juce::Colour lineColour = Tokens::osc)
             : param(apvts.getParameter(waveformParamID)),
+              tableParam(apvts.getParameter(tableParamID)),
+              bank(bankRef),
               colour(lineColour)
         {
             waveAttach = std::make_unique<juce::ParameterAttachment>(
                 *param, [this](float v) {
-                    waveIndex = juce::jlimit(0, 3, (int) std::round(v));
+                    waveIndex = juce::jlimit(0, 4, (int) std::round(v));
                     repaint();
                 });
             waveAttach->sendInitialUpdate();
+
+            tableAttach = std::make_unique<juce::ParameterAttachment>(
+                *tableParam, [this](float v) {
+                    tableIndex = juce::jlimit(0, WavetableBank::NumTables - 1, (int) std::round(v));
+                    repaint();
+                });
+            tableAttach->sendInitialUpdate();
+
             startTimerHz(30);
         }
 
@@ -63,14 +76,28 @@ namespace SynthVibe
                 case 1: return 2.f * t - 1.f;                                    // Saw
                 case 2: return t < 0.5f ? 1.f : -1.f;                            // Square
                 case 3: return 4.f * std::abs(t - 0.5f) - 1.f;                   // Triangle
+                case 4:
+                {
+                    const float* cycle = bank.getCycle(tableIndex);
+                    const int N = WavetableBank::Mip0Size;
+                    const float pos = t * N;
+                    const int   i   = juce::jlimit(0, N - 1, (int) pos);
+                    const float frac = pos - i;
+                    const int iNext = (i + 1) >= N ? 0 : (i + 1);
+                    return cycle[i] + frac * (cycle[iNext] - cycle[i]);
+                }
             }
             return 0.f;
         }
 
         juce::RangedAudioParameter* param;
+        juce::RangedAudioParameter* tableParam;
+        const WavetableBank&  bank;
         juce::Colour  colour;
-        int           waveIndex = 0;
-        float         drift     = 0.f;
+        int           waveIndex  = 0;
+        int           tableIndex = 0;
+        float         drift      = 0.f;
         std::unique_ptr<juce::ParameterAttachment> waveAttach;
+        std::unique_ptr<juce::ParameterAttachment> tableAttach;
     };
 }

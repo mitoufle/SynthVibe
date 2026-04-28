@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Parameters/ParameterLayout.h"
 #include "Parameters/ParameterIDs.h"
+#include "Engine/WavetableBank.h"
 #include "UI/components/AiErrorBanner.h"
 #include "UI/components/VariationCard.h"
 #include "AI/Variation.h"
@@ -75,7 +76,9 @@ struct UIConstructionTests : public juce::UnitTest
 
         beginTest("OscilloscopeView binds without crash");
         {
-            SynthVibe::OscilloscopeView scope(apvts, ParamIDs::osc1Waveform);
+            WavetableBank bank;
+            SynthVibe::OscilloscopeView scope(apvts, ParamIDs::osc1Waveform,
+                                              ParamIDs::osc1Table, bank);
             scope.setBounds(0, 0, 200, 60);
         }
 
@@ -171,7 +174,8 @@ struct UIConstructionTests : public juce::UnitTest
 
         beginTest("SoundTab constructs with Phase 2b grid");
         {
-            SoundTab tab(apvts);
+            WavetableBank bank;
+            SoundTab tab(apvts, bank);
             tab.setBounds(0, 0, 1280, 560);
             expect(tab.getWidth() == 1280, "SoundTab should construct at Phase 2b width");
         }

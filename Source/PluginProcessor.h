@@ -46,6 +46,7 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     PresetManager presetManager { apvts };
     int getActiveVoiceCount() const noexcept { return synth.getActiveVoiceCount(); }
+    const WavetableBank& getWavetableBank() const noexcept { return synth.getWavetableBank(); }
 
     // Collects UI-driven key presses (from the editor's MidiKeyboardComponent).
     // Its events are merged into the MIDI buffer at the top of processBlock so

@@ -5,7 +5,7 @@ AISynthEditor::AISynthEditor(AISynthProcessor& p)
     : AudioProcessorEditor(&p), processor(p),
       topBar(p.apvts, p.presetManager),
       bottomBar([&p] { return p.getActiveVoiceCount(); }),
-      soundTab(p.apvts),
+      soundTab(p.apvts, p.getWavetableBank()),
       modTab(p.apvts),
       fxTab(p.apvts),
       arpTab(p.apvts),
