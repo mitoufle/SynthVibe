@@ -135,6 +135,22 @@ struct PatchApplierTests : public juce::UnitTest
             expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc1.wave")),  4);
             expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc1.table")), 2);
         }
+
+        beginTest("PatchApplier sets osc2.wave=4 and osc2.table=1 -> params land in APVTS");
+        {
+            DummyProcessor proc;
+            PatchApplier applier(proc.apvts);
+
+            Variation v;
+            v.params["osc2.wave"]  = 4.0;
+            v.params["osc2.table"] = 1.0;
+            const auto r = applier.apply(v);
+            expectEquals(r.applied, 2);
+            expectEquals(r.unknown, 0);
+
+            expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc2.wave")),  4);
+            expectEquals(static_cast<int>(*proc.apvts.getRawParameterValue("osc2.table")), 1);
+        }
     }
 };
 
