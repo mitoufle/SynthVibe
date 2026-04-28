@@ -27,8 +27,8 @@ public:
     void setMatrixSnapshot(const SynthVibe::ModEngine::Snapshot& snapshot) noexcept;
 
 private:
-    std::array<Voice, NumVoices> voices;
     WavetableBank wavetableBank;
+    std::array<Voice, NumVoices> voices;
     std::atomic<int> activeVoiceCount { 0 };
     VoiceParams currentParams;
     uint64_t voiceOrderCounter = 0;
