@@ -43,6 +43,11 @@ struct WavetableBankTests : public juce::UnitTest
         beginTest("mipmap selection drops aliasing-prone harmonics at high notes");
         {
             const double sr = 48000.0;
+            // NOTE: With Task 5's stub data (one band-limited sine per mip), this
+            // assertion is a structural smoke check that fetchSample doesn't go
+            // silent or NaN at high notes — it does NOT prove correct aliasing
+            // suppression. The < rmsLow * 2.0 bound becomes a meaningful aliasing
+            // guard at Task 15, when harmonic-rich tables (Organ/Vocal/Noise) land.
             auto rms = [&](int tableIdx, double f) {
                 const double dt = f / sr;
                 double phase = 0.0, sumSq = 0.0;
