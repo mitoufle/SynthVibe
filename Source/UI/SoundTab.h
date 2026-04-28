@@ -10,6 +10,7 @@
 #include "components/OscilloscopeView.h"
 #include "components/PanelHeader.h"
 #include "components/WaveTypeSelect.h"
+#include "components/TableSelect.h"
 
 class SoundTab : public juce::Component
 {
@@ -23,6 +24,8 @@ public:
           fltEnvHeader("FLT ENV", SynthVibe::Tokens::env),
           osc1Wave(apvts, ParamIDs::osc1Waveform),
           osc2Wave(apvts, ParamIDs::osc2Waveform),
+          osc1Table(apvts, ParamIDs::osc1Table),
+          osc2Table(apvts, ParamIDs::osc2Table),
           filterType(apvts, ParamIDs::filterType),
           osc1Scope(apvts, ParamIDs::osc1Waveform),
           osc2Scope(apvts, ParamIDs::osc2Waveform),
@@ -61,6 +64,7 @@ public:
         for (auto* c : std::initializer_list<juce::Component*> {
             &osc1Header, &osc2Header, &filterHeader, &ampEnvHeader, &fltEnvHeader,
             &osc1Wave, &osc2Wave, &filterType,
+            &osc1Table, &osc2Table,
             &osc1Scope, &osc2Scope, &filterResponse,
             &ampEnv, &fltEnv,
             &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune, &knobOsc1Level,
@@ -77,18 +81,22 @@ public:
         osc1WaveAttach = std::make_unique<juce::ParameterAttachment>(
             *apvts.getParameter(ParamIDs::osc1Waveform),
             [this](float v) {
-                const int idx = juce::jlimit(0, 3, (int) std::round(v));
+                const int idx = juce::jlimit(0, 4, (int) std::round(v));
                 knobOsc1Pwm.setEnabled(idx == 2); // 2 = Square
                 knobOsc1Pwm.repaint();
+                osc1Table.setEnabled(idx == 4); // 4 = Wavetable
+                osc1Table.repaint();
             });
         osc1WaveAttach->sendInitialUpdate();
 
         osc2WaveAttach = std::make_unique<juce::ParameterAttachment>(
             *apvts.getParameter(ParamIDs::osc2Waveform),
             [this](float v) {
-                const int idx = juce::jlimit(0, 3, (int) std::round(v));
+                const int idx = juce::jlimit(0, 4, (int) std::round(v));
                 knobOsc2Pwm.setEnabled(idx == 2);
                 knobOsc2Pwm.repaint();
+                osc2Table.setEnabled(idx == 4); // 4 = Wavetable
+                osc2Table.repaint();
             });
         osc2WaveAttach->sendInitialUpdate();
     }
@@ -132,6 +140,7 @@ public:
                                   SynthVibe::PanelHeader& header,
                                   SynthVibe::OscilloscopeView& scope,
                                   SynthVibe::WaveTypeSelect& waveSel,
+                                  SynthVibe::TableSelect& tableSel,
                                   std::initializer_list<juce::Component*> pitchRow,
                                   std::initializer_list<juce::Component*> shapeRow,
                                   std::initializer_list<juce::Component*> unisonRow)
@@ -147,6 +156,8 @@ public:
             scope.setBounds(scopeBox);
 
             waveSel.setBounds(c.removeFromTop(selectH));
+            c.removeFromTop(spaceXs);
+            tableSel.setBounds(c.removeFromTop(selectH));
             c.removeFromTop(spaceSm);
             const int rowH = c.getHeight() / 3;
             layoutKnobsRow(c.removeFromTop(rowH), pitchRow);
@@ -156,13 +167,13 @@ public:
 
         const int oscH = leftCol.getHeight() / 2;
         layoutOscPanel(osc1Bounds, leftCol.removeFromTop(oscH),
-                       osc1Header, osc1Scope, osc1Wave,
+                       osc1Header, osc1Scope, osc1Wave, osc1Table,
                        { &knobOsc1Oct, &knobOsc1Semi, &knobOsc1Detune },
                        { &knobOsc1Phase, &knobOsc1Pwm, &knobOsc1Level },
                        { &knobUniVoices, &knobUniDetune, &knobUniSpread });
 
         layoutOscPanel(osc2Bounds, leftCol,
-                       osc2Header, osc2Scope, osc2Wave,
+                       osc2Header, osc2Scope, osc2Wave, osc2Table,
                        { &knobOsc2Oct, &knobOsc2Semi, &knobOsc2Detune },
                        { &knobOsc2Phase, &knobOsc2Pwm, &knobOsc2Level },
                        { &knobOsc2UniVoices, &knobOsc2UniDetune, &knobOsc2UniSpread });
@@ -226,6 +237,7 @@ private:
 
     SynthVibe::PanelHeader       osc1Header, osc2Header, filterHeader, ampEnvHeader, fltEnvHeader;
     SynthVibe::WaveTypeSelect    osc1Wave, osc2Wave;
+    SynthVibe::TableSelect       osc1Table, osc2Table;
     SynthVibe::FilterTypeSelect  filterType;
     SynthVibe::OscilloscopeView  osc1Scope, osc2Scope;
     SynthVibe::FilterResponseView filterResponse;

@@ -1,20 +1,19 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../DesignTokens.h"
-#include "../Fonts.h"
 
 namespace SynthVibe
 {
-    class WaveTypeSelect : public juce::Component
+    class TableSelect : public juce::Component
     {
     public:
-        WaveTypeSelect(juce::AudioProcessorValueTreeState& apvts,
-                       const juce::String& paramID)
+        TableSelect(juce::AudioProcessorValueTreeState& apvts,
+                    const juce::String& paramID)
         {
-            combo.addItemList({ "Sine", "Saw", "Square", "Triangle", "Wavetable" }, 1);
+            combo.addItemList({ "Organ", "EP", "Bell", "Vocal", "Noise" }, 1);
             combo.setColour(juce::ComboBox::backgroundColourId, Tokens::panel2);
-            combo.setColour(juce::ComboBox::textColourId, Tokens::ink);
-            combo.setColour(juce::ComboBox::outlineColourId, Tokens::edge);
+            combo.setColour(juce::ComboBox::textColourId,        Tokens::ink);
+            combo.setColour(juce::ComboBox::outlineColourId,     Tokens::edge);
             combo.setJustificationType(juce::Justification::centred);
             addAndMakeVisible(combo);
 
