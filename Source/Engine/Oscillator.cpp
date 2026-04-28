@@ -53,6 +53,11 @@ float Oscillator::getNextSample()
             sample = phase < 0.5 ? static_cast<float>(4.0 * phase - 1.0)
                                  : static_cast<float>(3.0 - 4.0 * phase);
             break;
+
+        default:
+            // Wavetable case — handled in Task 7 once WavetableBank is wired.
+            // Silent fallthrough until then.
+            break;
     }
 
     phase += dt;

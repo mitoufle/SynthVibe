@@ -56,6 +56,21 @@ struct OscillatorTests : public juce::UnitTest
                juce::String("duty 0.50 measured as ") + juce::String(d50));
         expect(std::abs(d90 - 0.90f) < 0.05f,
                juce::String("duty 0.90 measured as ") + juce::String(d90));
+
+        beginTest("Wavetable enum value exists and oscillator returns silence pre-bank");
+        {
+            Oscillator o;
+            o.setSampleRate(48000.0);
+            o.setFrequency(440.0);
+            o.setWaveform(Waveform::Wavetable);
+            o.reset();
+            float maxAbs = 0.f;
+            for (int i = 0; i < 1024; ++i)
+                maxAbs = std::max(maxAbs, std::abs(o.getNextSample()));
+            expect(maxAbs == 0.f,
+                   "Waveform::Wavetable should return 0.f when no bank is wired; got max |sample| = "
+                   + juce::String(maxAbs));
+        }
     }
 };
 

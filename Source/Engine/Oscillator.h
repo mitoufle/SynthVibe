@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-enum class Waveform { Sine = 0, Saw, Square, Triangle };
+enum class Waveform { Sine = 0, Saw, Square, Triangle, Wavetable };
 
 // Single-voice oscillator with PolyBLEP anti-aliasing for Saw and Square.
 // To add waveforms: extend the Waveform enum and add a case in getNextSample().
