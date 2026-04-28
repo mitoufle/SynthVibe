@@ -1,5 +1,6 @@
 #pragma once
 #include "Voice.h"
+#include "WavetableBank.h"
 #include "ModEngine.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <array>
@@ -27,6 +28,7 @@ public:
 
 private:
     std::array<Voice, NumVoices> voices;
+    WavetableBank wavetableBank;
     std::atomic<int> activeVoiceCount { 0 };
     VoiceParams currentParams;
     uint64_t voiceOrderCounter = 0;

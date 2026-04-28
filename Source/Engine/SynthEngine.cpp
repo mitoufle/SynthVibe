@@ -4,6 +4,8 @@ void SynthEngine::prepare(const juce::dsp::ProcessSpec& spec)
 {
     for (auto& v : voices)
         v.prepare(spec);
+    for (auto& v : voices)
+        v.setBankPointer(&wavetableBank);
     smoothPolyGain.reset(spec.sampleRate, 0.025);
     smoothPolyGain.setCurrentAndTargetValue(1.f);
 }
