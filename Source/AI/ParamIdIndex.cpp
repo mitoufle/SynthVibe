@@ -10,26 +10,30 @@ namespace ParamIdIndex
             // -----------------------------------------------------------------------
             // Oscillator 1
             // -----------------------------------------------------------------------
-            { "osc1.wave",   "Osc1 Waveform", ParamEntry::Type::Choice, 0.0, 3.0, 1.0,
-              { "Sine", "Saw", "Square", "Triangle" } },
+            { "osc1.wave",   "Osc1 Waveform", ParamEntry::Type::Choice, 0.0, 4.0, 1.0,
+              { "Sine", "Saw", "Square", "Triangle", "Wavetable" } },
             { "osc1.octave", "Osc1 Octave",   ParamEntry::Type::Int,    -2.0, 2.0, 0.0, {} },
             { "osc1.semi",   "Osc1 Semitone", ParamEntry::Type::Int,    -12.0, 12.0, 0.0, {} },
             { "osc1.fine",   "Osc1 Detune",   ParamEntry::Type::Float,  -10.0, 10.0, 0.0, {} },
             { "osc1.level",  "Osc1 Level",    ParamEntry::Type::Float,  0.0, 1.0, 1.0, {} },
             { "osc1.phase",  "Osc1 Phase",    ParamEntry::Type::Float,  0.0, 360.0, 0.0, {} },
             { "osc1.pwm",    "Osc1 PWM",      ParamEntry::Type::Float,  0.01, 0.99, 0.5, {} },
+            { "osc1.table",  "Osc1 Table",    ParamEntry::Type::Choice, 0.0, 4.0, 0.0,
+              { "Organ", "EP", "Bell", "Vocal", "Noise" } },
 
             // -----------------------------------------------------------------------
             // Oscillator 2
             // -----------------------------------------------------------------------
-            { "osc2.wave",   "Osc2 Waveform", ParamEntry::Type::Choice, 0.0, 3.0, 1.0,
-              { "Sine", "Saw", "Square", "Triangle" } },
+            { "osc2.wave",   "Osc2 Waveform", ParamEntry::Type::Choice, 0.0, 4.0, 1.0,
+              { "Sine", "Saw", "Square", "Triangle", "Wavetable" } },
             { "osc2.octave", "Osc2 Octave",   ParamEntry::Type::Int,    -2.0, 2.0, 0.0, {} },
             { "osc2.semi",   "Osc2 Semitone", ParamEntry::Type::Int,    -12.0, 12.0, 0.0, {} },
             { "osc2.fine",   "Osc2 Detune",   ParamEntry::Type::Float,  -10.0, 10.0, 0.0, {} },
             { "osc2.level",  "Osc2 Level",    ParamEntry::Type::Float,  0.0, 1.0, 0.0, {} },
             { "osc2.phase",  "Osc2 Phase",    ParamEntry::Type::Float,  0.0, 360.0, 0.0, {} },
             { "osc2.pwm",    "Osc2 PWM",      ParamEntry::Type::Float,  0.01, 0.99, 0.5, {} },
+            { "osc2.table",  "Osc2 Table",    ParamEntry::Type::Choice, 0.0, 4.0, 0.0,
+              { "Organ", "EP", "Bell", "Vocal", "Noise" } },
 
             // -----------------------------------------------------------------------
             // LFO 1

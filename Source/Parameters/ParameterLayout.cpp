@@ -13,7 +13,7 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterChoice>(
         ParamIDs::osc1Waveform, "Osc1 Waveform",
-        StringArray { "Sine", "Saw", "Square", "Triangle" }, 1));
+        StringArray { "Sine", "Saw", "Square", "Triangle", "Wavetable" }, 1));
     params.push_back(std::make_unique<AudioParameterInt>(
         ParamIDs::osc1Octave, "Osc1 Octave", -2, 2, 0));
     params.push_back(std::make_unique<AudioParameterInt>(
@@ -30,13 +30,16 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc1Pwm, "Osc1 PWM",
         NormalisableRange<float>(0.01f, 0.99f, 0.001f), 0.5f));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::osc1Table, "Osc1 Table",
+        StringArray { "Organ", "EP", "Bell", "Vocal", "Noise" }, 0));
 
     // -----------------------------------------------------------------------
     // Oscillator 2
     // -----------------------------------------------------------------------
     params.push_back(std::make_unique<AudioParameterChoice>(
         ParamIDs::osc2Waveform, "Osc2 Waveform",
-        StringArray { "Sine", "Saw", "Square", "Triangle" }, 1));
+        StringArray { "Sine", "Saw", "Square", "Triangle", "Wavetable" }, 1));
     params.push_back(std::make_unique<AudioParameterInt>(
         ParamIDs::osc2Octave, "Osc2 Octave", -2, 2, 0));
     params.push_back(std::make_unique<AudioParameterInt>(
@@ -53,6 +56,9 @@ AudioProcessorValueTreeState::ParameterLayout ParameterLayout::create()
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::osc2Pwm, "Osc2 PWM",
         NormalisableRange<float>(0.01f, 0.99f, 0.001f), 0.5f));
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::osc2Table, "Osc2 Table",
+        StringArray { "Organ", "EP", "Bell", "Vocal", "Noise" }, 0));
 
     // -----------------------------------------------------------------------
     // LFO 1
